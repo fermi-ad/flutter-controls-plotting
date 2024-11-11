@@ -10,7 +10,7 @@ Future<void> main() async {
 class App extends StatelessWidget {
   const App({super.key});
 
-  static const _title = 'Fermilab Controls Demo';
+  static const _title = 'Plotting Widgets Demo';
 
   // At the very least, the root widget should be `StandardApp`, which
   // provides a common look and feel. In this case, we wrap the
@@ -44,11 +44,6 @@ class App extends StatelessWidget {
 
 class _BaseWidget extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => Center(
-      child: StreamBuilder(
-          stream: ACSys.api(context).monitorDevices(["G:SCTIME@P,15H"]),
-          builder: (context, snapshot) => snapshot.hasData
-              ? Text(
-                  'Supercycle time: ${snapshot.data!.value!.toStringAsFixed(2)}')
-              : const Text('Loading...')));
+  Widget build(BuildContext context) =>
+      const Center(child: Text("Plotting Widgets Demo"));
 }
