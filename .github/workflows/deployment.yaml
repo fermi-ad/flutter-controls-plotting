@@ -1,0 +1,11 @@
+name: Continuous Deployment for Flutter applications
+
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  build-and-deploy:
+    uses: fermi-ad/.github/.github/workflows/flutter-deploy.yaml@518c48b1553f24da49b2409a48c37039fc11f2c7
+    secrets: inherit
