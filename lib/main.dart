@@ -21,9 +21,17 @@ class App extends StatelessWidget {
 
 class _BaseWidget extends StatelessWidget {
   @override
-  Widget build(BuildContext context) =>
-      Column(children: [_buildWaveformPlot()]);
+  Widget build(BuildContext context) => Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Row(children: [_buildWaveformPlot(context)])
+          ]);
 
-  Widget _buildWaveformPlot() =>
-      const Expanded(child: PlotWidget(plotChannels: ["PLOT TEST PARABOLA"]));
+  Widget _buildWaveformPlot(BuildContext context) => Expanded(
+      child: Card(
+          color: Theme.of(context).colorScheme.primaryContainer,
+          child: SizedBox(
+              height: 400,
+              child: PlotWidget(plotChannels: ["PLOT TEST PARABOLA"]))));
 }
