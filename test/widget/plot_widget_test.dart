@@ -3,9 +3,10 @@ import 'dart:async';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
-import 'package:flutter_controls_template/service/fake_acsys_service.dart';
-import 'package:flutter_controls_template/service/plot_daq_service.dart';
-import 'package:flutter_controls_template/widgets/plot_widget.dart';
+import 'package:flutter_controls_plotting/service/fake_acsys_service.dart';
+import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
+import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
+
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -34,7 +35,8 @@ Widget _buildPlotWidget(List<String> channelList) => MaterialApp(
         body: ACSysProvider(
             service: FakeACSysService(),
             child: PlotWidget(
-                plotChannels: channelList, daqService: StandardPlotDAQ()))));
+                plotChannels: channelList,
+                daqService: const StandardPlotDAQ()))));
 
 Future<void> waitForPlotDataToLoad(WidgetTester tester) async =>
     pumpUntilFound(tester, find.byType(LineChart));

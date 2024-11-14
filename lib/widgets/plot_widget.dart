@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
-import 'package:flutter_controls_template/service/plot_daq_service.dart';
+import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
 class PlotWidget extends StatefulWidget {
   final List<String> plotChannels;
@@ -9,7 +9,9 @@ class PlotWidget extends StatefulWidget {
   final PlotDAQService daqService;
 
   const PlotWidget(
-      {super.key, required this.plotChannels, required this.daqService});
+      {super.key,
+      required this.plotChannels,
+      this.daqService = const StandardPlotDAQ()});
 
   @override
   State<StatefulWidget> createState() => _PlotState();

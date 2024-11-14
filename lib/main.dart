@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 
 Future<void> main() async {
   await runFermiApp(appWidget: const App());
@@ -45,5 +46,5 @@ class App extends StatelessWidget {
 class _BaseWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
-      const Center(child: Text("Plotting Widgets Demo"));
+      const Center(child: PlotWidget(plotChannels: ["PLOT TEST PARABOLA"]));
 }

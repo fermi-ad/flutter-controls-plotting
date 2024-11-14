@@ -9,6 +9,8 @@ abstract class PlotDAQService {
 }
 
 class StandardPlotDAQ implements PlotDAQService {
+  const StandardPlotDAQ();
+
   @override
   Stream<PlotReply> retrievePlot(BuildContext context,
       {required String forChannel}) {

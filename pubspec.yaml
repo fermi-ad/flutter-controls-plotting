@@ -1,5 +1,5 @@
-name: flutter_controls_template
-description: A new Flutter project.
+name: flutter_controls_plotting
+description: A standard Controls Plotting library for Flutter applications
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
