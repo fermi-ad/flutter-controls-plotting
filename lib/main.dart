@@ -31,7 +31,7 @@ class _BaseWidget extends StatelessWidget {
   Widget _buildWaveformPlot(BuildContext context) => Expanded(
       child: Card(
           color: Theme.of(context).colorScheme.primaryContainer,
-          child: SizedBox(
+          child: const SizedBox(
               height: 400,
               child: PlotWidget(plotChannels: ["PLOT TEST PARABOLA"]))));
 }
