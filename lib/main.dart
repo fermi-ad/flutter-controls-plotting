@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/widgets/plot_card_widget.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 
 Future<void> main() async {
@@ -31,17 +32,4 @@ class _BaseWidget extends StatelessWidget {
   Widget _buildWaveformPlot(BuildContext context) => const Expanded(
       child: PlotCardWidget(
           child: PlotWidget(plotChannels: ["PLOT TEST PARABOLA"])));
-}
-
-class PlotCardWidget extends StatelessWidget {
-  final Widget child;
-
-  const PlotCardWidget({super.key, required this.child});
-
-  @override
-  Widget build(BuildContext context) => Card(
-      color: Theme.of(context).colorScheme.primaryContainer,
-      child: SizedBox(
-          height: 400,
-          child: Padding(padding: const EdgeInsets.all(10), child: child)));
 }
