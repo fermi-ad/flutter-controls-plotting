@@ -10,7 +10,7 @@ class PlotWidget extends StatefulWidget {
 
   const PlotWidget(
       {super.key,
-      required this.plotChannels,
+      this.plotChannels = const [],
       this.daqService = const StandardPlotDAQ()});
 
   @override
