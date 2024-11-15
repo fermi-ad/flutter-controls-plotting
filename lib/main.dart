@@ -22,12 +22,14 @@ class App extends StatelessWidget {
 
 class _BaseWidget extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => Column(
+  Widget build(BuildContext context) => Padding(
+      padding: const EdgeInsets.all(10),
+      child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Row(children: [_buildWaveformPlot(context)])
-          ]);
+          ]));
 
   Widget _buildWaveformPlot(BuildContext context) => const Expanded(
       child: PlotCardWidget(
