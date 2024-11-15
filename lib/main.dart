@@ -33,5 +33,7 @@ class _BaseWidget extends StatelessWidget {
           color: Theme.of(context).colorScheme.primaryContainer,
           child: const SizedBox(
               height: 400,
-              child: PlotWidget(plotChannels: ["PLOT TEST PARABOLA"]))));
+              child: Padding(
+                  padding: EdgeInsets.all(10),
+                  child: PlotWidget(plotChannels: ["PLOT TEST PARABOLA"])))));
 }
