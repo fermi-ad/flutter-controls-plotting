@@ -35,6 +35,6 @@ class _BaseWidget extends StatelessWidget {
   Widget _buildWaveformPlot(BuildContext context) => const Row(children: [
         Expanded(
             child: PlotCardWidget(
-                child: PlotWidget(plotChannels: ["PLOT TEST PARABOLA"])))
+                child: PlotWidget(plotChannels: {"PLOT TEST PARABOLA"})))
       ]);
 }

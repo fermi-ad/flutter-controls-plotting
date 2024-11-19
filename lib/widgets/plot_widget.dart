@@ -1,16 +1,18 @@
+import 'dart:math';
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
 class PlotWidget extends StatefulWidget {
-  final List<String> plotChannels;
+  final Set<String> plotChannels;
 
   final PlotDAQService daqService;
 
   const PlotWidget(
       {super.key,
-      this.plotChannels = const [],
+      this.plotChannels = const <String>{},
       this.daqService = const StandardPlotDAQ()});
 
   @override
@@ -23,7 +25,7 @@ class _PlotState extends State<PlotWidget> {
     final channels = widget.plotChannels;
     if (channels.isNotEmpty) {
       _plotStream = widget.daqService
-          .retrievePlot(context, forChannel: widget.plotChannels.first);
+          .retrievePlot(context, forChannels: widget.plotChannels);
     }
 
     super.didChangeDependencies();
@@ -37,7 +39,7 @@ class _PlotState extends State<PlotWidget> {
       // Reset for new plot.
       _errorsDismissed = false;
       _plotStream = widget.daqService
-          .retrievePlot(context, forChannel: widget.plotChannels.first);
+          .retrievePlot(context, forChannels: widget.plotChannels);
     }
   }
 
@@ -61,7 +63,7 @@ class _PlotState extends State<PlotWidget> {
       return errorOnChannel != null
           ? _buildWithErrorMessage(
               "An error occured when attempting to acquire data for $errorOnChannel",
-              child: _buildEmptyPlot())
+              child: _buildPlotFromSnapshot(snapshot))
           : _buildPlotFromSnapshot(snapshot);
     } else {
       return _buildEmptyPlot();
@@ -70,11 +72,7 @@ class _PlotState extends State<PlotWidget> {
 
   Widget _buildPlotFromSnapshot(AsyncSnapshot<PlotReply> snapshot) => Padding(
       padding: const EdgeInsets.fromLTRB(20, 50, 30, 0),
-      child: _buildPlot(
-          channelNames: widget.plotChannels,
-          channelUnits: [snapshot.data!.data.first.units],
-          xAxisLabel: snapshot.data!.xAxisUnits,
-          spots: _toSpots(snapshot.data!.data.first.points)));
+      child: _buildPlot(plotReply: snapshot.data!));
 
   Widget _buildEmptyPlotWithProgressIndicator() => Column(children: [
         const Padding(
@@ -114,85 +112,99 @@ class _PlotState extends State<PlotWidget> {
     ]);
   }
 
-  Widget _buildEmptyPlot() =>
-      _buildPlot(channelNames: [], channelUnits: [], spots: [], xAxisLabel: "");
+  Widget _buildEmptyPlot() => _buildPlot(plotReply: null);
 
-  Widget _buildPlot(
-      {required List<String> channelNames,
-      required List<String> channelUnits,
-      required List<FlSpot> spots,
-      required String xAxisLabel}) {
-    final (minX, minY, maxX, maxY) = _findLimits(forPlotData: spots);
+  Widget _buildPlot({required PlotReply? plotReply}) {
+    List<LineChartBarData> lineChartBarDataList;
 
-    return LineChart(LineChartData(
-      minX: minX,
-      maxX: maxX,
-      minY: minY,
-      maxY: maxY,
-      lineBarsData: [
-        LineChartBarData(
-          spots: spots,
-          isCurved: true,
-          isStrokeCapRound: true,
-          barWidth: 3,
-          belowBarData: BarAreaData(
-            show: false,
-          ),
-          dotData: const FlDotData(show: false),
-        ),
-      ],
-      lineTouchData: LineTouchData(
-        touchTooltipData: LineTouchTooltipData(
-          maxContentWidth: 100,
-          getTooltipColor: (touchedSpot) => Colors.black,
-          getTooltipItems: (touchedSpots) {
-            return touchedSpots.map((LineBarSpot touchedSpot) {
-              final textStyle = TextStyle(
-                color: touchedSpot.bar.gradient?.colors[0] ??
-                    touchedSpot.bar.color,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              );
-              return LineTooltipItem(
-                '${touchedSpot.x}, ${touchedSpot.y.toStringAsFixed(2)}',
-                textStyle,
-              );
-            }).toList();
-          },
-        ),
-        handleBuiltInTouches: true,
-        getTouchLineStart: (data, index) => 0,
-      ),
-      titlesData: _buildTitlesData(channelNames, channelUnits, xAxisLabel),
-    ));
+    if (plotReply != null) {
+      lineChartBarDataList = _toLineChartBarDataList(plotReply.data);
+    } else {
+      // Defaults
+      lineChartBarDataList = [];
+    }
+
+    final (minX, minY, maxX, maxY) =
+        _findLimits(lineChartBarDataList: lineChartBarDataList);
+
+    return LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) =>
+            LineChart(LineChartData(
+              minX: minX,
+              maxX: maxX,
+              minY: minY,
+              maxY: maxY,
+              lineBarsData: lineChartBarDataList,
+              lineTouchData: LineTouchData(
+                touchTooltipData: LineTouchTooltipData(
+                  maxContentWidth: 100,
+                  getTooltipColor: (touchedSpot) => Colors.black,
+                  getTooltipItems: (touchedSpots) {
+                    return touchedSpots.map((LineBarSpot touchedSpot) {
+                      final textStyle = TextStyle(
+                        color: touchedSpot.bar.gradient?.colors[0] ??
+                            touchedSpot.bar.color,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      );
+                      return LineTooltipItem(
+                        '${touchedSpot.x}, ${touchedSpot.y.toStringAsFixed(2)}',
+                        textStyle,
+                      );
+                    }).toList();
+                  },
+                ),
+                handleBuiltInTouches: true,
+                getTouchLineStart: (data, index) => 0,
+              ),
+              titlesData:
+                  _buildTitlesData(plotReply, wide: constraints.maxWidth > 600),
+            )));
   }
 
-  FlTitlesData _buildTitlesData(
-      List<String> channelNames, List<String> channelUnits, String xAxisLabel) {
-    if (channelNames.isEmpty) {
+  FlTitlesData _buildTitlesData(PlotReply? plotReply, {required bool wide}) {
+    // List<String> channelNames, List<String> channelUnits, String xAxisLabel) {
+    if (plotReply == null) {
       return const FlTitlesData(
         topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
         rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
       );
     }
 
-    final wide = MediaQuery.of(context).size.width > 600;
+    final xAxisLabel = plotReply.xAxisUnits;
 
     const emptyTitles = AxisTitles(sideTitles: SideTitles(showTitles: false));
 
     final AxisTitles leftTitles;
     final AxisTitles topTitles;
+
+    List<Row> rowDataContents = [];
+
+    for (var (index, channelData) in plotReply.data.indexed) {
+      if (_channelHasError(channelData)) {
+        continue;
+      }
+      rowDataContents
+          .add(Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Text(
+          channelData.name,
+          style: TextStyle(color: _nextColorForIndex(index)),
+        ),
+        Text(
+          " (${channelData.units})",
+          style: TextStyle(color: _nextColorForIndex(index)),
+        )
+      ]));
+    }
+
+    double axisNameSize = plotReply.data.length * 20;
+    var axisNameWidget = Column(children: rowDataContents);
+
     if (wide) {
+      // Displayed on wide screen
       leftTitles = AxisTitles(
-        axisNameSize: 20,
-        axisNameWidget:
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Text(
-            channelNames.first,
-            style: const TextStyle(),
-          ),
-          Text(" (${channelUnits.first})")
-        ]),
+        axisNameSize: axisNameSize,
+        axisNameWidget: axisNameWidget,
         sideTitles: const SideTitles(
           showTitles: true,
           reservedSize: 40,
@@ -201,6 +213,7 @@ class _PlotState extends State<PlotWidget> {
 
       topTitles = emptyTitles;
     } else {
+      // Displayed on narrow screen
       leftTitles = const AxisTitles(
         sideTitles: SideTitles(
           showTitles: true,
@@ -209,15 +222,8 @@ class _PlotState extends State<PlotWidget> {
       );
 
       topTitles = AxisTitles(
-        axisNameSize: 50,
-        axisNameWidget:
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Text(
-            channelNames.first,
-            style: const TextStyle(),
-          ),
-          Text(" (${channelUnits.first})")
-        ]),
+        axisNameSize: axisNameSize,
+        axisNameWidget: axisNameWidget,
         sideTitles: const SideTitles(showTitles: false),
       );
     }
@@ -242,28 +248,55 @@ class _PlotState extends State<PlotWidget> {
   }
 
   (double, double, double, double) _findLimits(
-      {required List<FlSpot> forPlotData}) {
+      {required List<LineChartBarData> lineChartBarDataList}) {
     double minY = 0.0;
     double maxY = 1.0;
     double minX = 0.0;
     double maxX = 1.0;
 
-    for (final spot in forPlotData) {
-      if (spot.y < minY) {
-        minY = spot.y;
-      }
-      if (spot.y > maxY) {
-        maxY = spot.y;
-      }
-      if (spot.x < minX) {
-        minX = spot.x;
-      }
-      if (spot.x > maxX) {
-        maxX = spot.x;
+    for (final plotData in lineChartBarDataList) {
+      var spots = plotData.spots;
+      for (final spot in spots) {
+        minY = min(spot.y, minY);
+        maxY = max(spot.y, maxY);
+        minX = min(spot.x, minX);
+        maxX = max(spot.x, maxX);
       }
     }
 
     return (minX, minY, maxX, maxY);
+  }
+
+  Color _nextColorForIndex(int index) {
+    var colorIndex = min(index, Colors.primaries.length);
+    return Colors.primaries[colorIndex];
+  }
+
+  List<LineChartBarData> _toLineChartBarDataList(
+      List<PlotChannelData> plotChannels) {
+    List<LineChartBarData> lineChartList = [];
+
+    for (var (index, plotChannel) in plotChannels.indexed) {
+      if (_channelHasError(plotChannel)) {
+        continue;
+      }
+
+      var spots = _toSpots(plotChannel.points);
+
+      lineChartList.add(LineChartBarData(
+        color: _nextColorForIndex(index),
+        spots: spots,
+        isCurved: true,
+        isStrokeCapRound: true,
+        barWidth: 3,
+        belowBarData: BarAreaData(
+          show: false,
+        ),
+        dotData: const FlDotData(show: false),
+      ));
+    }
+
+    return lineChartList;
   }
 
   List<FlSpot> _toSpots(List<PlotPoint> points) => points
@@ -275,10 +308,18 @@ class _PlotState extends State<PlotWidget> {
   Stream<PlotReply>? _plotStream;
 
   _checkSnapshotDataForErrors(AsyncSnapshot<PlotReply> snapshot) {
-    if (snapshot.data!.data.first.status < 0) {
-      return snapshot.data!.data.first.name;
-    } else {
-      return null;
+    if (snapshot.data != null) {
+      for (PlotChannelData chData in snapshot.data?.data as List) {
+        if (_channelHasError(chData)) {
+          return chData.name;
+        }
+      }
     }
+
+    return null;
+  }
+
+  bool _channelHasError(PlotChannelData chData) {
+    return chData.status < 0;
   }
 }

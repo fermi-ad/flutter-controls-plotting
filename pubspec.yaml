@@ -44,9 +44,10 @@ dependencies:
 
   fl_chart: ^0.69.0
 
-dev_dependencies:
   flutter_test:
     sdk: flutter
+
+dev_dependencies:
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
