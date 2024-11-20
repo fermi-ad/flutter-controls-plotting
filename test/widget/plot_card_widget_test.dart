@@ -14,13 +14,9 @@ void main() {
       const title = "Empty Plot";
 
       // When I build the PlotCard
-      tester.pumpWidget(Scaffold(
-          body: ACSysProvider(
-              service: FakeACSysService(),
-              child: const PlotCardWidget(
-                  title: title,
-                  child: PlotWidget(
-                      plotChannels: {}, daqService: StandardPlotDAQ())))));
+      await tester.pumpWidget(_buildPlotCard(const PlotCardWidget(
+          title: title,
+          child: PlotWidget(plotChannels: {}, daqService: StandardPlotDAQ()))));
 
       // Then the title is displayed inside the card
       expect(
@@ -31,3 +27,7 @@ void main() {
     });
   });
 }
+
+Widget _buildPlotCard(PlotCardWidget card) => MaterialApp(
+    home: Scaffold(
+        body: ACSysProvider(service: FakeACSysService(), child: card)));
