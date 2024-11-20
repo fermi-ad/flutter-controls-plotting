@@ -291,4 +291,5 @@ Widget _buildPlotWidget(Set<String> channelList) => MaterialApp(
         body: ACSysProvider(
             service: FakeACSysService(),
             child: PlotWidget(
-                plotChannels: channelList, daqService: StandardPlotDAQ()))));
+                plotChannels: channelList,
+                daqService: const StandardPlotDAQ()))));
