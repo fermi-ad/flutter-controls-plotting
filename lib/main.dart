@@ -28,20 +28,20 @@ class _BaseWidget extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            _buildEmptyPlot(context),
-            _buildWaveformPlot(context),
+            _buildEmptyPlot(),
+            _buildWaveformPlot(),
             _buildMultipleWaveformPlot()
           ]));
 
-  Widget _buildEmptyPlot(BuildContext context) =>
+  Widget _buildEmptyPlot() =>
       const Expanded(child: PlotCardWidget(child: PlotWidget()));
 
-  Widget _buildWaveformPlot(BuildContext context) => const Expanded(
+  Widget _buildWaveformPlot() => const Expanded(
       child: PlotCardWidget(
           child: PlotWidget(plotChannels: {"PLOT TEST PARABOLA"})));
 
   Widget _buildMultipleWaveformPlot() => const Expanded(
       child: PlotCardWidget(
           child: PlotWidget(
-              plotChannels: {"PLOT TEST RAMP", "PLOT TEST NORMAL"})));
+              plotChannels: {"PLOT TEST RAND RAMP", "PLOT TEST NORMAL"})));
 }
