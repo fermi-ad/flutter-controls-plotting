@@ -12,7 +12,11 @@ class PlotCardWidget extends StatelessWidget {
   Widget build(BuildContext context) => Card(
       color: Theme.of(context).colorScheme.primaryContainer,
       child: Column(children: [
-        title == null ? Container() : Text(title!),
+        title == null
+            ? Container()
+            : Padding(
+                padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
+                child: Text(title!)),
         SizedBox(
             height: 400,
             child: Padding(padding: const EdgeInsets.all(10), child: plot))
