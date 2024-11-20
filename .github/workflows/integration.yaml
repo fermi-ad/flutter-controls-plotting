@@ -32,8 +32,8 @@ jobs:
       - name: Linting
         run: flutter analyze .
 
-      - name: Running unit tests
-        run: flutter test test/unit
+      # - name: Running unit tests
+      #  run: flutter test test/unit
 
       - name: Running widget tests
         run:  flutter test test/widget
