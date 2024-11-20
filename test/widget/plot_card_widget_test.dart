@@ -13,7 +13,7 @@ void main() {
       // Given nothing
       // When I build the PlotCard with no title parameter
       await tester.pumpWidget(_buildPlotCard(const PlotCardWidget(
-          child: PlotWidget(plotChannels: {}, daqService: StandardPlotDAQ()))));
+          plot: PlotWidget(plotChannels: {}, daqService: StandardPlotDAQ()))));
 
       // Then the title is displayed inside the card
       expect(
@@ -35,7 +35,7 @@ void main() {
       // When I build the PlotCard
       await tester.pumpWidget(_buildPlotCard(const PlotCardWidget(
           title: title,
-          child: PlotWidget(plotChannels: {}, daqService: StandardPlotDAQ()))));
+          plot: PlotWidget(plotChannels: {}, daqService: StandardPlotDAQ()))));
 
       // Then the title is displayed inside the card
       expect(
