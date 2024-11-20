@@ -22,16 +22,12 @@ class App extends StatelessWidget {
 
 class _BaseWidget extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => Padding(
-      padding: const EdgeInsets.all(10),
-      child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _buildEmptyPlot(),
-            _buildWaveformPlot(),
-            _buildMultipleWaveformPlot()
-          ]));
+  Widget build(BuildContext context) =>
+      ListView(padding: const EdgeInsets.all(20), children: [
+        _buildEmptyPlot(),
+        _buildWaveformPlot(),
+        _buildMultipleWaveformPlot()
+      ]);
 
   Widget _buildEmptyPlot() => const Expanded(
       child: PlotCardWidget(title: "Empty Plot", plot: PlotWidget()));
