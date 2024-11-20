@@ -1,0 +1,42 @@
+name: Integration workflow for Plotting library
+
+on:
+  pull_request:
+    branches:
+      - "main"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  Lint-Test-Build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checking out source code
+        uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          cache: true
+
+      - name: Configure Git for private repo access
+        run: |
+          git config --global url."https://${{ secrets.FLUTTER_CORE_SECRET }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Resolving dependencies
+        run: flutter pub get
+
+      - name: Linting
+        run: flutter analyze .
+
+      - name: Running unit tests
+        run: flutter test test/unit
+
+      - name: Running widget tests
+        run:  flutter test test/widget
+
+      - name: Building web application
+        run: flutter build web
