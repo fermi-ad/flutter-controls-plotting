@@ -138,6 +138,8 @@ class _PlotState extends State<PlotWidget> {
               lineTouchData: LineTouchData(
                 touchTooltipData: LineTouchTooltipData(
                   maxContentWidth: 100,
+                  fitInsideHorizontally: true,
+                  fitInsideVertically: true,
                   getTooltipColor: (touchedSpot) => Colors.black,
                   getTooltipItems: (touchedSpots) {
                     return touchedSpots.map((LineBarSpot touchedSpot) {
