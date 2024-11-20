@@ -30,7 +30,7 @@ void main() {
     testWidgets("Plot PLOT TEST CONSTANT, get a horizontal line at y=5.0",
         (WidgetTester tester) async {
       // Given a channel list containing "PLOT TEST CONSTANT"
-      final channelList = {"PLOT TEST CONSTANT"};
+      final channelList = {"PLOT TEST CONSTANT": ChannelSetting()};
 
       // When I build the PlotWidget
       await tester.pumpWidget(_buildPlotWidget(channelList));
@@ -53,7 +53,7 @@ void main() {
         "Plot PLOT TEST RAMP, get a ramp starting at Y=0.0 and ending at y = 500.0",
         (WidgetTester tester) async {
       // Given a channel list containing "PLOT TEST RAMP"
-      final channelList = {"PLOT TEST RAMP"};
+      final channelList = {"PLOT TEST RAMP": ChannelSetting()};
 
       // When I build the PlotWidget
       await tester.pumpWidget(_buildPlotWidget(channelList));
@@ -75,7 +75,7 @@ void main() {
     testWidgets(
         "Plot multiple plots and ensure that the Y and X axis limits are adjusted",
         (WidgetTester tester) async {
-      final channelList = {"PLOT TEST SINE"};
+      final channelList = {"PLOT TEST SINE": ChannelSetting()};
       // When I build the PlotWidget
       await tester.pumpWidget(_buildPlotWidget(channelList));
       await waitForPlotDataToLoad(tester);
@@ -85,7 +85,7 @@ void main() {
       assertPlotYAxisLimits(min: -1, max: 1);
 
       // Plot a second channel.
-      channelList.add("PLOT TEST CONSTANT");
+      channelList["PLOT TEST CONSTANT"] = ChannelSetting();
       await tester.pumpWidget(_buildPlotWidget(channelList));
       await waitForPlotDataToLoad(tester);
 
@@ -98,7 +98,7 @@ void main() {
         "Plot PLOT TEST PARABOLA, get a parabola starting at X=-50 and ending at X=50",
         (WidgetTester tester) async {
       // Given a channel list containing "PLOT TEST PARABOLA"
-      final channelList = {"PLOT TEST PARABOLA"};
+      final channelList = {"PLOT TEST PARABOLA": ChannelSetting()};
 
       // When I build the PlotWidget
       await tester.pumpWidget(_buildPlotWidget(channelList));
@@ -121,7 +121,7 @@ void main() {
         "Plot PLOT TEST SINE, get a sine wave starting at X=-250 and ending at X=250",
         (WidgetTester tester) async {
       // Given a channel list containing "PLOT TEST SINE"
-      final channelList = {"PLOT TEST SINE"};
+      final channelList = {"PLOT TEST SINE": ChannelSetting()};
 
       // When I build the PlotWidget
       await tester.pumpWidget(_buildPlotWidget(channelList));
@@ -144,7 +144,7 @@ void main() {
         "Plot PLOT TEST SINE, get a progress indicator while data is fetched",
         (WidgetTester tester) async {
       // Given a channel list containing "PLOT TEST SINE"
-      final channelList = {"PLOT TEST SINE"};
+      final channelList = {"PLOT TEST SINE": ChannelSetting()};
 
       // When I build the PlotWidget
       await tester.pumpWidget(_buildPlotWidget(channelList));
@@ -158,7 +158,7 @@ void main() {
         "Plot PLOT TEST PARABOLA 64K, get a parabola starting at X=-32767 and ending at X=32767",
         (WidgetTester tester) async {
       // Given a channel list containing "PLOT TEST PARABOLA"
-      final channelList = {"PLOT TEST PARABOLA 64K"};
+      final channelList = {"PLOT TEST PARABOLA 64K": ChannelSetting()};
 
       // When I build the PlotWidget
       await tester.pumpWidget(_buildPlotWidget(channelList));
@@ -181,7 +181,7 @@ void main() {
         "Plot PLOT TEST NORMAL, get a normal distribution centered around 250",
         (WidgetTester tester) async {
       // Given a channel list containing "PLOT TEST PARABOLA"
-      final channelList = {"PLOT TEST NORMAL"};
+      final channelList = {"PLOT TEST NORMAL": ChannelSetting()};
 
       // When I build the PlotWidget
       await tester.pumpWidget(_buildPlotWidget(channelList));
@@ -204,7 +204,7 @@ void main() {
     testWidgets("Dismiss error message, error banner goes away",
         (WidgetTester tester) async {
       // Given I tried to plot a channel that had an error
-      final channelList = {"PLOT TEST DOESN'T EXIST"};
+      final channelList = {"PLOT TEST DOESN'T EXIST": ChannelSetting()};
       await tester.pumpWidget(_buildPlotWidget(channelList));
       await waitForPlotDataToLoad(tester);
 
@@ -226,7 +226,7 @@ void main() {
       const errorChannel = "PLOT TEST DOESN'T EXIST";
       const errorMessage =
           "An error occured when attempting to acquire data for $errorChannel";
-      Set<String> channelList = {errorChannel};
+      Map<String, ChannelSetting> channelList = {errorChannel: ChannelSetting()};
       await tester.pumpWidget(_buildPlotWidget(channelList));
       await waitForPlotDataToLoad(tester);
 
@@ -239,7 +239,7 @@ void main() {
       expect(find.text(errorMessage), findsNothing);
 
       channelList.clear();
-      channelList = {errorChannel};
+      channelList = {errorChannel: ChannelSetting()};
       await tester.pumpWidget(_buildPlotWidget(channelList));
       await waitForPlotDataToLoad(tester);
 
@@ -249,7 +249,7 @@ void main() {
     testWidgets("Plot API TEST CONST, get a horizontal line at y=5.0",
         (WidgetTester tester) async {
       // Given a channel list containing "PLOT TEST PARABOLA"
-      final channelList = {"API TEST CONSTANT"};
+      final channelList = {"API TEST CONSTANT": ChannelSetting()};
 
       // When I build the PlotWidget with an AcsysProvider
       await tester.pumpWidget(_buildPlotWidget(channelList));
@@ -271,7 +271,7 @@ void main() {
     testWidgets("Small screen, y-axis labels are on top",
         (WidgetTester tester) async {
       // Given a channel list containing "PLOT TEST PARABOLA"
-      final channelList = {"PLOT TEST CONSTANT"};
+      final channelList = {"PLOT TEST CONSTANT": ChannelSetting()};
 
       // ... and we are rendering for a small display
       await setSmallScreenSize(tester);
@@ -286,7 +286,7 @@ void main() {
   });
 }
 
-Widget _buildPlotWidget(Set<String> channelList) => MaterialApp(
+Widget _buildPlotWidget(Map<String, ChannelSetting> channelList) => MaterialApp(
     home: Scaffold(
         body: ACSysProvider(
             service: FakeACSysService(),

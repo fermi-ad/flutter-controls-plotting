@@ -5,14 +5,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
+class ChannelSetting {  
+  Color? lineColor; 
+
+  ChannelSetting(); 
+}
+
 class PlotWidget extends StatefulWidget {
-  final Set<String> plotChannels;
+  final Map<String, ChannelSetting> plotChannels;  
 
   final PlotDAQService daqService;
 
   const PlotWidget(
       {super.key,
-      this.plotChannels = const <String>{},
+      this.plotChannels = const <String, ChannelSetting>{},
       this.daqService = const StandardPlotDAQ()});
 
   @override
@@ -25,7 +31,7 @@ class _PlotState extends State<PlotWidget> {
     final channels = widget.plotChannels;
     if (channels.isNotEmpty) {
       _plotStream = widget.daqService
-          .retrievePlot(context, forChannels: widget.plotChannels);
+          .retrievePlot(context, forChannels: widget.plotChannels.keys.toSet());
     }
 
     super.didChangeDependencies();
@@ -39,7 +45,7 @@ class _PlotState extends State<PlotWidget> {
       // Reset for new plot.
       _errorsDismissed = false;
       _plotStream = widget.daqService
-          .retrievePlot(context, forChannels: widget.plotChannels);
+          .retrievePlot(context, forChannels: widget.plotChannels.keys.toSet());
     }
   }
 
