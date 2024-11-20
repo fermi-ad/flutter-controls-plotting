@@ -209,7 +209,7 @@ class _PlotState extends State<PlotWidget> {
         axisNameWidget: axisNameWidget,
         sideTitles: const SideTitles(
           showTitles: true,
-          reservedSize: 40,
+          reservedSize: 60,
         ),
       );
 
@@ -219,7 +219,7 @@ class _PlotState extends State<PlotWidget> {
       leftTitles = const AxisTitles(
         sideTitles: SideTitles(
           showTitles: true,
-          reservedSize: 40,
+          reservedSize: 60,
         ),
       );
 
