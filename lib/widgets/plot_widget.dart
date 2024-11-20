@@ -46,7 +46,7 @@ class _PlotState extends State<PlotWidget> {
   @override
   Widget build(BuildContext context) => widget.plotChannels.isEmpty
       ? Padding(
-          padding: const EdgeInsets.fromLTRB(20, 50, 30, 0),
+          padding: const EdgeInsets.fromLTRB(10, 10, 30, 10),
           child: _buildEmptyPlot())
       : StreamBuilder(stream: _plotStream, builder: _plotStreamBuilder);
 
@@ -71,7 +71,7 @@ class _PlotState extends State<PlotWidget> {
   }
 
   Widget _buildPlotFromSnapshot(AsyncSnapshot<PlotReply> snapshot) => Padding(
-      padding: const EdgeInsets.fromLTRB(20, 50, 30, 0),
+      padding: const EdgeInsets.fromLTRB(10, 10, 30, 10),
       child: _buildPlot(plotReply: snapshot.data!));
 
   Widget _buildEmptyPlotWithProgressIndicator() => Column(children: [
@@ -83,7 +83,7 @@ class _PlotState extends State<PlotWidget> {
                     Column(children: [Spacer(), LinearProgressIndicator()]))),
         Expanded(
             child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 30, 0),
+                padding: const EdgeInsets.fromLTRB(10, 10, 30, 10),
                 child: _buildEmptyPlot()))
       ]);
 
