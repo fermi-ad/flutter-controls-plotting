@@ -206,7 +206,7 @@ class _PlotState extends State<PlotWidget> {
 
     List<Row> rowDataContents = [];
 
-    for (var (index, channelData) in plotReply.data.indexed) {
+    for (var channelData in plotReply.data) {
       if (_channelHasError(channelData)) {
         continue;
       }
@@ -329,7 +329,7 @@ class _PlotState extends State<PlotWidget> {
       List<PlotChannelData> plotChannels) {
     List<LineChartBarData> lineChartList = [];
 
-    for (var (index, plotChannel) in plotChannels.indexed) {
+    for (var plotChannel in plotChannels) {
       if (_channelHasError(plotChannel)) {
         continue;
       }
