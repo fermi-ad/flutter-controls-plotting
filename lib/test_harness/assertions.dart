@@ -15,6 +15,14 @@ void assertEmptyPlot({required bool isVisible}) {
   }
 }
 
+void assertColorOfPlot({required Color expectedColor}) {
+  expect(find.byType(LineChart), findsOneWidget);  
+  final lineChart =
+      (find.byType(LineChart).evaluate().first.widget as LineChart);
+      
+  expect(lineChart.data.lineBarsData.first.color, expectedColor);  
+}
+
 void assertPlotXAxisTitle({required String title}) => expect(
     find.descendant(of: find.byType(LineChart), matching: find.text(title)),
     findsOneWidget);

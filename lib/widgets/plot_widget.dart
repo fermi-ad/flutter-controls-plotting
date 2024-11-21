@@ -5,14 +5,38 @@ import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
+// Defines a default set of colors for plots. It is possible to pass in any color as well.
+enum PlotColor {
+  red("Red", Colors.red),
+  green("Green", Colors.green),
+  blue("Blue", Colors.blue),
+  yellow("Yellow", Colors.yellow),
+  brown("Brown", Colors.brown),
+  gray("Gray", Colors.blueGrey),
+  purple("Purple", Colors.purple),
+  lime("Lime", Colors.lime),
+  cyan("Cyan", Colors.cyan),
+  orange("Orange", Colors.orange);
+
+  const PlotColor(this.name, this.color);
+  final String name;
+  final Color color;
+}
+
+class ChannelSetting {
+  Color? lineColor;
+
+  ChannelSetting({this.lineColor});
+}
+
 class PlotWidget extends StatefulWidget {
-  final Set<String> plotChannels;
+  final Map<String, ChannelSetting> plotChannels;
 
   final PlotDAQService daqService;
 
   const PlotWidget(
       {super.key,
-      this.plotChannels = const <String>{},
+      this.plotChannels = const <String, ChannelSetting>{},
       this.daqService = const StandardPlotDAQ()});
 
   @override
@@ -25,7 +49,7 @@ class _PlotState extends State<PlotWidget> {
     final channels = widget.plotChannels;
     if (channels.isNotEmpty) {
       _plotStream = widget.daqService
-          .retrievePlot(context, forChannels: widget.plotChannels);
+          .retrievePlot(context, forChannels: widget.plotChannels.keys.toSet());
     }
 
     super.didChangeDependencies();
@@ -39,7 +63,7 @@ class _PlotState extends State<PlotWidget> {
       // Reset for new plot.
       _errorsDismissed = false;
       _plotStream = widget.daqService
-          .retrievePlot(context, forChannels: widget.plotChannels);
+          .retrievePlot(context, forChannels: widget.plotChannels.keys.toSet());
     }
   }
 
@@ -182,7 +206,7 @@ class _PlotState extends State<PlotWidget> {
 
     List<Row> rowDataContents = [];
 
-    for (var (index, channelData) in plotReply.data.indexed) {
+    for (var channelData in plotReply.data) {
       if (_channelHasError(channelData)) {
         continue;
       }
@@ -190,11 +214,11 @@ class _PlotState extends State<PlotWidget> {
           .add(Row(mainAxisAlignment: MainAxisAlignment.center, children: [
         Text(
           channelData.name,
-          style: TextStyle(color: _nextColorForIndex(index)),
+          style: TextStyle(color: _nextColorForIndex(channelData.name)),
         ),
         Text(
           " (${channelData.units})",
-          style: TextStyle(color: _nextColorForIndex(index)),
+          style: TextStyle(color: _nextColorForIndex(channelData.name)),
         )
       ]));
     }
@@ -269,16 +293,43 @@ class _PlotState extends State<PlotWidget> {
     return (minX, minY, maxX, maxY);
   }
 
-  Color _nextColorForIndex(int index) {
-    var colorIndex = min(index, Colors.primaries.length);
-    return Colors.primaries[colorIndex];
+  Color _nextColorForIndex(String channelName) {
+    var plotChannels = widget.plotChannels;
+    ChannelSetting setting = plotChannels[channelName]!;
+
+    // Find unique color
+    if (setting.lineColor == null) {
+      Color? candidateColor;
+      List<Color> displayedColors = [];
+      plotChannels.forEach((name, setting) {
+        if (name != channelName) {
+          if (setting.lineColor != null) {
+            displayedColors.add(setting.lineColor!);
+          }
+        }
+      });
+
+      for (var plotColor in PlotColor.values) {
+        if (displayedColors.contains(plotColor.color)) {
+          continue;
+        }
+        candidateColor = plotColor.color;
+        break;
+      }
+
+      // No more colors, default to blue.
+      candidateColor ??= PlotColor.blue.color;
+      setting.lineColor = candidateColor;
+    }
+
+    return setting.lineColor!;
   }
 
   List<LineChartBarData> _toLineChartBarDataList(
       List<PlotChannelData> plotChannels) {
     List<LineChartBarData> lineChartList = [];
 
-    for (var (index, plotChannel) in plotChannels.indexed) {
+    for (var plotChannel in plotChannels) {
       if (_channelHasError(plotChannel)) {
         continue;
       }
@@ -286,7 +337,7 @@ class _PlotState extends State<PlotWidget> {
       var spots = _toSpots(plotChannel.points);
 
       lineChartList.add(LineChartBarData(
-        color: _nextColorForIndex(index),
+        color: _nextColorForIndex(plotChannel.name),
         spots: spots,
         isCurved: true,
         isStrokeCapRound: true,
