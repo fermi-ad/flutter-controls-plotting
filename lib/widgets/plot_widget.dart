@@ -26,7 +26,7 @@ enum PlotColor {
 class ChannelSetting {
   Color? lineColor;
 
-  ChannelSetting();
+  ChannelSetting({this.lineColor});
 }
 
 class PlotWidget extends StatefulWidget {

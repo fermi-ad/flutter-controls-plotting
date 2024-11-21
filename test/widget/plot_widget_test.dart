@@ -283,6 +283,19 @@ void main() {
       // Then the y-axis labels are located on the top of the plot
       assertPlotYAxisTitle(title: "PLOT TEST CONSTANT", units: "V");
     });
+
+    testWidgets("Verify plot color applied to newly added channel.",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST PARABOLA"
+      final channelList = {"PLOT TEST CONSTANT": ChannelSetting(lineColor: PlotColor.blue.color)};
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(_buildPlotWidget(channelList));
+      await waitForPlotDataToLoad(tester);
+
+      // Verify that color is as expected.
+      assertColorOfPlot(expectedColor: PlotColor.blue.color); 
+    });    
   });
 }
 
