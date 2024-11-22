@@ -34,10 +34,13 @@ class PlotWidget extends StatefulWidget {
 
   final PlotDAQService daqService;
 
+  final List<String> yLimits;
+
   const PlotWidget(
       {super.key,
       this.plotChannels = const <String, ChannelSetting>{},
-      this.daqService = const StandardPlotDAQ()});
+      this.daqService = const StandardPlotDAQ(),
+      this.yLimits = const ["", ""]});
 
   @override
   State<StatefulWidget> createState() => _PlotState();
@@ -96,7 +99,7 @@ class _PlotState extends State<PlotWidget> {
 
   Widget _buildPlotFromSnapshot(AsyncSnapshot<PlotReply> snapshot) => Padding(
       padding: const EdgeInsets.fromLTRB(10, 10, 30, 10),
-      child: _buildPlot(plotReply: snapshot.data!));
+      child: _buildPlot(plotReply: snapshot.data!, yLimits: widget.yLimits));
 
   Widget _buildEmptyPlotWithProgressIndicator() => Column(children: [
         const Padding(
@@ -136,20 +139,25 @@ class _PlotState extends State<PlotWidget> {
     ]);
   }
 
-  Widget _buildEmptyPlot() => _buildPlot(plotReply: null);
+  Widget _buildEmptyPlot() => _buildPlot(plotReply: null, yLimits: []);
 
-  Widget _buildPlot({required PlotReply? plotReply}) {
+  Widget _buildPlot(
+      {required PlotReply? plotReply, required List<String> yLimits}) {
     List<LineChartBarData> lineChartBarDataList;
+    double minX, minY, maxX, maxY;
+    List<List<FlSpot>> filteredChannelSpots;
 
     if (plotReply != null) {
-      lineChartBarDataList = _toLineChartBarDataList(plotReply.data);
+      // _findLimits will filter the data according to the minY, maxY.
+      (minX, minY, maxX, maxY, filteredChannelSpots) =
+          _findLimits(plotChannels: plotReply.data, yLimits: yLimits);
+      lineChartBarDataList =
+          _toLineChartBarDataList(plotReply.data, filteredChannelSpots);
     } else {
       // Defaults
       lineChartBarDataList = [];
+      (minX, minY, maxX, maxY) = (0.0, 0.0, 1.0, 1.0);
     }
-
-    final (minX, minY, maxX, maxY) =
-        _findLimits(lineChartBarDataList: lineChartBarDataList);
 
     return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) =>
@@ -273,15 +281,20 @@ class _PlotState extends State<PlotWidget> {
     setState(() => _errorsDismissed = true);
   }
 
-  (double, double, double, double) _findLimits(
-      {required List<LineChartBarData> lineChartBarDataList}) {
+  (double, double, double, double, List<List<FlSpot>>) _findLimits(
+      {required List<PlotChannelData> plotChannels,
+      required List<String> yLimits}) {
     double minY = 0.0;
     double maxY = 1.0;
     double minX = 0.0;
     double maxX = 1.0;
-
-    for (final plotData in lineChartBarDataList) {
-      var spots = plotData.spots;
+    List<List<FlSpot>> filteredChannelSpots = [];
+    // Get the minX, minY, maxX, maxY accorss all channels.
+    for (var plotChannel in plotChannels) {
+      if (_channelHasError(plotChannel)) {
+        continue;
+      }
+      List<FlSpot> spots = _toSpots(plotChannel.points);
       for (final spot in spots) {
         minY = min(spot.y, minY);
         maxY = max(spot.y, maxY);
@@ -289,8 +302,22 @@ class _PlotState extends State<PlotWidget> {
         maxX = max(spot.x, maxX);
       }
     }
-
-    return (minX, minY, maxX, maxY);
+    // Filter the data according to the configured minY and maxY.
+    if (yLimits.isNotEmpty) {
+      if (yLimits[0] != "") minY = double.parse(yLimits[0]);
+      if (yLimits[1] != "") maxY = double.parse(yLimits[1]);
+      for (var plotChannel in plotChannels) {
+        if (_channelHasError(plotChannel)) {
+          continue;
+        }
+        List<FlSpot> spots = _toSpots(plotChannel.points);
+        List<FlSpot> filteredSpots = yLimits.isNotEmpty
+            ? spots.where((spot) => spot.y >= minY && spot.y <= maxY).toList()
+            : spots;
+        filteredChannelSpots.add(filteredSpots);
+      }
+    }
+    return (minX, minY, maxX, maxY, filteredChannelSpots);
   }
 
   Color _nextColorForIndex(String channelName) {
@@ -326,15 +353,16 @@ class _PlotState extends State<PlotWidget> {
   }
 
   List<LineChartBarData> _toLineChartBarDataList(
-      List<PlotChannelData> plotChannels) {
+      List<PlotChannelData> plotChannels,
+      List<List<FlSpot>> filteredChannelSpots) {
     List<LineChartBarData> lineChartList = [];
 
-    for (var plotChannel in plotChannels) {
+    plotChannels.asMap().forEach((index, plotChannel) {
       if (_channelHasError(plotChannel)) {
-        continue;
+        return;
       }
 
-      var spots = _toSpots(plotChannel.points);
+      var spots = filteredChannelSpots[index];
 
       lineChartList.add(LineChartBarData(
         color: _nextColorForIndex(plotChannel.name),
@@ -347,7 +375,7 @@ class _PlotState extends State<PlotWidget> {
         ),
         dotData: const FlDotData(show: false),
       ));
-    }
+    });
 
     return lineChartList;
   }
