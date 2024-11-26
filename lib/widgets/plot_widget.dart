@@ -31,16 +31,16 @@ class ChannelSetting {
 
 class PlotWidget extends StatefulWidget {
   final Map<String, ChannelSetting> plotChannels;
-
   final PlotDAQService daqService;
-
   final List<String> yLimits;
+  final Function(String channelName)? onInternalChannelSettingChange;
 
   const PlotWidget(
       {super.key,
       this.plotChannels = const <String, ChannelSetting>{},
       this.daqService = const StandardPlotDAQ(),
-      this.yLimits = const ["", ""]});
+      this.yLimits = const ["", ""],
+      this.onInternalChannelSettingChange});
 
   @override
   State<StatefulWidget> createState() => _PlotState();
@@ -222,11 +222,11 @@ class _PlotState extends State<PlotWidget> {
           .add(Row(mainAxisAlignment: MainAxisAlignment.center, children: [
         Text(
           channelData.name,
-          style: TextStyle(color: _nextColorForIndex(channelData.name)),
+          style: TextStyle(color: _nextColorForChannel(channelData.name)),
         ),
         Text(
           " (${channelData.units})",
-          style: TextStyle(color: _nextColorForIndex(channelData.name)),
+          style: TextStyle(color: _nextColorForChannel(channelData.name)),
         )
       ]));
     }
@@ -320,7 +320,7 @@ class _PlotState extends State<PlotWidget> {
     return (minX, minY, maxX, maxY, filteredChannelSpots);
   }
 
-  Color _nextColorForIndex(String channelName) {
+  Color _nextColorForChannel(String channelName) {
     var plotChannels = widget.plotChannels;
     ChannelSetting setting = plotChannels[channelName]!;
 
@@ -347,6 +347,8 @@ class _PlotState extends State<PlotWidget> {
       // No more colors, default to blue.
       candidateColor ??= PlotColor.blue.color;
       setting.lineColor = candidateColor;
+      // Notify external widgets that the plotWidget made a change to channel settings.
+      widget.onInternalChannelSettingChange?.call(channelName);
     }
 
     return setting.lineColor!;
@@ -365,7 +367,7 @@ class _PlotState extends State<PlotWidget> {
       var spots = filteredChannelSpots[index];
 
       lineChartList.add(LineChartBarData(
-        color: _nextColorForIndex(plotChannel.name),
+        color: _nextColorForChannel(plotChannel.name),
         spots: spots,
         isCurved: true,
         isStrokeCapRound: true,
