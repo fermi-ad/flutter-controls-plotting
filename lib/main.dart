@@ -24,26 +24,26 @@ class _BaseWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
       padding: const EdgeInsets.all(10),
-      child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _buildEmptyPlot(),
-            _buildWaveformPlot(),
-            _buildMultipleWaveformPlot()
-          ]));
+      child: LayoutBuilder(
+          builder: (context, constraints) => GridView.count(
+                  crossAxisCount: constraints.maxWidth > 1000 ? 2 : 1,
+                  children: [
+                    _buildEmptyPlot(),
+                    _buildWaveformPlot(),
+                    _buildMultipleWaveformPlot()
+                  ])));
 
-  Widget _buildEmptyPlot() => const Expanded(
-      child: PlotCardWidget(title: "Empty Plot", plot: PlotWidget()));
+  Widget _buildEmptyPlot() =>
+      const PlotCardWidget(title: "Empty Plot", plot: PlotWidget());
 
-  Widget _buildWaveformPlot() => Expanded(
-      child: PlotCardWidget(
-          title: "Single Waveform Plot",
-          plot: PlotWidget(plotChannels: {"PLOT TEST PARABOLA": ChannelSetting()})));
+  Widget _buildWaveformPlot() => PlotCardWidget(
+      title: "Single Waveform Plot",
+      plot: PlotWidget(plotChannels: {"PLOT TEST PARABOLA": ChannelSetting()}));
 
-  Widget _buildMultipleWaveformPlot() => Expanded(
-      child: PlotCardWidget(
-          title: "Multiple Waveforms Plot",
-          plot: PlotWidget(
-              plotChannels: {"PLOT TEST RAND RAMP": ChannelSetting(), "PLOT TEST NORMAL": ChannelSetting()})));
+  Widget _buildMultipleWaveformPlot() => PlotCardWidget(
+      title: "Multiple Waveforms Plot",
+      plot: PlotWidget(plotChannels: {
+        "PLOT TEST RAND RAMP": ChannelSetting(),
+        "PLOT TEST NORMAL": ChannelSetting()
+      }));
 }
