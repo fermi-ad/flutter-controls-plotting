@@ -44,7 +44,7 @@ dependencies:
 
   fl_chart: ^0.69.0
 
-  flutter_echarts: ^2.5.0
+  graphic: ^2.5.0
 
   flutter_test:
     sdk: flutter

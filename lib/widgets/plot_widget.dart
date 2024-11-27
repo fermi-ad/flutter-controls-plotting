@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
-enum PlotImplementation { flCharts, eCharts, fermi }
+enum PlotImplementation { flCharts, graphic, fermi }
 
 // Defines a default set of colors for plots. It is possible to pass in any color as well.
 enum PlotColor {
@@ -104,7 +104,8 @@ class _PlotState extends State<PlotWidget> {
 
   Widget _buildPlotFromSnapshot(AsyncSnapshot<PlotReply> snapshot) => Padding(
       padding: const EdgeInsets.fromLTRB(10, 10, 30, 10),
-      child: _buildPlot(plotReply: snapshot.data!, yLimits: widget.yLimits));
+      child: _buildFlChartsPlot(
+          plotReply: snapshot.data!, yLimits: widget.yLimits));
 
   Widget _buildEmptyPlotWithProgressIndicator() => Column(children: [
         const Padding(
@@ -144,9 +145,12 @@ class _PlotState extends State<PlotWidget> {
     ]);
   }
 
-  Widget _buildEmptyPlot() => _buildPlot(plotReply: null, yLimits: []);
+  Widget _buildEmptyPlot() =>
+      widget.implementation == PlotImplementation.flCharts
+          ? _buildFlChartsPlot(plotReply: null, yLimits: [])
+          : _buildGraphicPlot(plotReply: null, yLimits: []);
 
-  Widget _buildPlot(
+  Widget _buildFlChartsPlot(
       {required PlotReply? plotReply, required List<String> yLimits}) {
     List<LineChartBarData> lineChartBarDataList;
     double minX, minY, maxX, maxY;
@@ -200,6 +204,10 @@ class _PlotState extends State<PlotWidget> {
                   _buildTitlesData(plotReply, wide: constraints.maxWidth > 600),
             )));
   }
+
+  Widget _buildGraphicPlot(
+          {required PlotReply? plotReply, required List<String> yLimits}) =>
+      Container();
 
   FlTitlesData _buildTitlesData(PlotReply? plotReply, {required bool wide}) {
     // List<String> channelNames, List<String> channelUnits, String xAxisLabel) {
