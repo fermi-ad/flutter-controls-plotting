@@ -7,7 +7,6 @@ import 'package:flutter_controls_plotting/test_harness/assertions.dart';
 import 'package:flutter_controls_plotting/test_harness/setup.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:graphic/graphic.dart';
 
 void main() {
   group("PlotWidget widget tests", () {
@@ -19,7 +18,7 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Then the plot is empty
-      assertEmptyPlot(isVisible: true);
+      assertEmptyPlot(tester, isVisible: true);
 
       // ... and the Y-axis limits are 0 to 1
       assertPlotYAxisLimits(min: 0, max: 1);
@@ -315,7 +314,7 @@ void main() {
           find.byType(PlotWidget), PlotImplementation.graphic);
 
       // ... and the plot is empty
-      assertEmptyPlot(isVisible: true);
+      assertEmptyPlot(tester, isVisible: true);
 
       // ... and the Y-axis limits are 0 to 1
       // assertPlotYAxisLimits(min: 0, max: 1);

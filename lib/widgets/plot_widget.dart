@@ -49,10 +49,13 @@ class PlotWidget extends StatefulWidget {
       this.implementation = PlotImplementation.flCharts});
 
   @override
-  State<StatefulWidget> createState() => _PlotState();
+  State<StatefulWidget> createState() => PlotState();
 }
 
-class _PlotState extends State<PlotWidget> {
+class PlotState extends State<PlotWidget> {
+  List<PlotChannelData> get channelData =>
+      _plotReply != null ? _plotReply!.data : [];
+
   @override
   void didChangeDependencies() {
     final channels = widget.plotChannels;
@@ -93,6 +96,7 @@ class _PlotState extends State<PlotWidget> {
           child: _buildEmptyPlot());
     } else if (snapshot.hasData) {
       final errorOnChannel = _checkSnapshotDataForErrors(snapshot);
+      _plotReply = snapshot.data;
       return errorOnChannel != null
           ? _buildWithErrorMessage(
               "An error occured when attempting to acquire data for $errorOnChannel",
@@ -465,4 +469,6 @@ class _PlotState extends State<PlotWidget> {
   bool _channelHasError(PlotChannelData chData) {
     return chData.status < 0;
   }
+
+  PlotReply? _plotReply;
 }

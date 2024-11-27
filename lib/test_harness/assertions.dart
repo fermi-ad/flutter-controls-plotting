@@ -2,25 +2,25 @@ import 'dart:math';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-void assertEmptyPlot({required bool isVisible}) {
-  expect(find.byType(LineChart), isVisible ? findsOneWidget : findsNothing);
+void assertEmptyPlot(WidgetTester tester, {required bool isVisible}) {
+  final plotFinder = find.byType(PlotWidget);
+  expect(plotFinder, isVisible ? findsOneWidget : findsNothing);
 
   if (isVisible) {
-    final lineChart =
-        (find.byType(LineChart).evaluate().first.widget as LineChart);
-
-    expect(lineChart.data.lineBarsData.length, 0);
+    final PlotState plotState = tester.state(plotFinder);
+    expect(plotState.channelData.length, 0);
   }
 }
 
 void assertColorOfPlot({required Color expectedColor}) {
-  expect(find.byType(LineChart), findsOneWidget);  
+  expect(find.byType(LineChart), findsOneWidget);
   final lineChart =
       (find.byType(LineChart).evaluate().first.widget as LineChart);
-      
-  expect(lineChart.data.lineBarsData.first.color, expectedColor);  
+
+  expect(lineChart.data.lineBarsData.first.color, expectedColor);
 }
 
 void assertPlotXAxisTitle({required String title}) => expect(
