@@ -210,25 +210,52 @@ class _PlotState extends State<PlotWidget> {
           {required PlotReply? plotReply, required List<String> yLimits}) =>
       Chart(
         data: const [
-          {'genre': 'Sports', 'sold': 275},
-          {'genre': 'Strategy', 'sold': 115},
-          {'genre': 'Action', 'sold': 120},
-          {'genre': 'Shooter', 'sold': 350},
-          {'genre': 'Other', 'sold': 150},
+          {'index': 0, 'v': 0},
+          {
+            'index': 1,
+            'v': 1
+          }, /*
+          {'index': 2, 'v': 2},
+          {'index': 3, 'v': 3},
+          {'index': 4, 'v': 4},*/
         ],
         variables: {
-          'genre': Variable(
-            accessor: (Map map) => map['genre'] as String,
+          'index': Variable(
+            accessor: (Map map) => map['index'] as num,
           ),
-          'sold': Variable(
-            accessor: (Map map) => map['sold'] as num,
+          'v': Variable(
+            accessor: (Map map) => map['v'] as num,
           ),
         },
-        marks: [IntervalMark()],
+        marks: [
+          LineMark(
+            shape: ShapeEncode(value: BasicLineShape(dash: [5, 2])),
+            selected: {
+              'touchMove': {1}
+            },
+          )
+        ],
+        coord: RectCoord(color: const Color(0xffdddddd)),
         axes: [
           Defaults.horizontalAxis,
           Defaults.verticalAxis,
         ],
+        selections: {
+          'touchMove': PointSelection(
+            on: {
+              GestureType.scaleUpdate,
+              GestureType.tapDown,
+              GestureType.longPressMoveUpdate
+            },
+            dim: Dim.x,
+          )
+        },
+        tooltip: TooltipGuide(
+          followPointer: [false, true],
+          align: Alignment.topLeft,
+          offset: const Offset(-20, -20),
+        ),
+        crosshair: CrosshairGuide(followPointer: [false, true]),
       );
 
   FlTitlesData _buildTitlesData(PlotReply? plotReply, {required bool wide}) {

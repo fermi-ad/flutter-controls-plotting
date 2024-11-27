@@ -311,10 +311,11 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Then plot was built using Flutter eCharts
-      expect(find.byType(Chart<Map<dynamic, dynamic>>), findsOneWidget);
+      assertPlotImplementationIs(
+          find.byType(PlotWidget), PlotImplementation.graphic);
 
       // ... and the plot is empty
-      // assertEmptyPlot(isVisible: true);
+      assertEmptyPlot(isVisible: true);
 
       // ... and the Y-axis limits are 0 to 1
       // assertPlotYAxisLimits(min: 0, max: 1);
@@ -323,6 +324,12 @@ void main() {
       // assertPlotXAxisLimits(min: 0, max: 1);
     });
   });
+}
+
+void assertPlotImplementationIs(
+    Finder finder, PlotImplementation implementation) {
+  final widget = finder.evaluate().first.widget as PlotWidget;
+  expect(widget.implementation, implementation);
 }
 
 Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
