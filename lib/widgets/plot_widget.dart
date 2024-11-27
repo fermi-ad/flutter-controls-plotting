@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
+enum PlotImplementation { flCharts, eCharts, fermi }
+
 // Defines a default set of colors for plots. It is possible to pass in any color as well.
 enum PlotColor {
   red("Red", Colors.red),
@@ -36,11 +38,14 @@ class PlotWidget extends StatefulWidget {
 
   final List<String> yLimits;
 
+  final PlotImplementation implementation;
+
   const PlotWidget(
       {super.key,
       this.plotChannels = const <String, ChannelSetting>{},
       this.daqService = const StandardPlotDAQ(),
-      this.yLimits = const ["", ""]});
+      this.yLimits = const ["", ""],
+      this.implementation = PlotImplementation.flCharts});
 
   @override
   State<StatefulWidget> createState() => _PlotState();

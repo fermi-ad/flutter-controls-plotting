@@ -6,6 +6,7 @@ import 'package:flutter_controls_plotting/test_harness/actions.dart';
 import 'package:flutter_controls_plotting/test_harness/assertions.dart';
 import 'package:flutter_controls_plotting/test_harness/setup.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
+import 'package:flutter_echarts/flutter_echarts.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -226,7 +227,9 @@ void main() {
       const errorChannel = "PLOT TEST DOESN'T EXIST";
       const errorMessage =
           "An error occured when attempting to acquire data for $errorChannel";
-      Map<String, ChannelSetting> channelList = {errorChannel: ChannelSetting()};
+      Map<String, ChannelSetting> channelList = {
+        errorChannel: ChannelSetting()
+      };
       await tester.pumpWidget(_buildPlotWidget(channelList));
       await waitForPlotDataToLoad(tester);
 
@@ -287,22 +290,49 @@ void main() {
     testWidgets("Verify plot color applied to newly added channel.",
         (WidgetTester tester) async {
       // Given a channel list containing "PLOT TEST PARABOLA"
-      final channelList = {"PLOT TEST CONSTANT": ChannelSetting(lineColor: PlotColor.blue.color)};
+      final channelList = {
+        "PLOT TEST CONSTANT": ChannelSetting(lineColor: PlotColor.blue.color)
+      };
 
       // When I build the PlotWidget
       await tester.pumpWidget(_buildPlotWidget(channelList));
       await waitForPlotDataToLoad(tester);
 
       // Verify that color is as expected.
-      assertColorOfPlot(expectedColor: PlotColor.blue.color); 
-    });    
+      assertColorOfPlot(expectedColor: PlotColor.blue.color);
+    });
+
+    testWidgets(
+        "Implementation = eCharts, builds an empty plot using Flutter eCharts",
+        (WidgetTester tester) async {
+      // Given an empty channel list
+      // When I build the PlotWidget with implementation = eCharts
+      await tester.pumpWidget(
+          _buildPlotWidget(const {}, impl: PlotImplementation.eCharts));
+      await waitForPlotDataToLoad(tester);
+
+      // Then the plot is empty
+      assertEmptyPlot(isVisible: true);
+
+      // ... and the Y-axis limits are 0 to 1
+      assertPlotYAxisLimits(min: 0, max: 1);
+
+      // ... and the X-axis limits are 0 to 1
+      assertPlotXAxisLimits(min: 0, max: 1);
+
+      // ... and the empty plot was built using Flutter eCharts
+      expect(find.byType(Echarts), findsOneWidget);
+    });
   });
 }
 
-Widget _buildPlotWidget(Map<String, ChannelSetting> channelList) => MaterialApp(
-    home: Scaffold(
-        body: ACSysProvider(
-            service: FakeACSysService(),
-            child: PlotWidget(
-                plotChannels: channelList,
-                daqService: const StandardPlotDAQ()))));
+Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
+        {PlotImplementation impl = PlotImplementation.flCharts}) =>
+    MaterialApp(
+        home: Scaffold(
+            body: ACSysProvider(
+                service: FakeACSysService(),
+                child: PlotWidget(
+                    plotChannels: channelList,
+                    implementation: impl,
+                    daqService: const StandardPlotDAQ()))));
