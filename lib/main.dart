@@ -33,8 +33,11 @@ class _BaseWidget extends StatelessWidget {
                     _buildMultipleWaveformPlot()
                   ])));
 
-  Widget _buildEmptyPlot() =>
-      const PlotCardWidget(title: "Empty Plot", plot: PlotWidget());
+  Widget _buildEmptyPlot() => const PlotCardWidget(
+      title: "Empty Plot",
+      plot: PlotWidget(
+        implementation: PlotImplementation.graphic,
+      ));
 
   Widget _buildWaveformPlot() => PlotCardWidget(
       title: "Single Waveform Plot",

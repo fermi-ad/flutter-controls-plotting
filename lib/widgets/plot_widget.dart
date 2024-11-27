@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
+import 'package:graphic/graphic.dart';
 
 enum PlotImplementation { flCharts, graphic, fermi }
 
@@ -207,7 +208,28 @@ class _PlotState extends State<PlotWidget> {
 
   Widget _buildGraphicPlot(
           {required PlotReply? plotReply, required List<String> yLimits}) =>
-      Container();
+      Chart(
+        data: const [
+          {'genre': 'Sports', 'sold': 275},
+          {'genre': 'Strategy', 'sold': 115},
+          {'genre': 'Action', 'sold': 120},
+          {'genre': 'Shooter', 'sold': 350},
+          {'genre': 'Other', 'sold': 150},
+        ],
+        variables: {
+          'genre': Variable(
+            accessor: (Map map) => map['genre'] as String,
+          ),
+          'sold': Variable(
+            accessor: (Map map) => map['sold'] as num,
+          ),
+        },
+        marks: [IntervalMark()],
+        axes: [
+          Defaults.horizontalAxis,
+          Defaults.verticalAxis,
+        ],
+      );
 
   FlTitlesData _buildTitlesData(PlotReply? plotReply, {required bool wide}) {
     // List<String> channelNames, List<String> channelUnits, String xAxisLabel) {

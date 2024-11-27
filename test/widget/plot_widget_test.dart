@@ -311,7 +311,7 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Then plot was built using Flutter eCharts
-      expect(find.byType(Chart), findsOneWidget);
+      expect(find.byType(Chart<Map<dynamic, dynamic>>), findsOneWidget);
 
       // ... and the plot is empty
       // assertEmptyPlot(isVisible: true);
