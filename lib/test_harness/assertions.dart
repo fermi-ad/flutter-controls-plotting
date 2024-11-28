@@ -27,16 +27,20 @@ void assertPlotXAxisTitle({required String title}) => expect(
     find.descendant(of: find.byType(LineChart), matching: find.text(title)),
     findsOneWidget);
 
-void assertPlotYAxisTitle(
-    {required String title, required String units, int sameUnitCount = 1}) {
-  expect(
-      find.descendant(of: find.byType(LineChart), matching: find.text(title)),
-      findsOneWidget);
+void assertPlotYAxisTitles(
+    {required List<String> titles, required List<String> units}) {
+  for (final title in titles) {
+    expect(
+        find.descendant(of: find.byType(LineChart), matching: find.text(title)),
+        findsOneWidget);
+  }
 
-  expect(
-      find.descendant(
-          of: find.byType(LineChart), matching: find.text(" ($units)")),
-      findsExactly(sameUnitCount));
+  for (final unit in units) {
+    expect(
+        find.descendant(
+            of: find.byType(LineChart), matching: find.text(" ($unit)")),
+        findsOneWidget);
+  }
 }
 
 void assertDifferentColorsYAxisLabels(

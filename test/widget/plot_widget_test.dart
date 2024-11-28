@@ -40,7 +40,7 @@ void main() {
       assertPlotContainsHorizontalLine(numberOfPoints: 500, atY: 5.0);
 
       // ... and the Y axis is labeled...
-      assertPlotYAxisTitle(title: "PLOT TEST CONSTANT", units: "V");
+      assertPlotYAxisTitles(titles: ["PLOT TEST CONSTANT"], units: ["V"]);
 
       // ... and the Y-axis has limits of...
       assertPlotYAxisLimits(min: 0, max: 5);
@@ -63,7 +63,7 @@ void main() {
       assertPlotContainsRamp(numberOfPoints: 500, startingAtY: 0.0);
 
       // ... and the Y-axis is labeled
-      assertPlotYAxisTitle(title: "PLOT TEST RAMP", units: "V");
+      assertPlotYAxisTitles(titles: ["PLOT TEST RAMP"], units: ["V"]);
 
       // ... and the limits for the Y-axis are 0 to 500
       assertPlotYAxisLimits(min: 0, max: 499);
@@ -108,7 +108,7 @@ void main() {
       assertPlotContainsParabola(numberOfPoints: 501, startingAtX: -250);
 
       // ... and the Y-axis is labeled
-      assertPlotYAxisTitle(title: "PLOT TEST PARABOLA", units: "V");
+      assertPlotYAxisTitles(titles: ["PLOT TEST PARABOLA"], units: ["V"]);
 
       // ... and the limits for the X-axis are -250 to 250
       assertPlotXAxisLimits(min: -250.0, max: 250.0);
@@ -131,7 +131,7 @@ void main() {
       assertPlotContainsSineWave(numberOfPoints: 501, startingAtX: -250);
 
       // ... and the Y-axis is labeled
-      assertPlotYAxisTitle(title: "PLOT TEST SINE", units: "V");
+      assertPlotYAxisTitles(titles: ["PLOT TEST SINE"], units: ["V"]);
 
       // ... and the limits for the X-axis are -250 to 250
       assertPlotXAxisLimits(min: -250.0, max: 250.0);
@@ -168,7 +168,7 @@ void main() {
       assertPlotContainsParabola(numberOfPoints: 65535, startingAtX: -32767);
 
       // ... and the Y-axis is labeled
-      assertPlotYAxisTitle(title: "PLOT TEST PARABOLA 64K", units: "V");
+      assertPlotYAxisTitles(titles: ["PLOT TEST PARABOLA 64K"], units: ["V"]);
 
       // ... and the limits for the X-axis are -250 to 250
       assertPlotXAxisLimits(min: -32767.0, max: 32767.0);
@@ -192,7 +192,7 @@ void main() {
           numberOfPoints: 500, centeredAtX: 250);
 
       // ... and the Y-axis is labeled
-      assertPlotYAxisTitle(title: "PLOT TEST NORMAL", units: "V");
+      assertPlotYAxisTitles(titles: ["PLOT TEST NORMAL"], units: ["V"]);
 
       // ... and the limits for the X-axis are 0 to 499
       assertPlotXAxisLimits(min: 0.0, max: 499.0);
@@ -261,7 +261,7 @@ void main() {
       assertPlotContainsHorizontalLine(numberOfPoints: 500, atY: 5.0);
 
       // ... and the Y-axis is labeled
-      assertPlotYAxisTitle(title: "API TEST CONSTANT", units: "A");
+      assertPlotYAxisTitles(titles: ["API TEST CONSTANT"], units: ["A"]);
 
       // ... and the limits for the X-axis are -250 to 250
       assertPlotXAxisLimits(min: 0, max: 499);
@@ -283,7 +283,7 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Then the y-axis labels are located on the top of the plot
-      assertPlotYAxisTitle(title: "PLOT TEST CONSTANT", units: "V");
+      assertPlotYAxisTitles(titles: ["PLOT TEST CONSTANT"], units: ["V"]);
     });
 
     testWidgets("Verify plot color applied to newly added channel.",
@@ -338,7 +338,7 @@ void main() {
       // assertPlotContainsHorizontalLine(numberOfPoints: 500, atY: 5.0);
 
       // ... and the Y axis is labeled...
-      assertPlotYAxisTitle(title: "PLOT TEST CONSTANT", units: "V");
+      assertPlotYAxisTitles(titles: ["PLOT TEST CONSTANT"], units: ["V"]);
 
       // ... and the Y-axis has limits of...
       // assertPlotYAxisLimits(min: 0, max: 5);
