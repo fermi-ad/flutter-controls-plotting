@@ -324,7 +324,7 @@ void main() {
       assertEmptyPlot(tester, isVisible: true);
 
       // ... and the Y-axis limits are 0 to 1
-      // assertPlotYAxisLimits(min: 0, max: 1);
+      assertPlotYAxisLimits(min: 0, max: 1);
 
       // ... and the X-axis limits are 0 to 1
       // assertPlotXAxisLimits(min: 0, max: 1);
@@ -348,7 +348,7 @@ void main() {
           titles: ["PLOT TEST CONSTANT"], units: ["V"]);
 
       // ... and the Y-axis has limits of...
-      // assertPlotYAxisLimits(min: 0, max: 5);
+      assertPlotYAxisLimits(min: 0, max: 5);
 
       // ... and the X-axis is labeled...
       // assertPlotXAxisTitle(title: "Index");
