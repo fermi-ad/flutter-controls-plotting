@@ -69,12 +69,12 @@ void assertPlotXAxisLimits({required double min, required double max}) {
   expect(lineChartData.maxX, closeTo(max, 0.01));
 }
 
-void assertPlotYAxisLimits({required double min, required double max}) {
-  final lineChartData =
-      (find.byType(LineChart).evaluate().first.widget as LineChart).data;
+void assertPlotYAxisLimits(WidgetTester tester,
+    {required double min, required double max}) {
+  final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
 
-  expect(lineChartData.minY, closeTo(min, 0.01));
-  expect(lineChartData.maxY, closeTo(max, 0.01));
+  expect(plotState.minY, closeTo(min, 0.01));
+  expect(plotState.maxY, closeTo(max, 0.01));
 }
 
 void assertPlotContainsHorizontalLine(

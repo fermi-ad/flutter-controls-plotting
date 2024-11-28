@@ -21,7 +21,7 @@ void main() {
       assertEmptyPlot(tester, isVisible: true);
 
       // ... and the Y-axis limits are 0 to 1
-      assertPlotYAxisLimits(min: 0, max: 1);
+      assertPlotYAxisLimits(tester, min: 0, max: 1);
 
       // ... and the X-axis limits are 0 to 1
       assertPlotXAxisLimits(min: 0, max: 1);
@@ -44,7 +44,7 @@ void main() {
           titles: ["PLOT TEST CONSTANT"], units: ["V"]);
 
       // ... and the Y-axis has limits of...
-      assertPlotYAxisLimits(min: 0, max: 5);
+      assertPlotYAxisLimits(tester, min: 0, max: 5);
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(title: "Index");
@@ -67,7 +67,7 @@ void main() {
       assertPlotYAxisTitles(tester, titles: ["PLOT TEST RAMP"], units: ["V"]);
 
       // ... and the limits for the Y-axis are 0 to 500
-      assertPlotYAxisLimits(min: 0, max: 499);
+      assertPlotYAxisLimits(tester, min: 0, max: 499);
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(title: "Index");
@@ -83,7 +83,7 @@ void main() {
 
       // Ensure that the axis limits accomodate the sine plot test.
       assertPlotXAxisLimits(min: -250.0, max: 250.0);
-      assertPlotYAxisLimits(min: -1, max: 1);
+      assertPlotYAxisLimits(tester, min: -1, max: 1);
 
       // Plot a second channel.
       channelList["PLOT TEST CONSTANT"] = ChannelSetting();
@@ -92,7 +92,7 @@ void main() {
 
       // Ensure that the axis limits changed to accomodate the new plot.
       assertPlotXAxisLimits(min: -250, max: 499);
-      assertPlotYAxisLimits(min: -1, max: 5);
+      assertPlotYAxisLimits(tester, min: -1, max: 5);
     });
 
     testWidgets(
@@ -324,7 +324,7 @@ void main() {
       assertEmptyPlot(tester, isVisible: true);
 
       // ... and the Y-axis limits are 0 to 1
-      assertPlotYAxisLimits(min: 0, max: 1);
+      assertPlotYAxisLimits(tester, min: 0, max: 1);
 
       // ... and the X-axis limits are 0 to 1
       // assertPlotXAxisLimits(min: 0, max: 1);
@@ -348,7 +348,7 @@ void main() {
           titles: ["PLOT TEST CONSTANT"], units: ["V"]);
 
       // ... and the Y-axis has limits of...
-      assertPlotYAxisLimits(min: 0, max: 5);
+      assertPlotYAxisLimits(tester, min: 0, max: 5);
 
       // ... and the X-axis is labeled...
       // assertPlotXAxisTitle(title: "Index");

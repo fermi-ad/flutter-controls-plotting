@@ -68,6 +68,10 @@ class PlotState extends State<PlotWidget> {
           .toList()
       : [];
 
+  double get minY => _minY;
+
+  double get maxY => _maxY;
+
   @override
   void didChangeDependencies() {
     final channels = widget.plotChannels;
@@ -102,8 +106,10 @@ class PlotState extends State<PlotWidget> {
       BuildContext context, AsyncSnapshot<PlotReply> snapshot) {
     if (snapshot.connectionState == ConnectionState.none ||
         snapshot.connectionState == ConnectionState.waiting) {
+      _plotReply = null;
       return _buildEmptyPlotWithProgressIndicator();
     } else if (snapshot.hasError) {
+      _plotReply = null;
       return _buildWithErrorMessage(snapshot.error!.toString(),
           child: _buildEmptyPlot());
     } else if (snapshot.hasData) {
@@ -112,20 +118,19 @@ class PlotState extends State<PlotWidget> {
       return errorOnChannel != null
           ? _buildWithErrorMessage(
               "An error occured when attempting to acquire data for $errorOnChannel",
-              child: _buildPlotFromSnapshot(snapshot))
-          : _buildPlotFromSnapshot(snapshot);
+              child: _buildPlotFromSnapshot())
+          : _buildPlotFromSnapshot();
     } else {
+      _plotReply = null;
       return _buildEmptyPlot();
     }
   }
 
-  Widget _buildPlotFromSnapshot(AsyncSnapshot<PlotReply> snapshot) => Padding(
+  Widget _buildPlotFromSnapshot() => Padding(
       padding: const EdgeInsets.fromLTRB(10, 10, 30, 10),
       child: widget.implementation == PlotImplementation.flCharts
-          ? _buildFlChartsPlot(
-              plotReply: snapshot.data!, yLimits: widget.yLimits)
-          : _buildGraphicPlot(
-              plotReply: snapshot.data!, yLimits: widget.yLimits));
+          ? _buildFlChartsPlot(yLimits: widget.yLimits)
+          : _buildGraphicPlot(yLimits: widget.yLimits));
 
   Widget _buildEmptyPlotWithProgressIndicator() => Column(children: [
         const Padding(
@@ -167,34 +172,36 @@ class PlotState extends State<PlotWidget> {
 
   Widget _buildEmptyPlot() =>
       widget.implementation == PlotImplementation.flCharts
-          ? _buildFlChartsPlot(plotReply: null, yLimits: [])
-          : _buildGraphicPlot(plotReply: null, yLimits: []);
+          ? _buildFlChartsPlot(yLimits: [])
+          : _buildGraphicPlot(yLimits: []);
 
-  Widget _buildFlChartsPlot(
-      {required PlotReply? plotReply, required List<String> yLimits}) {
+  Widget _buildFlChartsPlot({required List<String> yLimits}) {
     List<LineChartBarData> lineChartBarDataList;
     double minX, minY, maxX, maxY;
     List<List<FlSpot>> filteredChannelSpots;
 
-    if (plotReply != null) {
+    if (_plotReply != null) {
       // _findLimits will filter the data according to the minY, maxY.
       (minX, minY, maxX, maxY, filteredChannelSpots) =
-          _findLimits(plotChannels: plotReply.data, yLimits: yLimits);
+          _findLimits(plotChannels: _plotReply!.data, yLimits: yLimits);
       lineChartBarDataList =
-          _toLineChartBarDataList(plotReply.data, filteredChannelSpots);
+          _toLineChartBarDataList(_plotReply!.data, filteredChannelSpots);
     } else {
       // Defaults
       lineChartBarDataList = [];
       (minX, minY, maxX, maxY) = (0.0, 0.0, 1.0, 1.0);
     }
 
+    _minY = minY;
+    _maxY = maxY;
+
     return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) =>
             LineChart(LineChartData(
               minX: minX,
               maxX: maxX,
-              minY: minY,
-              maxY: maxY,
+              minY: _minY,
+              maxY: _maxY,
               lineBarsData: lineChartBarDataList,
               lineTouchData: LineTouchData(
                 touchTooltipData: LineTouchTooltipData(
@@ -220,62 +227,77 @@ class PlotState extends State<PlotWidget> {
                 handleBuiltInTouches: true,
                 getTouchLineStart: (data, index) => 0,
               ),
-              titlesData:
-                  _buildTitlesData(plotReply, wide: constraints.maxWidth > 600),
+              titlesData: _buildTitlesData(_plotReply,
+                  wide: constraints.maxWidth > 600),
             )));
   }
 
-  Widget _buildGraphicPlot(
-          {required PlotReply? plotReply, required List<String> yLimits}) =>
-      Chart(
-        data: const [
-          {'index': 0, 'v': 0},
-          {
-            'index': 1,
-            'v': 1
-          }, /*
+  Widget _buildGraphicPlot({required List<String> yLimits}) {
+    double minX, minY, maxX, maxY;
+    List<List<FlSpot>> filteredChannelSpots;
+
+    if (_plotReply != null) {
+      // _findLimits will filter the data according to the minY, maxY.
+      (minX, minY, maxX, maxY, filteredChannelSpots) =
+          _findLimits(plotChannels: _plotReply!.data, yLimits: yLimits);
+    } else {
+      // Defaults
+      (minX, minY, maxX, maxY) = (0.0, 0.0, 1.0, 1.0);
+    }
+
+    _minY = minY;
+    _maxY = maxY;
+
+    return Chart(
+      data: const [
+        {'index': 0, 'v': 0},
+        {
+          'index': 1,
+          'v': 1
+        }, /*
           {'index': 2, 'v': 2},
           {'index': 3, 'v': 3},
           {'index': 4, 'v': 4},*/
-        ],
-        variables: {
-          'index': Variable(
-            accessor: (Map map) => map['index'] as num,
-          ),
-          'v': Variable(
-            accessor: (Map map) => map['v'] as num,
-          ),
-        },
-        marks: [
-          LineMark(
-            shape: ShapeEncode(value: BasicLineShape(dash: [5, 2])),
-            selected: {
-              'touchMove': {1}
-            },
-          )
-        ],
-        coord: RectCoord(color: const Color(0xffdddddd)),
-        axes: [
-          Defaults.horizontalAxis,
-          Defaults.verticalAxis,
-        ],
-        selections: {
-          'touchMove': PointSelection(
-            on: {
-              GestureType.scaleUpdate,
-              GestureType.tapDown,
-              GestureType.longPressMoveUpdate
-            },
-            dim: Dim.x,
-          )
-        },
-        tooltip: TooltipGuide(
-          followPointer: [false, true],
-          align: Alignment.topLeft,
-          offset: const Offset(-20, -20),
+      ],
+      variables: {
+        'index': Variable(
+          accessor: (Map map) => map['index'] as num,
         ),
-        crosshair: CrosshairGuide(followPointer: [false, true]),
-      );
+        'v': Variable(
+          accessor: (Map map) => map['v'] as num,
+        ),
+      },
+      marks: [
+        LineMark(
+          shape: ShapeEncode(value: BasicLineShape(dash: [5, 2])),
+          selected: {
+            'touchMove': {1}
+          },
+        )
+      ],
+      coord: RectCoord(color: const Color(0xffdddddd)),
+      axes: [
+        Defaults.horizontalAxis,
+        Defaults.verticalAxis,
+      ],
+      selections: {
+        'touchMove': PointSelection(
+          on: {
+            GestureType.scaleUpdate,
+            GestureType.tapDown,
+            GestureType.longPressMoveUpdate
+          },
+          dim: Dim.x,
+        )
+      },
+      tooltip: TooltipGuide(
+        followPointer: [false, true],
+        align: Alignment.topLeft,
+        offset: const Offset(-20, -20),
+      ),
+      crosshair: CrosshairGuide(followPointer: [false, true]),
+    );
+  }
 
   FlTitlesData _buildTitlesData(PlotReply? plotReply, {required bool wide}) {
     // List<String> channelNames, List<String> channelUnits, String xAxisLabel) {
@@ -486,4 +508,8 @@ class PlotState extends State<PlotWidget> {
   }
 
   PlotReply? _plotReply;
+
+  double _minY = 0;
+
+  double _maxY = 0;
 }
