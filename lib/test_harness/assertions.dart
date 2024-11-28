@@ -27,19 +27,18 @@ void assertPlotXAxisTitle({required String title}) => expect(
     find.descendant(of: find.byType(LineChart), matching: find.text(title)),
     findsOneWidget);
 
-void assertPlotYAxisTitles(
+void assertPlotYAxisTitles(WidgetTester tester,
     {required List<String> titles, required List<String> units}) {
-  for (final title in titles) {
-    expect(
-        find.descendant(of: find.byType(LineChart), matching: find.text(title)),
-        findsOneWidget);
-  }
+  expect(titles.length, units.length);
 
-  for (final unit in units) {
-    expect(
-        find.descendant(
-            of: find.byType(LineChart), matching: find.text(" ($unit)")),
-        findsOneWidget);
+  final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
+
+  expect(plotState.channelNames.length, titles.length);
+  expect(plotState.channelUnits.length, units.length);
+
+  for (int i = 0; i != titles.length; i++) {
+    expect(plotState.channelNames[i], titles[i]);
+    expect(plotState.channelUnits[i], units[i]);
   }
 }
 

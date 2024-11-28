@@ -56,6 +56,18 @@ class PlotState extends State<PlotWidget> {
   List<PlotChannelData> get channelData =>
       _plotReply != null ? _plotReply!.data : [];
 
+  List<String> get channelNames => _plotReply != null
+      ? _plotReply!.data
+          .map((PlotChannelData channelData) => channelData.name)
+          .toList()
+      : [];
+
+  List<String> get channelUnits => _plotReply != null
+      ? _plotReply!.data
+          .map((PlotChannelData channelData) => channelData.units)
+          .toList()
+      : [];
+
   @override
   void didChangeDependencies() {
     final channels = widget.plotChannels;
