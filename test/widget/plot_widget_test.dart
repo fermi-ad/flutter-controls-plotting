@@ -9,7 +9,7 @@ import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group("PlotWidget widget tests", () {
+  group("PlotWidget (implementation = FlCharts) widget tests", () {
     testWidgets("Plot channel list is empty, plot is empty",
         (WidgetTester tester) async {
       // Given nothing
@@ -305,8 +305,10 @@ void main() {
       // Verify that color is as expected.
       assertColorOfPlot(expectedColor: PlotColor.blue.color);
     });
+  });
 
-    testWidgets("Implementation = graphic, builds an empty plot using Graphic",
+  group("PlotWidget (implementation = Graphic) widget tests", () {
+    testWidgets("Plot channel list is empty, plot is empty",
         (WidgetTester tester) async {
       // Given an empty channel list
       // When I build the PlotWidget with implementation = eCharts
@@ -328,8 +330,7 @@ void main() {
       // assertPlotXAxisLimits(min: 0, max: 1);
     });
 
-    testWidgets(
-        "Plot PLOT TEST CONSTANT with implementation = graphic, get a horizontal line at y=5.0",
+    testWidgets("Plot PLOT TEST CONSTANT, get a horizontal line at y=5.0",
         (WidgetTester tester) async {
       // Given a channel list containing "PLOT TEST CONSTANT"
       final channelList = {"PLOT TEST CONSTANT": ChannelSetting()};
@@ -353,6 +354,8 @@ void main() {
       // assertPlotXAxisTitle(title: "Index");
     });
   });
+
+  group("PlotWidget (implementation = Fermi) widget tests", () {});
 }
 
 void assertPlotImplementationIs(
