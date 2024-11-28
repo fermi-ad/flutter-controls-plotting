@@ -322,6 +322,30 @@ void main() {
       // ... and the X-axis limits are 0 to 1
       // assertPlotXAxisLimits(min: 0, max: 1);
     });
+
+    testWidgets(
+        "Plot PLOT TEST CONSTANT with implementation = graphic, get a horizontal line at y=5.0",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST CONSTANT"
+      final channelList = {"PLOT TEST CONSTANT": ChannelSetting()};
+
+      // When I build the PlotWidget with the Graphic implementation
+      await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
+      await waitForPlotDataToLoad(tester);
+
+      // Then the plot contains 500 points with y = 5.0
+      // assertPlotContainsHorizontalLine(numberOfPoints: 500, atY: 5.0);
+
+      // ... and the Y axis is labeled...
+      assertPlotYAxisTitle(title: "PLOT TEST CONSTANT", units: "V");
+
+      // ... and the Y-axis has limits of...
+      // assertPlotYAxisLimits(min: 0, max: 5);
+
+      // ... and the X-axis is labeled...
+      // assertPlotXAxisTitle(title: "Index");
+    });
   });
 }
 

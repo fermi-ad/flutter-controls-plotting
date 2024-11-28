@@ -109,8 +109,11 @@ class PlotState extends State<PlotWidget> {
 
   Widget _buildPlotFromSnapshot(AsyncSnapshot<PlotReply> snapshot) => Padding(
       padding: const EdgeInsets.fromLTRB(10, 10, 30, 10),
-      child: _buildFlChartsPlot(
-          plotReply: snapshot.data!, yLimits: widget.yLimits));
+      child: widget.implementation == PlotImplementation.flCharts
+          ? _buildFlChartsPlot(
+              plotReply: snapshot.data!, yLimits: widget.yLimits)
+          : _buildGraphicPlot(
+              plotReply: snapshot.data!, yLimits: widget.yLimits));
 
   Widget _buildEmptyPlotWithProgressIndicator() => Column(children: [
         const Padding(
