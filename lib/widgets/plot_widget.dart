@@ -71,7 +71,19 @@ class PlotState extends State<PlotWidget> {
 
   @override
   initState() {
-    _adapter = FlchartsPlotWidgetAdapter(widget: widget);
+    switch (widget.implementation) {
+      case PlotImplementation.flCharts:
+        _adapter = FlchartsPlotWidgetAdapter(widget: widget);
+        break;
+
+      case PlotImplementation.graphic:
+        _adapter = GraphicPlotWidgetAdapter(widget: widget);
+        break;
+
+      case PlotImplementation.fermi:
+        _adapter = FermiPlotWidgetAdapter(widget: widget);
+        break;
+    }
     super.initState();
   }
 
