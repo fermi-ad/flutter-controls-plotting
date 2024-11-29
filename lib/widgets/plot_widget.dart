@@ -102,8 +102,8 @@ class PlotState extends State<PlotWidget> {
       return _buildWithErrorMessage(snapshot.error!.toString(),
           child: _buildEmptyPlot());
     } else if (snapshot.hasData) {
-      final errorOnChannel = _checkSnapshotDataForErrors(snapshot);
       _plotReply = snapshot.data;
+      final errorOnChannel = _plotReplyHasErrors();
       return errorOnChannel != null
           ? _buildWithErrorMessage(
               "An error occured when attempting to acquire data for $errorOnChannel",
@@ -485,9 +485,9 @@ class PlotState extends State<PlotWidget> {
     }
   }
 
-  _checkSnapshotDataForErrors(AsyncSnapshot<PlotReply> snapshot) {
-    if (snapshot.data != null) {
-      for (PlotChannelData chData in snapshot.data?.data as List) {
+  _plotReplyHasErrors() {
+    if (_plotReply != null) {
+      for (PlotChannelData chData in _plotReply!.data as List) {
         if (_channelHasError(chData)) {
           return chData.name;
         }
