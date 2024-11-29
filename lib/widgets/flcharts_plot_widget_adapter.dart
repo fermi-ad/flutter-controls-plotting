@@ -4,54 +4,43 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   FlchartsPlotWidgetAdapter({required super.widget});
 
   @override
-  Widget buildPlot({required PlotReply? plotReply}) {
-    List<LineChartBarData> lineChartBarDataList;
-
-    if (plotReply != null) {
-      // _findLimits will filter the data according to the minY, maxY.
-      lineChartBarDataList =
-          _toLineChartBarDataList(plotReply.data, filteredPoints);
-    } else {
-      // Defaults
-      lineChartBarDataList = [];
-    }
-
-    return LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) =>
-            LineChart(LineChartData(
-              minX: minX,
-              maxX: maxX,
-              minY: minY,
-              maxY: maxY,
-              lineBarsData: lineChartBarDataList,
-              lineTouchData: LineTouchData(
-                touchTooltipData: LineTouchTooltipData(
-                  maxContentWidth: 100,
-                  fitInsideHorizontally: true,
-                  fitInsideVertically: true,
-                  getTooltipColor: (touchedSpot) => Colors.black,
-                  getTooltipItems: (touchedSpots) {
-                    return touchedSpots.map((LineBarSpot touchedSpot) {
-                      final textStyle = TextStyle(
-                        color: touchedSpot.bar.gradient?.colors[0] ??
-                            touchedSpot.bar.color,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      );
-                      return LineTooltipItem(
-                        '${touchedSpot.x}, ${touchedSpot.y.toStringAsFixed(2)}',
-                        textStyle,
-                      );
-                    }).toList();
-                  },
-                ),
-                handleBuiltInTouches: true,
-                getTouchLineStart: (data, index) => 0,
+  Widget buildPlot({required PlotReply? plotReply}) => LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) =>
+          LineChart(LineChartData(
+            minX: minX,
+            maxX: maxX,
+            minY: minY,
+            maxY: maxY,
+            lineBarsData: plotReply == null
+                ? []
+                : _toLineChartBarDataList(plotReply.data, filteredPoints),
+            lineTouchData: LineTouchData(
+              touchTooltipData: LineTouchTooltipData(
+                maxContentWidth: 100,
+                fitInsideHorizontally: true,
+                fitInsideVertically: true,
+                getTooltipColor: (touchedSpot) => Colors.black,
+                getTooltipItems: (touchedSpots) {
+                  return touchedSpots.map((LineBarSpot touchedSpot) {
+                    final textStyle = TextStyle(
+                      color: touchedSpot.bar.gradient?.colors[0] ??
+                          touchedSpot.bar.color,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    );
+                    return LineTooltipItem(
+                      '${touchedSpot.x}, ${touchedSpot.y.toStringAsFixed(2)}',
+                      textStyle,
+                    );
+                  }).toList();
+                },
               ),
-              titlesData: _buildTitlesData(
-                  plotReply: plotReply, wide: constraints.maxWidth > 600),
-            )));
-  }
+              handleBuiltInTouches: true,
+              getTouchLineStart: (data, index) => 0,
+            ),
+            titlesData: _buildTitlesData(
+                plotReply: plotReply, wide: constraints.maxWidth > 600),
+          )));
 
   FlTitlesData _buildTitlesData(
       {required PlotReply? plotReply, required bool wide}) {
