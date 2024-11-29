@@ -4,7 +4,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   FlchartsPlotWidgetAdapter({required super.widget});
 
   @override
-  Widget buildPlot({required PlotReply? plotReply}) => LayoutBuilder(
+  Widget buildPlot() => LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) =>
           LineChart(LineChartData(
             minX: minX,
@@ -13,7 +13,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
             maxY: maxY,
             lineBarsData: plotReply == null
                 ? []
-                : _toLineChartBarDataList(plotReply.data, filteredPoints),
+                : _toLineChartBarDataList(plotReply!.data, filteredPoints),
             lineTouchData: LineTouchData(
               touchTooltipData: LineTouchTooltipData(
                 maxContentWidth: 100,

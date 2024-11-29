@@ -13,6 +13,8 @@ part 'fermi_plot_widget_adapter.dart';
 abstract class PlotWidgetAdapter {
   final PlotWidget widget;
 
+  PlotReply? plotReply;
+
   double minY = 0, maxY = 1.0;
 
   double minX = 0, maxX = 1.0;
@@ -21,7 +23,7 @@ abstract class PlotWidgetAdapter {
 
   PlotWidgetAdapter({required this.widget});
 
-  Widget buildPlot({required PlotReply? plotReply});
+  Widget buildPlot();
 
   Color _nextColorForIndex(String channelName) {
     var plotChannels = widget.plotChannels;

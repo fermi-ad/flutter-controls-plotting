@@ -4,7 +4,7 @@ class GraphicPlotWidgetAdapter extends PlotWidgetAdapter {
   GraphicPlotWidgetAdapter({required super.widget});
 
   @override
-  Widget buildPlot({required PlotReply? plotReply}) {
+  Widget buildPlot() {
     return Chart(
       data: const [
         {'index': 0, 'v': 0},

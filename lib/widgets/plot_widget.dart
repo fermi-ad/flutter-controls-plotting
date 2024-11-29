@@ -53,16 +53,16 @@ class PlotWidget extends StatefulWidget {
 
 class PlotState extends State<PlotWidget> {
   List<PlotChannelData> get channelData =>
-      _plotReply != null ? _plotReply!.data : [];
+      _adapter.plotReply != null ? _adapter.plotReply!.data : [];
 
-  List<String> get channelNames => _plotReply != null
-      ? _plotReply!.data
+  List<String> get channelNames => _adapter.plotReply != null
+      ? _adapter.plotReply!.data
           .map((PlotChannelData channelData) => channelData.name)
           .toList()
       : [];
 
-  List<String> get channelUnits => _plotReply != null
-      ? _plotReply!.data
+  List<String> get channelUnits => _adapter.plotReply != null
+      ? _adapter.plotReply!.data
           .map((PlotChannelData channelData) => channelData.units)
           .toList()
       : [];
@@ -112,10 +112,10 @@ class PlotState extends State<PlotWidget> {
       BuildContext context, AsyncSnapshot<PlotReply> snapshot) {
     if (snapshot.connectionState == ConnectionState.none ||
         snapshot.connectionState == ConnectionState.waiting) {
-      _plotReply = null;
+      _adapter.plotReply = null;
       return _buildEmptyPlotWithProgressIndicator();
     } else if (snapshot.hasError) {
-      _plotReply = null;
+      _adapter.plotReply = null;
       return _buildWithErrorMessage(snapshot.error!.toString(),
           child: _buildEmptyPlot());
     } else if (snapshot.hasData) {
@@ -127,14 +127,14 @@ class PlotState extends State<PlotWidget> {
               child: _buildPlotFromSnapshot())
           : _buildPlotFromSnapshot();
     } else {
-      _plotReply = null;
+      _adapter.plotReply = null;
       return _buildEmptyPlot();
     }
   }
 
   Widget _buildPlotFromSnapshot() => Padding(
       padding: const EdgeInsets.fromLTRB(10, 10, 30, 10),
-      child: _adapter.buildPlot(plotReply: _plotReply));
+      child: _adapter.buildPlot());
 
   Widget _buildEmptyPlotWithProgressIndicator() => Column(children: [
         const Padding(
@@ -174,14 +174,14 @@ class PlotState extends State<PlotWidget> {
     ]);
   }
 
-  Widget _buildEmptyPlot() => _adapter.buildPlot(plotReply: _plotReply);
+  Widget _buildEmptyPlot() => _adapter.buildPlot();
 
   void _handleDismissErrors() {
     setState(() => _errorsDismissed = true);
   }
 
   void _resetStream() {
-    _plotReply = null;
+    _adapter.plotReply = null;
 
     if (widget.plotChannels.isNotEmpty) {
       _errorsDismissed = false;
@@ -191,7 +191,7 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _receiveData(PlotReply plotReply) {
-    _plotReply = plotReply;
+    _adapter.plotReply = plotReply;
 
     _findLimits();
 
@@ -199,7 +199,7 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _findLimits() {
-    final plotChannels = _plotReply!.data;
+    final plotChannels = _adapter.plotReply!.data;
     for (var plotChannel in plotChannels) {
       if (_channelHasError(plotChannel)) {
         continue;
@@ -225,7 +225,7 @@ class PlotState extends State<PlotWidget> {
 
   void _filterPoints() {
     _adapter.filteredPoints.clear();
-    final plotChannels = _plotReply!.data;
+    final plotChannels = _adapter.plotReply!.data;
     for (var plotChannel in plotChannels) {
       if (_channelHasError(plotChannel)) {
         continue;
@@ -241,8 +241,8 @@ class PlotState extends State<PlotWidget> {
   }
 
   String? _plotReplyHasErrors() {
-    if (_plotReply != null) {
-      for (PlotChannelData chData in _plotReply!.data as List) {
+    if (_adapter.plotReply != null) {
+      for (PlotChannelData chData in _adapter.plotReply!.data as List) {
         if (_channelHasError(chData)) {
           return chData.name;
         }
@@ -259,8 +259,6 @@ class PlotState extends State<PlotWidget> {
   late PlotWidgetAdapter _adapter;
 
   Stream<PlotReply>? _plotStream;
-
-  PlotReply? _plotReply;
 
   bool _errorsDismissed = false;
 }
