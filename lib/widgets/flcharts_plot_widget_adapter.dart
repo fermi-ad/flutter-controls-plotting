@@ -124,6 +124,15 @@ abstract class PlotWidgetAdapter {
   }
 }
 
+class FermiPlotWidgetAdapter extends PlotWidgetAdapter {
+  FermiPlotWidgetAdapter({required super.widget});
+
+  @override
+  Widget buildPlot(
+          {required PlotReply? plotReply, required List<String> yLimits}) =>
+      Container();
+}
+
 class GraphicPlotWidgetAdapter extends PlotWidgetAdapter {
   GraphicPlotWidgetAdapter({required super.widget});
 
