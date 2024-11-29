@@ -74,25 +74,14 @@ class PlotState extends State<PlotWidget> {
 
   @override
   void didChangeDependencies() {
-    final channels = widget.plotChannels;
-    if (channels.isNotEmpty) {
-      _plotStream = widget.daqService
-          .retrievePlot(context, forChannels: widget.plotChannels.keys.toSet());
-    }
-
+    _resetStream();
     super.didChangeDependencies();
   }
 
   @override
   void didUpdateWidget(PlotWidget oldWidget) {
+    _resetStream();
     super.didUpdateWidget(oldWidget);
-    final channels = widget.plotChannels;
-    if (channels.isNotEmpty) {
-      // Reset for new plot.
-      _errorsDismissed = false;
-      _plotStream = widget.daqService
-          .retrievePlot(context, forChannels: widget.plotChannels.keys.toSet());
-    }
   }
 
   @override
@@ -486,9 +475,15 @@ class PlotState extends State<PlotWidget> {
       .map<FlSpot>((PlotPoint point) => FlSpot(point.x, point.y))
       .toList();
 
-  bool _errorsDismissed = false;
+  void _resetStream() {
+    _plotReply = null;
 
-  Stream<PlotReply>? _plotStream;
+    if (widget.plotChannels.isNotEmpty) {
+      _errorsDismissed = false;
+      _plotStream = widget.daqService
+          .retrievePlot(context, forChannels: widget.plotChannels.keys.toSet());
+    }
+  }
 
   _checkSnapshotDataForErrors(AsyncSnapshot<PlotReply> snapshot) {
     if (snapshot.data != null) {
@@ -506,9 +501,13 @@ class PlotState extends State<PlotWidget> {
     return chData.status < 0;
   }
 
+  Stream<PlotReply>? _plotStream;
+
   PlotReply? _plotReply;
 
   double _minY = 0;
 
   double _maxY = 0;
+
+  bool _errorsDismissed = false;
 }
