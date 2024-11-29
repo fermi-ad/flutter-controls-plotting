@@ -7,11 +7,11 @@ class GraphicPlotWidgetAdapter extends PlotWidgetAdapter {
   Widget buildPlot(
       {required PlotReply? plotReply, required List<String> yLimits}) {
     double minX, minY, maxX, maxY;
-    List<List<FlSpot>> filteredChannelSpots;
+    List<List<PlotPoint>> filteredChannelPoints;
 
     if (plotReply != null) {
       // _findLimits will filter the data according to the minY, maxY.
-      (minX, minY, maxX, maxY, filteredChannelSpots) =
+      (minX, minY, maxX, maxY, filteredChannelPoints) =
           _findLimits(plotChannels: plotReply.data, yLimits: yLimits);
     } else {
       // Defaults

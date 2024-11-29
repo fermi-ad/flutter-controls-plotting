@@ -22,25 +22,25 @@ abstract class PlotWidgetAdapter {
   Widget buildPlot(
       {required PlotReply? plotReply, required List<String> yLimits});
 
-  (double, double, double, double, List<List<FlSpot>>) _findLimits(
+  (double, double, double, double, List<List<PlotPoint>>) _findLimits(
       {required List<PlotChannelData> plotChannels,
       required List<String> yLimits}) {
     double minY = 0.0;
     double maxY = 1.0;
     double minX = 0.0;
     double maxX = 1.0;
-    List<List<FlSpot>> filteredChannelSpots = [];
+    List<List<PlotPoint>> filterPlotPoints = [];
     // Get the minX, minY, maxX, maxY accorss all channels.
     for (var plotChannel in plotChannels) {
       if (_channelHasError(plotChannel)) {
         continue;
       }
-      List<FlSpot> spots = _toSpots(plotChannel.points);
-      for (final spot in spots) {
-        minY = min(spot.y, minY);
-        maxY = max(spot.y, maxY);
-        minX = min(spot.x, minX);
-        maxX = max(spot.x, maxX);
+      final points = plotChannel.points;
+      for (final point in points) {
+        minY = min(point.y, minY);
+        maxY = max(point.y, maxY);
+        minX = min(point.x, minX);
+        maxX = max(point.x, maxX);
       }
     }
     // Filter the data according to the configured minY and maxY.
@@ -51,14 +51,16 @@ abstract class PlotWidgetAdapter {
         if (_channelHasError(plotChannel)) {
           continue;
         }
-        List<FlSpot> spots = _toSpots(plotChannel.points);
-        List<FlSpot> filteredSpots = yLimits.isNotEmpty
-            ? spots.where((spot) => spot.y >= minY && spot.y <= maxY).toList()
-            : spots;
-        filteredChannelSpots.add(filteredSpots);
+        final points = plotChannel.points;
+        final filteredPoints = yLimits.isNotEmpty
+            ? points
+                .where((PlotPoint point) => point.y >= minY && point.y <= maxY)
+                .toList()
+            : points;
+        filterPlotPoints.add(filteredPoints);
       }
     }
-    return (minX, minY, maxX, maxY, filteredChannelSpots);
+    return (minX, minY, maxX, maxY, filterPlotPoints);
   }
 
   Color _nextColorForIndex(String channelName) {
@@ -91,38 +93,6 @@ abstract class PlotWidgetAdapter {
     }
 
     return setting.lineColor!;
-  }
-
-  List<FlSpot> _toSpots(List<PlotPoint> points) => points
-      .map<FlSpot>((PlotPoint point) => FlSpot(point.x, point.y))
-      .toList();
-
-  List<LineChartBarData> _toLineChartBarDataList(
-      List<PlotChannelData> plotChannels,
-      List<List<FlSpot>> filteredChannelSpots) {
-    List<LineChartBarData> lineChartList = [];
-
-    plotChannels.asMap().forEach((index, plotChannel) {
-      if (_channelHasError(plotChannel)) {
-        return;
-      }
-
-      var spots = filteredChannelSpots[index];
-
-      lineChartList.add(LineChartBarData(
-        color: _nextColorForIndex(plotChannel.name),
-        spots: spots,
-        isCurved: true,
-        isStrokeCapRound: true,
-        barWidth: 3,
-        belowBarData: BarAreaData(
-          show: false,
-        ),
-        dotData: const FlDotData(show: false),
-      ));
-    });
-
-    return lineChartList;
   }
 
   bool _channelHasError(PlotChannelData chData) {
