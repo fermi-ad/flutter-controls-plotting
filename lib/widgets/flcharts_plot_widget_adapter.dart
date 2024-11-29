@@ -7,31 +7,30 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   Widget buildPlot(
       {required PlotReply? plotReply, required List<String> yLimits}) {
     List<LineChartBarData> lineChartBarDataList;
-    double minX, minY, maxX, maxY;
     List<List<PlotPoint>> filteredChannelPoints;
 
     if (plotReply != null) {
       // _findLimits will filter the data according to the minY, maxY.
-      (minX, minY, maxX, maxY, filteredChannelPoints) =
+      filteredChannelPoints =
           _findLimits(plotChannels: plotReply.data, yLimits: yLimits);
       lineChartBarDataList =
           _toLineChartBarDataList(plotReply.data, filteredChannelPoints);
     } else {
       // Defaults
       lineChartBarDataList = [];
-      (minX, minY, maxX, maxY) = (0.0, 0.0, 1.0, 1.0);
+      minX = 0.0;
+      minY = 0.0;
+      maxX = 1.0;
+      maxY = 1.0;
     }
-
-    super.minY = minY;
-    super.maxY = maxY;
 
     return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) =>
             LineChart(LineChartData(
               minX: minX,
               maxX: maxX,
-              minY: super.minY,
-              maxY: super.maxY,
+              minY: minY,
+              maxY: maxY,
               lineBarsData: lineChartBarDataList,
               lineTouchData: LineTouchData(
                 touchTooltipData: LineTouchTooltipData(

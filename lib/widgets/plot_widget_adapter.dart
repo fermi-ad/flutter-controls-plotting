@@ -15,20 +15,18 @@ part 'fermi_plot_widget_adapter.dart';
 abstract class PlotWidgetAdapter {
   final PlotWidget widget;
 
-  double minY = 0, maxY = 0;
+  double minY = 0, maxY = 1.0;
+
+  double minX = 0, maxX = 1.0;
 
   PlotWidgetAdapter({required this.widget});
 
   Widget buildPlot(
       {required PlotReply? plotReply, required List<String> yLimits});
 
-  (double, double, double, double, List<List<PlotPoint>>) _findLimits(
+  List<List<PlotPoint>> _findLimits(
       {required List<PlotChannelData> plotChannels,
       required List<String> yLimits}) {
-    double minY = 0.0;
-    double maxY = 1.0;
-    double minX = 0.0;
-    double maxX = 1.0;
     List<List<PlotPoint>> filterPlotPoints = [];
     // Get the minX, minY, maxX, maxY accorss all channels.
     for (var plotChannel in plotChannels) {
@@ -60,7 +58,7 @@ abstract class PlotWidgetAdapter {
         filterPlotPoints.add(filteredPoints);
       }
     }
-    return (minX, minY, maxX, maxY, filterPlotPoints);
+    return filterPlotPoints;
   }
 
   Color _nextColorForIndex(String channelName) {
