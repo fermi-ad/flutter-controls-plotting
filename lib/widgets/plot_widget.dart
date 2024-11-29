@@ -69,8 +69,10 @@ class PlotState extends State<PlotWidget> {
 
   double get maxY => _adapter.maxY;
 
-  PlotState() {
+  @override
+  initState() {
     _adapter = FlchartsPlotWidgetAdapter(widget: widget);
+    super.initState();
   }
 
   @override
