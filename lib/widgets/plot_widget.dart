@@ -227,8 +227,7 @@ class PlotState extends State<PlotWidget> {
                 handleBuiltInTouches: true,
                 getTouchLineStart: (data, index) => 0,
               ),
-              titlesData: _buildTitlesData(_plotReply,
-                  wide: constraints.maxWidth > 600),
+              titlesData: _buildTitlesData(wide: constraints.maxWidth > 600),
             )));
   }
 
@@ -299,16 +298,16 @@ class PlotState extends State<PlotWidget> {
     );
   }
 
-  FlTitlesData _buildTitlesData(PlotReply? plotReply, {required bool wide}) {
+  FlTitlesData _buildTitlesData({required bool wide}) {
     // List<String> channelNames, List<String> channelUnits, String xAxisLabel) {
-    if (plotReply == null) {
+    if (_plotReply == null) {
       return const FlTitlesData(
         topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
         rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
       );
     }
 
-    final xAxisLabel = plotReply.xAxisUnits;
+    final xAxisLabel = _plotReply!.xAxisUnits;
 
     const emptyTitles = AxisTitles(sideTitles: SideTitles(showTitles: false));
 
@@ -317,7 +316,7 @@ class PlotState extends State<PlotWidget> {
 
     List<Row> rowDataContents = [];
 
-    for (var channelData in plotReply.data) {
+    for (var channelData in _plotReply!.data) {
       if (_channelHasError(channelData)) {
         continue;
       }
@@ -334,7 +333,7 @@ class PlotState extends State<PlotWidget> {
       ]));
     }
 
-    double axisNameSize = plotReply.data.length * 20;
+    double axisNameSize = _plotReply!.data.length * 20;
     var axisNameWidget = Column(children: rowDataContents);
 
     if (wide) {
