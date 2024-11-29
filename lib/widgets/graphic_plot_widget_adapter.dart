@@ -4,22 +4,7 @@ class GraphicPlotWidgetAdapter extends PlotWidgetAdapter {
   GraphicPlotWidgetAdapter({required super.widget});
 
   @override
-  Widget buildPlot(
-      {required PlotReply? plotReply, required List<String> yLimits}) {
-    List<List<PlotPoint>> filteredChannelPoints;
-
-    if (plotReply != null) {
-      // _findLimits will filter the data according to the minY, maxY.
-      filteredChannelPoints =
-          _findLimits(plotChannels: plotReply.data, yLimits: yLimits);
-    } else {
-      // Defaults
-      minX = 0.0;
-      minY = 0.0;
-      maxX = 1.0;
-      maxY = 1.0;
-    }
-
+  Widget buildPlot({required PlotReply? plotReply}) {
     return Chart(
       data: const [
         {'index': 0, 'v': 0},

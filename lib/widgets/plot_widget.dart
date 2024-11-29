@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
@@ -132,8 +134,7 @@ class PlotState extends State<PlotWidget> {
 
   Widget _buildPlotFromSnapshot() => Padding(
       padding: const EdgeInsets.fromLTRB(10, 10, 30, 10),
-      child:
-          _adapter.buildPlot(plotReply: _plotReply, yLimits: widget.yLimits));
+      child: _adapter.buildPlot(plotReply: _plotReply));
 
   Widget _buildEmptyPlotWithProgressIndicator() => Column(children: [
         const Padding(
@@ -173,8 +174,7 @@ class PlotState extends State<PlotWidget> {
     ]);
   }
 
-  Widget _buildEmptyPlot() =>
-      _adapter.buildPlot(plotReply: _plotReply, yLimits: []);
+  Widget _buildEmptyPlot() => _adapter.buildPlot(plotReply: _plotReply);
 
   void _handleDismissErrors() {
     setState(() => _errorsDismissed = true);
@@ -192,9 +192,55 @@ class PlotState extends State<PlotWidget> {
 
   void _receiveData(PlotReply plotReply) {
     _plotReply = plotReply;
+
+    _findLimits();
+
+    _filterPoints();
   }
 
-  _plotReplyHasErrors() {
+  void _findLimits() {
+    final plotChannels = _plotReply!.data;
+    for (var plotChannel in plotChannels) {
+      if (_channelHasError(plotChannel)) {
+        continue;
+      }
+      final points = plotChannel.points;
+      for (final point in points) {
+        _adapter.minY = min(point.y, _adapter.minY);
+        _adapter.maxY = max(point.y, _adapter.maxY);
+        _adapter.minX = min(point.x, _adapter.minX);
+        _adapter.maxX = max(point.x, _adapter.maxX);
+      }
+    }
+
+    if (widget.yLimits.isNotEmpty) {
+      if (widget.yLimits[0] != "") {
+        _adapter.minY = double.parse(widget.yLimits[0]);
+      }
+      if (widget.yLimits[1] != "") {
+        _adapter.maxY = double.parse(widget.yLimits[1]);
+      }
+    }
+  }
+
+  void _filterPoints() {
+    _adapter.filteredPoints.clear();
+    final plotChannels = _plotReply!.data;
+    for (var plotChannel in plotChannels) {
+      if (_channelHasError(plotChannel)) {
+        continue;
+      }
+      final points = plotChannel.points;
+      final filteredPoints = widget.yLimits.isNotEmpty
+          ? points
+              .where((PlotPoint point) => point.y >= minY && point.y <= maxY)
+              .toList()
+          : points;
+      _adapter.filteredPoints.add(filteredPoints);
+    }
+  }
+
+  String? _plotReplyHasErrors() {
     if (_plotReply != null) {
       for (PlotChannelData chData in _plotReply!.data as List) {
         if (_channelHasError(chData)) {
