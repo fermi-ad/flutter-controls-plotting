@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
-import 'package:flutter_controls_plotting/widgets/flcharts_plot_widget_adapter.dart';
+import 'package:flutter_controls_plotting/widgets/plot_widget_adapter.dart';
 
 enum PlotImplementation { flCharts, graphic, fermi }
 
