@@ -10,7 +10,7 @@ class GraphicPlotWidgetAdapter extends PlotWidgetAdapter {
       variables: _variables,
       marks: [
         LineMark(
-          shape: ShapeEncode(value: BasicLineShape(dash: [5, 2])),
+          shape: ShapeEncode(value: BasicLineShape()),
           selected: {
             'touchMove': {1}
           },
