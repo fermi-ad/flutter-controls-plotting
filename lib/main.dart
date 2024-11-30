@@ -33,20 +33,24 @@ class _BaseWidget extends StatelessWidget {
                     _buildMultipleWaveformPlot()
                   ])));
 
-  Widget _buildEmptyPlot() => const PlotCardWidget(
+  Widget _buildEmptyPlot() => PlotCardWidget(
       title: "Empty Plot",
       plot: PlotWidget(
-        implementation: PlotImplementation.graphic,
+        implementation: _implementation,
       ));
 
   Widget _buildWaveformPlot() => PlotCardWidget(
       title: "Single Waveform Plot",
-      plot: PlotWidget(plotChannels: {"PLOT TEST PARABOLA": ChannelSetting()}));
+      plot: PlotWidget(
+          implementation: _implementation,
+          plotChannels: {"PLOT TEST PARABOLA": ChannelSetting()}));
 
   Widget _buildMultipleWaveformPlot() => PlotCardWidget(
       title: "Multiple Waveforms Plot",
-      plot: PlotWidget(plotChannels: {
+      plot: PlotWidget(implementation: _implementation, plotChannels: {
         "PLOT TEST RAND RAMP": ChannelSetting(),
         "PLOT TEST NORMAL": ChannelSetting()
       }));
+
+  final _implementation = PlotImplementation.graphic;
 }
