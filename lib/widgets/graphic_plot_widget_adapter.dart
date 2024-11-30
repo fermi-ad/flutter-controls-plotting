@@ -8,14 +8,7 @@ class GraphicPlotWidgetAdapter extends PlotWidgetAdapter {
     return Chart(
       data: _data,
       variables: _variables,
-      marks: [
-        LineMark(
-          shape: ShapeEncode(value: BasicLineShape()),
-          selected: {
-            'touchMove': {1}
-          },
-        )
-      ],
+      marks: _lineStyles,
       coord: RectCoord(color: const Color(0xffdddddd)),
       axes: [
         Defaults.horizontalAxis,
@@ -81,4 +74,19 @@ class GraphicPlotWidgetAdapter extends PlotWidgetAdapter {
 
     return variables;
   }
+
+  List<LineMark> get _lineStyles => widget.plotChannels.isEmpty
+      ? [_lineMarkWithColor(Colors.blue)]
+      : [
+          _lineMarkWithColor(
+              _nextColorForIndex(widget.plotChannels.keys.first)),
+        ];
+
+  LineMark _lineMarkWithColor(Color c) => LineMark(
+        color: ColorEncode(value: c),
+        shape: ShapeEncode(value: BasicLineShape()),
+        selected: {
+          'touchMove': {1}
+        },
+      );
 }
