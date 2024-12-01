@@ -9,16 +9,28 @@ class GraphicPlotWidgetAdapter extends PlotWidgetAdapter {
       data: _data,
       variables: {
         'Index': Variable(
-          accessor: (Map datum) => datum['Index'] as num,
-        ),
+            accessor: (Map datum) => datum['Index'] as double,
+            scale: LinearScale()),
         'Value': Variable(
-          accessor: (Map datum) => datum['Value'] as num,
-        ),
+            accessor: (Map datum) => datum['Value'] as double,
+            scale: LinearScale()),
         'Channel': Variable(
           accessor: (Map datum) => datum['Channel'] as String,
         ),
       },
-      marks: _lineMarks,
+      marks: [
+        LineMark(
+          position: Varset('Index') * Varset('Value') / Varset('Channel'),
+          color:
+              (widget.plotChannels.isEmpty || widget.plotChannels.length == 1)
+                  ? ColorEncode(value: _channelColorList.first)
+                  : ColorEncode(variable: "Channel", values: _channelColorList),
+          shape: ShapeEncode(value: BasicLineShape()),
+          selected: {
+            'touchMove': {1}
+          },
+        ),
+      ],
       coord: RectCoord(color: const Color(0xffdddddd)),
       axes: [
         Defaults.horizontalAxis,
@@ -50,7 +62,7 @@ class GraphicPlotWidgetAdapter extends PlotWidgetAdapter {
       for (final channel in plotReply!.data) {
         for (final point in channel.points) {
           data.add(
-              {"Channel": channel.name, "Index": point.x, "Value": point.y});
+              {"Index": point.x, "Value": point.y, "Channel": channel.name});
         }
       }
     } else {
@@ -63,13 +75,9 @@ class GraphicPlotWidgetAdapter extends PlotWidgetAdapter {
     return data;
   }
 
-  List<LineMark> get _lineMarks => [
-        LineMark(
-          color: ColorEncode(value: Colors.blue),
-          shape: ShapeEncode(value: BasicLineShape()),
-          selected: {
-            'touchMove': {1}
-          },
-        ),
-      ];
+  List<Color> get _channelColorList => widget.plotChannels.isEmpty
+      ? [Colors.red]
+      : widget.plotChannels.keys
+          .map((String channelName) => _lineColorForChannel(channelName))
+          .toList();
 }
