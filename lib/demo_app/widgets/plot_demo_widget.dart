@@ -17,7 +17,7 @@ class PlotDemoState extends State<PlotDemoWidget> {
         DropdownMenu<String>(
           initialSelection: "Fl_Charts",
           label: const Text("Plot Implementation"),
-          onSelected: (String? selection) {},
+          onSelected: _handleImplementationSelected,
           dropdownMenuEntries: const [
             DropdownMenuEntry<String>(value: "Fl_Charts", label: "Fl_Charts"),
             DropdownMenuEntry<String>(value: "Graphic", label: "Graphic"),
@@ -54,5 +54,17 @@ class PlotDemoState extends State<PlotDemoWidget> {
         "PLOT TEST NORMAL": ChannelSetting()
       }));
 
-  final _implementation = PlotImplementation.flCharts;
+  void _handleImplementationSelected(String? implementation) {
+    if (implementation == null) {
+      return;
+    } else if (implementation == "Fl_Charts") {
+      setState(() => _implementation = PlotImplementation.flCharts);
+    } else if (implementation == "Graphic") {
+      setState(() => _implementation = PlotImplementation.graphic);
+    } else if (implementation == "Fermi") {
+      assert(false);
+    }
+  }
+
+  PlotImplementation _implementation = PlotImplementation.flCharts;
 }

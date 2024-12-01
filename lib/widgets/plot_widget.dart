@@ -72,31 +72,15 @@ class PlotState extends State<PlotWidget> {
   double get maxY => _adapter.maxY;
 
   @override
-  initState() {
-    switch (widget.implementation) {
-      case PlotImplementation.flCharts:
-        _adapter = FlchartsPlotWidgetAdapter(widget: widget);
-        break;
-
-      case PlotImplementation.graphic:
-        _adapter = GraphicPlotWidgetAdapter(widget: widget);
-        break;
-
-      case PlotImplementation.fermi:
-        _adapter = FermiPlotWidgetAdapter(widget: widget);
-        break;
-    }
-    super.initState();
-  }
-
-  @override
   void didChangeDependencies() {
+    _resetAdapter();
     _resetStream();
     super.didChangeDependencies();
   }
 
   @override
   void didUpdateWidget(PlotWidget oldWidget) {
+    _resetAdapter();
     _resetStream();
     super.didUpdateWidget(oldWidget);
   }
@@ -178,6 +162,22 @@ class PlotState extends State<PlotWidget> {
 
   void _handleDismissErrors() {
     setState(() => _errorsDismissed = true);
+  }
+
+  void _resetAdapter() {
+    switch (widget.implementation) {
+      case PlotImplementation.flCharts:
+        _adapter = FlchartsPlotWidgetAdapter(widget: widget);
+        break;
+
+      case PlotImplementation.graphic:
+        _adapter = GraphicPlotWidgetAdapter(widget: widget);
+        break;
+
+      case PlotImplementation.fermi:
+        _adapter = FermiPlotWidgetAdapter(widget: widget);
+        break;
+    }
   }
 
   void _resetStream() {

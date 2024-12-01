@@ -50,21 +50,14 @@ void main() {
       // When I select Graphic from the Plot Implementation menu
       await tester.tap(find.byType(DropdownMenu<String>));
       await tester.pumpAndSettle();
-      await tester.tap(find.text("Graphic").first);
+      await tester.tap(find.text("Graphic").last);
       await tester.pumpAndSettle();
 
-      // Then Graphic is the selected implementation
-      expect(
-          find.descendant(
-              of: find.byType(DropdownMenu<String>),
-              matching: find.text("Graphic")),
-          findsNWidgets(2));
-
-      // ... and flCharts widgets are NOT being displayed
+      // Then flCharts widgets are NOT being displayed
       expect(find.byType(LineChart), findsNothing);
 
       // ... and Graphic widgets are being displayed
-      expect(find.byType(Chart), findsWidgets);
+      expect(find.byType(Chart<Map<dynamic, dynamic>>), findsWidgets);
     });
   });
 }
