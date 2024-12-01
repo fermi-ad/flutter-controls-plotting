@@ -8,14 +8,27 @@ class PlotDemoWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
       padding: const EdgeInsets.all(10),
-      child: LayoutBuilder(
-          builder: (context, constraints) => GridView.count(
-                  crossAxisCount: constraints.maxWidth > 1000 ? 2 : 1,
-                  children: [
-                    _buildEmptyPlot(),
-                    _buildWaveformPlot(),
-                    _buildMultipleWaveformPlot()
-                  ])));
+      child: Column(children: [
+        DropdownMenu<String>(
+          initialSelection: "Fl_Charts",
+          label: const Text("Plot Implementation"),
+          onSelected: (String? selection) {},
+          dropdownMenuEntries: const [
+            DropdownMenuEntry<String>(value: "Fl_Charts", label: "Fl_Charts"),
+            DropdownMenuEntry<String>(value: "Graphic", label: "Graphic"),
+            DropdownMenuEntry<String>(value: "Fermi", label: "Custom")
+          ],
+        ),
+        Expanded(
+            child: LayoutBuilder(
+                builder: (context, constraints) => GridView.count(
+                        crossAxisCount: constraints.maxWidth > 1000 ? 2 : 1,
+                        children: [
+                          _buildEmptyPlot(),
+                          _buildWaveformPlot(),
+                          _buildMultipleWaveformPlot()
+                        ])))
+      ]));
 
   Widget _buildEmptyPlot() => PlotCardWidget(
       title: "Empty Plot",
@@ -36,5 +49,5 @@ class PlotDemoWidget extends StatelessWidget {
         "PLOT TEST NORMAL": ChannelSetting()
       }));
 
-  final _implementation = PlotImplementation.graphic;
+  final _implementation = PlotImplementation.flCharts;
 }
