@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_controls_plotting/widgets/plot_card_widget.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 
-class PlotDemoWidget extends StatelessWidget {
+class PlotDemoWidget extends StatefulWidget {
   const PlotDemoWidget({super.key});
 
+  @override
+  State<StatefulWidget> createState() => PlotDemoState();
+}
+
+class PlotDemoState extends State<PlotDemoWidget> {
   @override
   Widget build(BuildContext context) => Padding(
       padding: const EdgeInsets.all(10),
