@@ -25,7 +25,7 @@ abstract class PlotWidgetAdapter {
 
   Widget buildPlot();
 
-  Color _nextColorForIndex(String channelName) {
+  Color _lineColorForChannel(String channelName) {
     var plotChannels = widget.plotChannels;
     ChannelSetting setting = plotChannels[channelName]!;
 

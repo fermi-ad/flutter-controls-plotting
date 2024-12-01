@@ -69,11 +69,11 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
           .add(Row(mainAxisAlignment: MainAxisAlignment.center, children: [
         Text(
           channelData.name,
-          style: TextStyle(color: _nextColorForIndex(channelData.name)),
+          style: TextStyle(color: _lineColorForChannel(channelData.name)),
         ),
         Text(
           " (${channelData.units})",
-          style: TextStyle(color: _nextColorForIndex(channelData.name)),
+          style: TextStyle(color: _lineColorForChannel(channelData.name)),
         )
       ]));
     }
@@ -141,7 +141,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       var spots = _toSpots(filteredChannelPoints[index]);
 
       lineChartList.add(LineChartBarData(
-        color: _nextColorForIndex(plotChannel.name),
+        color: _lineColorForChannel(plotChannel.name),
         spots: spots,
         isCurved: true,
         isStrokeCapRound: true,
