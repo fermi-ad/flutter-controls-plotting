@@ -31,7 +31,6 @@ class GraphicPlotWidgetAdapter extends PlotWidgetAdapter {
           },
         ),
       ],
-      coord: RectCoord(color: const Color(0xffdddddd)),
       axes: [
         Defaults.horizontalAxis,
         Defaults.verticalAxis,
