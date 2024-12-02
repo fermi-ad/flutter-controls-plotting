@@ -470,6 +470,32 @@ void main() {
       assertPlotLoadingIndicator(isVisible: true);
       await waitForPlotDataToLoad(tester);
     });
+
+    testWidgets(
+        "Plot PLOT TEST PARABOLA 64K, get a parabola starting at X=-32767 and ending at X=32767",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST PARABOLA"
+      final channelList = {"PLOT TEST PARABOLA 64K": ChannelSetting()};
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
+      await waitForPlotDataToLoad(tester);
+
+      // Then the plot contains a parabola with 500 points starting at X=-250
+      assertPlotContainsParabola(tester,
+          numberOfPoints: 65535, startingAtX: -32767);
+
+      // ... and the Y-axis is labeled
+      assertPlotYAxisTitles(tester,
+          titles: ["PLOT TEST PARABOLA 64K"], units: ["V"]);
+
+      // ... and the limits for the X-axis are -250 to 250
+      assertPlotXAxisLimits(tester, min: -32767.0, max: 32767.0);
+
+      // ... and the X-axis is labeled...
+      assertPlotXAxisTitle(tester, title: "Index");
+    });
   });
 
   group("PlotWidget (implementation = Fermi) widget tests", () {});
