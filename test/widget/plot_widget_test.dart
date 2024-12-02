@@ -9,6 +9,54 @@ import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  group("Error handling", () {
+    testWidgets("Dismiss error message, error banner goes away",
+        (WidgetTester tester) async {
+      // Given I tried to plot a channel that had an error
+      final channelList = {"PLOT TEST DOESN'T EXIST": ChannelSetting()};
+      await tester.pumpWidget(_buildPlotWidget(channelList));
+      await waitForPlotDataToLoad(tester);
+
+      // When I dismiss the error banner
+      await tester.tap(find.text("Dismiss"));
+      await tester.pumpAndSettle();
+
+      // Then the error message is no longer visible
+      expect(
+          find.text(
+              "An error occured when attempting to acquire data for PLOT TEST DOESN'T EXIST"),
+          findsNothing);
+    });
+
+    testWidgets(
+        "Dismiss error message, error banner goes away, can appear again",
+        (WidgetTester tester) async {
+      // Given I tried to plot a channel that had an error
+      const errorChannel = "PLOT TEST DOESN'T EXIST";
+      const errorMessage =
+          "An error occured when attempting to acquire data for $errorChannel";
+      Map<String, ChannelSetting> channelList = {
+        errorChannel: ChannelSetting()
+      };
+      await tester.pumpWidget(_buildPlotWidget(channelList));
+      await waitForPlotDataToLoad(tester);
+
+      // When I dismiss the error banner
+      expect(find.text(errorMessage), findsOne);
+      await tester.tap(find.text("Dismiss"));
+      await tester.pumpAndSettle();
+
+      // Then the error message is no longer visible
+      expect(find.text(errorMessage), findsNothing);
+
+      channelList.clear();
+      channelList = {errorChannel: ChannelSetting()};
+      await tester.pumpWidget(_buildPlotWidget(channelList));
+      await waitForPlotDataToLoad(tester);
+
+      expect(find.text(errorMessage), findsOne);
+    });
+  });
   group("PlotWidget (implementation = FlCharts) widget tests", () {
     testWidgets("Plot channel list is empty, plot is empty",
         (WidgetTester tester) async {
@@ -205,53 +253,6 @@ void main() {
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
-    });
-
-    testWidgets("Dismiss error message, error banner goes away",
-        (WidgetTester tester) async {
-      // Given I tried to plot a channel that had an error
-      final channelList = {"PLOT TEST DOESN'T EXIST": ChannelSetting()};
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
-
-      // When I dismiss the error banner
-      await tester.tap(find.text("Dismiss"));
-      await tester.pumpAndSettle();
-
-      // Then the error message is no longer visible
-      expect(
-          find.text(
-              "An error occured when attempting to acquire data for PLOT TEST DOESN'T EXIST"),
-          findsNothing);
-    });
-
-    testWidgets(
-        "Dismiss error message, error banner goes away, can appear again",
-        (WidgetTester tester) async {
-      // Given I tried to plot a channel that had an error
-      const errorChannel = "PLOT TEST DOESN'T EXIST";
-      const errorMessage =
-          "An error occured when attempting to acquire data for $errorChannel";
-      Map<String, ChannelSetting> channelList = {
-        errorChannel: ChannelSetting()
-      };
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
-
-      // When I dismiss the error banner
-      expect(find.text(errorMessage), findsOne);
-      await tester.tap(find.text("Dismiss"));
-      await tester.pumpAndSettle();
-
-      // Then the error message is no longer visible
-      expect(find.text(errorMessage), findsNothing);
-
-      channelList.clear();
-      channelList = {errorChannel: ChannelSetting()};
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
-
-      expect(find.text(errorMessage), findsOne);
     });
 
     testWidgets("Plot API TEST CONST, get a horizontal line at y=5.0",
