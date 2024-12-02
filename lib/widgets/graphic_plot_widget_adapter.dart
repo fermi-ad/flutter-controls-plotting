@@ -25,10 +25,6 @@ class GraphicPlotWidgetAdapter extends PlotWidgetAdapter {
               (widget.plotChannels.isEmpty || widget.plotChannels.length == 1)
                   ? ColorEncode(value: _channelColorList.first)
                   : ColorEncode(variable: "Channel", values: _channelColorList),
-          shape: ShapeEncode(value: BasicLineShape()),
-          selected: {
-            'touchMove': {1}
-          },
         ),
       ],
       coord: RectCoord(),
