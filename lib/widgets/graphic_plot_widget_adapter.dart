@@ -78,6 +78,6 @@ class GraphicPlotWidgetAdapter extends PlotWidgetAdapter {
   List<Color> get _channelColorList => widget.plotChannels.isEmpty
       ? [Colors.red]
       : widget.plotChannels.keys
-          .map((String channelName) => _lineColorForChannel(channelName))
+          .map((String channelName) => lineColorForChannel(channelName))
           .toList();
 }

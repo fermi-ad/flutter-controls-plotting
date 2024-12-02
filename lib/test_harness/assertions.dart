@@ -16,12 +16,10 @@ void assertEmptyPlot(WidgetTester tester, {required bool isVisible}) {
   }
 }
 
-void assertColorOfPlot({required Color expectedColor}) {
-  expect(find.byType(LineChart), findsOneWidget);
-  final lineChart =
-      (find.byType(LineChart).evaluate().first.widget as LineChart);
+void assertColorOfPlot(WidgetTester tester, {required Color expectedColor}) {
+  final PlotState plotState = tester.state(find.byType(PlotWidget));
 
-  expect(lineChart.data.lineBarsData.first.color, expectedColor);
+  expect(plotState.channelColors.first, expectedColor);
 }
 
 void assertPlotXAxisTitle(WidgetTester tester, {required String title}) {

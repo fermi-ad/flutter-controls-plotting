@@ -306,7 +306,7 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Verify that color is as expected.
-      assertColorOfPlot(expectedColor: PlotColor.blue.color);
+      assertColorOfPlot(tester, expectedColor: PlotColor.blue.color);
     });
   });
 
@@ -544,6 +544,22 @@ void main() {
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
+    });
+
+    testWidgets("Verify plot color applied to newly added channel.",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST PARABOLA"
+      final channelList = {
+        "PLOT TEST CONSTANT": ChannelSetting(lineColor: PlotColor.blue.color)
+      };
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
+      await waitForPlotDataToLoad(tester);
+
+      // Verify that color is as expected.
+      assertColorOfPlot(tester, expectedColor: PlotColor.blue.color);
     });
   });
 

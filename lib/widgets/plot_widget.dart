@@ -78,6 +78,10 @@ class PlotState extends State<PlotWidget> {
   String get xAxisTitle =>
       _adapter.plotReply != null ? _adapter.plotReply!.xAxisUnits : "";
 
+  List<Color> get channelColors => widget.plotChannels.keys
+      .map((String channelName) => _adapter.lineColorForChannel(channelName))
+      .toList();
+
   List<List<PlotPoint>> get points => _adapter.plotReply != null
       ? _adapter.plotReply!.data
           .map((PlotChannelData channelData) => channelData.points)
