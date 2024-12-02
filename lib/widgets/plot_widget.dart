@@ -71,6 +71,10 @@ class PlotState extends State<PlotWidget> {
 
   double get maxY => _adapter.maxY;
 
+  double get minX => _adapter.minX;
+
+  double get maxX => _adapter.maxX;
+
   String get xAxisTitle =>
       _adapter.plotReply != null ? _adapter.plotReply!.xAxisUnits : "";
 

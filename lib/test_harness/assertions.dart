@@ -64,12 +64,11 @@ void assertDifferentColorsYAxisLabels(
   }
 }
 
-void assertPlotXAxisLimits({required double min, required double max}) {
-  final lineChartData =
-      (find.byType(LineChart).evaluate().first.widget as LineChart).data;
-
-  expect(lineChartData.minX, closeTo(min, 0.01));
-  expect(lineChartData.maxX, closeTo(max, 0.01));
+void assertPlotXAxisLimits(WidgetTester tester,
+    {required double min, required double max}) {
+  final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
+  expect(plotState.minX, closeTo(min, 0.01));
+  expect(plotState.maxX, closeTo(max, 0.01));
 }
 
 void assertPlotYAxisLimits(WidgetTester tester,

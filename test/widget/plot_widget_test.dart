@@ -24,7 +24,7 @@ void main() {
       assertPlotYAxisLimits(tester, min: 0, max: 1);
 
       // ... and the X-axis limits are 0 to 1
-      assertPlotXAxisLimits(min: 0, max: 1);
+      assertPlotXAxisLimits(tester, min: 0, max: 1);
     });
 
     testWidgets("Plot PLOT TEST CONSTANT, get a horizontal line at y=5.0",
@@ -82,7 +82,7 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Ensure that the axis limits accomodate the sine plot test.
-      assertPlotXAxisLimits(min: -250.0, max: 250.0);
+      assertPlotXAxisLimits(tester, min: -250.0, max: 250.0);
       assertPlotYAxisLimits(tester, min: -1, max: 1);
 
       // Plot a second channel.
@@ -91,7 +91,7 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Ensure that the axis limits changed to accomodate the new plot.
-      assertPlotXAxisLimits(min: -250, max: 499);
+      assertPlotXAxisLimits(tester, min: -250, max: 499);
       assertPlotYAxisLimits(tester, min: -1, max: 5);
     });
 
@@ -114,7 +114,7 @@ void main() {
           titles: ["PLOT TEST PARABOLA"], units: ["V"]);
 
       // ... and the limits for the X-axis are -250 to 250
-      assertPlotXAxisLimits(min: -250.0, max: 250.0);
+      assertPlotXAxisLimits(tester, min: -250.0, max: 250.0);
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
@@ -138,7 +138,7 @@ void main() {
       assertPlotYAxisTitles(tester, titles: ["PLOT TEST SINE"], units: ["V"]);
 
       // ... and the limits for the X-axis are -250 to 250
-      assertPlotXAxisLimits(min: -250.0, max: 250.0);
+      assertPlotXAxisLimits(tester, min: -250.0, max: 250.0);
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
@@ -177,7 +177,7 @@ void main() {
           titles: ["PLOT TEST PARABOLA 64K"], units: ["V"]);
 
       // ... and the limits for the X-axis are -250 to 250
-      assertPlotXAxisLimits(min: -32767.0, max: 32767.0);
+      assertPlotXAxisLimits(tester, min: -32767.0, max: 32767.0);
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
@@ -201,7 +201,7 @@ void main() {
       assertPlotYAxisTitles(tester, titles: ["PLOT TEST NORMAL"], units: ["V"]);
 
       // ... and the limits for the X-axis are 0 to 499
-      assertPlotXAxisLimits(min: 0.0, max: 499.0);
+      assertPlotXAxisLimits(tester, min: 0.0, max: 499.0);
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
@@ -271,7 +271,7 @@ void main() {
           titles: ["API TEST CONSTANT"], units: ["A"]);
 
       // ... and the limits for the X-axis are -250 to 250
-      assertPlotXAxisLimits(min: 0, max: 499);
+      assertPlotXAxisLimits(tester, min: 0, max: 499);
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
@@ -330,7 +330,7 @@ void main() {
       assertPlotYAxisLimits(tester, min: 0, max: 1);
 
       // ... and the X-axis limits are 0 to 1
-      // assertPlotXAxisLimits(min: 0, max: 1);
+      // assertPlotXAxisLimits(tester, min: 0, max: 1);
     });
 
     testWidgets("Plot PLOT TEST CONSTANT, get a horizontal line at y=5.0",
@@ -392,7 +392,7 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Ensure that the axis limits accomodate the sine plot test.
-      assertPlotXAxisLimits(min: -250.0, max: 250.0);
+      assertPlotXAxisLimits(tester, min: -250.0, max: 250.0);
       assertPlotYAxisLimits(tester, min: -1, max: 1);
 
       // Plot a second channel.
@@ -401,7 +401,7 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Ensure that the axis limits changed to accomodate the new plot.
-      assertPlotXAxisLimits(min: -250, max: 499);
+      assertPlotXAxisLimits(tester, min: -250, max: 499);
       assertPlotYAxisLimits(tester, min: -1, max: 5);
     });
   });
