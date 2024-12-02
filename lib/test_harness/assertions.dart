@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
@@ -43,17 +42,15 @@ void assertPlotYAxisTitles(WidgetTester tester,
   }
 }
 
-void assertDifferentColorsYAxisLabels(
+void assertDifferentColorsYAxisLabels(WidgetTester tester,
     {required int expectedLabelCount, String title = 'PLOT TEST'}) {
-  var yLabels = find.descendant(
-      of: find.byType(LineChart), matching: find.textContaining(title));
-  expect(yLabels, findsExactly(expectedLabelCount));
+  final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
+  var yLabels = plotState.channelNames;
+  expect(yLabels.length, expectedLabelCount);
 
   var uniqueColors = [];
 
-  for (var yLabel in yLabels.found) {
-    Text label = yLabel.widget as Text;
-    var color = label.style?.color;
+  for (final color in plotState.channelColors) {
     // Make sure some color was defined.
     expect(color, isNotNull);
     // Make sure color is unique
