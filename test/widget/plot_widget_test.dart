@@ -9,7 +9,7 @@ import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group("PlotWidget widget tests", () {
+  group("PlotWidget (implementation = FlCharts) widget tests", () {
     testWidgets("Plot channel list is empty, plot is empty",
         (WidgetTester tester) async {
       // Given nothing
@@ -18,10 +18,10 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Then the plot is empty
-      assertEmptyPlot(isVisible: true);
+      assertEmptyPlot(tester, isVisible: true);
 
       // ... and the Y-axis limits are 0 to 1
-      assertPlotYAxisLimits(min: 0, max: 1);
+      assertPlotYAxisLimits(tester, min: 0, max: 1);
 
       // ... and the X-axis limits are 0 to 1
       assertPlotXAxisLimits(min: 0, max: 1);
@@ -40,10 +40,11 @@ void main() {
       assertPlotContainsHorizontalLine(numberOfPoints: 500, atY: 5.0);
 
       // ... and the Y axis is labeled...
-      assertPlotYAxisTitle(title: "PLOT TEST CONSTANT", units: "V");
+      assertPlotYAxisTitles(tester,
+          titles: ["PLOT TEST CONSTANT"], units: ["V"]);
 
       // ... and the Y-axis has limits of...
-      assertPlotYAxisLimits(min: 0, max: 5);
+      assertPlotYAxisLimits(tester, min: 0, max: 5);
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(title: "Index");
@@ -63,10 +64,10 @@ void main() {
       assertPlotContainsRamp(numberOfPoints: 500, startingAtY: 0.0);
 
       // ... and the Y-axis is labeled
-      assertPlotYAxisTitle(title: "PLOT TEST RAMP", units: "V");
+      assertPlotYAxisTitles(tester, titles: ["PLOT TEST RAMP"], units: ["V"]);
 
       // ... and the limits for the Y-axis are 0 to 500
-      assertPlotYAxisLimits(min: 0, max: 499);
+      assertPlotYAxisLimits(tester, min: 0, max: 499);
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(title: "Index");
@@ -82,7 +83,7 @@ void main() {
 
       // Ensure that the axis limits accomodate the sine plot test.
       assertPlotXAxisLimits(min: -250.0, max: 250.0);
-      assertPlotYAxisLimits(min: -1, max: 1);
+      assertPlotYAxisLimits(tester, min: -1, max: 1);
 
       // Plot a second channel.
       channelList["PLOT TEST CONSTANT"] = ChannelSetting();
@@ -91,7 +92,7 @@ void main() {
 
       // Ensure that the axis limits changed to accomodate the new plot.
       assertPlotXAxisLimits(min: -250, max: 499);
-      assertPlotYAxisLimits(min: -1, max: 5);
+      assertPlotYAxisLimits(tester, min: -1, max: 5);
     });
 
     testWidgets(
@@ -108,7 +109,8 @@ void main() {
       assertPlotContainsParabola(numberOfPoints: 501, startingAtX: -250);
 
       // ... and the Y-axis is labeled
-      assertPlotYAxisTitle(title: "PLOT TEST PARABOLA", units: "V");
+      assertPlotYAxisTitles(tester,
+          titles: ["PLOT TEST PARABOLA"], units: ["V"]);
 
       // ... and the limits for the X-axis are -250 to 250
       assertPlotXAxisLimits(min: -250.0, max: 250.0);
@@ -131,7 +133,7 @@ void main() {
       assertPlotContainsSineWave(numberOfPoints: 501, startingAtX: -250);
 
       // ... and the Y-axis is labeled
-      assertPlotYAxisTitle(title: "PLOT TEST SINE", units: "V");
+      assertPlotYAxisTitles(tester, titles: ["PLOT TEST SINE"], units: ["V"]);
 
       // ... and the limits for the X-axis are -250 to 250
       assertPlotXAxisLimits(min: -250.0, max: 250.0);
@@ -168,7 +170,8 @@ void main() {
       assertPlotContainsParabola(numberOfPoints: 65535, startingAtX: -32767);
 
       // ... and the Y-axis is labeled
-      assertPlotYAxisTitle(title: "PLOT TEST PARABOLA 64K", units: "V");
+      assertPlotYAxisTitles(tester,
+          titles: ["PLOT TEST PARABOLA 64K"], units: ["V"]);
 
       // ... and the limits for the X-axis are -250 to 250
       assertPlotXAxisLimits(min: -32767.0, max: 32767.0);
@@ -192,7 +195,7 @@ void main() {
           numberOfPoints: 500, centeredAtX: 250);
 
       // ... and the Y-axis is labeled
-      assertPlotYAxisTitle(title: "PLOT TEST NORMAL", units: "V");
+      assertPlotYAxisTitles(tester, titles: ["PLOT TEST NORMAL"], units: ["V"]);
 
       // ... and the limits for the X-axis are 0 to 499
       assertPlotXAxisLimits(min: 0.0, max: 499.0);
@@ -226,7 +229,9 @@ void main() {
       const errorChannel = "PLOT TEST DOESN'T EXIST";
       const errorMessage =
           "An error occured when attempting to acquire data for $errorChannel";
-      Map<String, ChannelSetting> channelList = {errorChannel: ChannelSetting()};
+      Map<String, ChannelSetting> channelList = {
+        errorChannel: ChannelSetting()
+      };
       await tester.pumpWidget(_buildPlotWidget(channelList));
       await waitForPlotDataToLoad(tester);
 
@@ -259,7 +264,8 @@ void main() {
       assertPlotContainsHorizontalLine(numberOfPoints: 500, atY: 5.0);
 
       // ... and the Y-axis is labeled
-      assertPlotYAxisTitle(title: "API TEST CONSTANT", units: "A");
+      assertPlotYAxisTitles(tester,
+          titles: ["API TEST CONSTANT"], units: ["A"]);
 
       // ... and the limits for the X-axis are -250 to 250
       assertPlotXAxisLimits(min: 0, max: 499);
@@ -281,28 +287,90 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Then the y-axis labels are located on the top of the plot
-      assertPlotYAxisTitle(title: "PLOT TEST CONSTANT", units: "V");
+      assertPlotYAxisTitles(tester,
+          titles: ["PLOT TEST CONSTANT"], units: ["V"]);
     });
 
     testWidgets("Verify plot color applied to newly added channel.",
         (WidgetTester tester) async {
       // Given a channel list containing "PLOT TEST PARABOLA"
-      final channelList = {"PLOT TEST CONSTANT": ChannelSetting(lineColor: PlotColor.blue.color)};
+      final channelList = {
+        "PLOT TEST CONSTANT": ChannelSetting(lineColor: PlotColor.blue.color)
+      };
 
       // When I build the PlotWidget
       await tester.pumpWidget(_buildPlotWidget(channelList));
       await waitForPlotDataToLoad(tester);
 
       // Verify that color is as expected.
-      assertColorOfPlot(expectedColor: PlotColor.blue.color); 
-    });    
+      assertColorOfPlot(expectedColor: PlotColor.blue.color);
+    });
   });
+
+  group("PlotWidget (implementation = Graphic) widget tests", () {
+    testWidgets("Plot channel list is empty, plot is empty",
+        (WidgetTester tester) async {
+      // Given an empty channel list
+      // When I build the PlotWidget with implementation = eCharts
+      await tester.pumpWidget(
+          _buildPlotWidget(const {}, impl: PlotImplementation.graphic));
+      await waitForPlotDataToLoad(tester);
+
+      // Then plot was built using Flutter eCharts
+      assertPlotImplementationIs(
+          find.byType(PlotWidget), PlotImplementation.graphic);
+
+      // ... and the plot is empty
+      assertEmptyPlot(tester, isVisible: true);
+
+      // ... and the Y-axis limits are 0 to 1
+      assertPlotYAxisLimits(tester, min: 0, max: 1);
+
+      // ... and the X-axis limits are 0 to 1
+      // assertPlotXAxisLimits(min: 0, max: 1);
+    });
+
+    testWidgets("Plot PLOT TEST CONSTANT, get a horizontal line at y=5.0",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST CONSTANT"
+      final channelList = {"PLOT TEST CONSTANT": ChannelSetting()};
+
+      // When I build the PlotWidget with the Graphic implementation
+      await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
+      await waitForPlotDataToLoad(tester);
+
+      // Then the plot contains 500 points with y = 5.0
+      // assertPlotContainsHorizontalLine(numberOfPoints: 500, atY: 5.0);
+
+      // ... and the Y axis is labeled...
+      assertPlotYAxisTitles(tester,
+          titles: ["PLOT TEST CONSTANT"], units: ["V"]);
+
+      // ... and the Y-axis has limits of...
+      assertPlotYAxisLimits(tester, min: 0, max: 5);
+
+      // ... and the X-axis is labeled...
+      // assertPlotXAxisTitle(title: "Index");
+    });
+  });
+
+  group("PlotWidget (implementation = Fermi) widget tests", () {});
 }
 
-Widget _buildPlotWidget(Map<String, ChannelSetting> channelList) => MaterialApp(
-    home: Scaffold(
-        body: ACSysProvider(
-            service: FakeACSysService(),
-            child: PlotWidget(
-                plotChannels: channelList,
-                daqService: const StandardPlotDAQ()))));
+void assertPlotImplementationIs(
+    Finder finder, PlotImplementation implementation) {
+  final widget = finder.evaluate().first.widget as PlotWidget;
+  expect(widget.implementation, implementation);
+}
+
+Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
+        {PlotImplementation impl = PlotImplementation.flCharts}) =>
+    MaterialApp(
+        home: Scaffold(
+            body: ACSysProvider(
+                service: FakeACSysService(),
+                child: PlotWidget(
+                    plotChannels: channelList,
+                    implementation: impl,
+                    daqService: const StandardPlotDAQ()))));

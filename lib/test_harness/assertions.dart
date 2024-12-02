@@ -2,41 +2,44 @@ import 'dart:math';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-void assertEmptyPlot({required bool isVisible}) {
-  expect(find.byType(LineChart), isVisible ? findsOneWidget : findsNothing);
+void assertEmptyPlot(WidgetTester tester, {required bool isVisible}) {
+  final plotFinder = find.byType(PlotWidget);
+  expect(plotFinder, isVisible ? findsOneWidget : findsNothing);
 
   if (isVisible) {
-    final lineChart =
-        (find.byType(LineChart).evaluate().first.widget as LineChart);
-
-    expect(lineChart.data.lineBarsData.length, 0);
+    final PlotState plotState = tester.state(plotFinder);
+    expect(plotState.channelData.length, 0);
   }
 }
 
 void assertColorOfPlot({required Color expectedColor}) {
-  expect(find.byType(LineChart), findsOneWidget);  
+  expect(find.byType(LineChart), findsOneWidget);
   final lineChart =
       (find.byType(LineChart).evaluate().first.widget as LineChart);
-      
-  expect(lineChart.data.lineBarsData.first.color, expectedColor);  
+
+  expect(lineChart.data.lineBarsData.first.color, expectedColor);
 }
 
 void assertPlotXAxisTitle({required String title}) => expect(
     find.descendant(of: find.byType(LineChart), matching: find.text(title)),
     findsOneWidget);
 
-void assertPlotYAxisTitle(
-    {required String title, required String units, int sameUnitCount = 1}) {
-  expect(
-      find.descendant(of: find.byType(LineChart), matching: find.text(title)),
-      findsOneWidget);
+void assertPlotYAxisTitles(WidgetTester tester,
+    {required List<String> titles, required List<String> units}) {
+  expect(titles.length, units.length);
 
-  expect(
-      find.descendant(
-          of: find.byType(LineChart), matching: find.text(" ($units)")),
-      findsExactly(sameUnitCount));
+  final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
+
+  expect(plotState.channelNames.length, titles.length);
+  expect(plotState.channelUnits.length, units.length);
+
+  for (int i = 0; i != titles.length; i++) {
+    expect(plotState.channelNames[i], titles[i]);
+    expect(plotState.channelUnits[i], units[i]);
+  }
 }
 
 void assertDifferentColorsYAxisLabels(
@@ -66,12 +69,12 @@ void assertPlotXAxisLimits({required double min, required double max}) {
   expect(lineChartData.maxX, closeTo(max, 0.01));
 }
 
-void assertPlotYAxisLimits({required double min, required double max}) {
-  final lineChartData =
-      (find.byType(LineChart).evaluate().first.widget as LineChart).data;
+void assertPlotYAxisLimits(WidgetTester tester,
+    {required double min, required double max}) {
+  final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
 
-  expect(lineChartData.minY, closeTo(min, 0.01));
-  expect(lineChartData.maxY, closeTo(max, 0.01));
+  expect(plotState.minY, closeTo(min, 0.01));
+  expect(plotState.maxY, closeTo(max, 0.01));
 }
 
 void assertPlotContainsHorizontalLine(
