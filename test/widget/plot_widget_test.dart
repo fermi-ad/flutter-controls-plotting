@@ -455,6 +455,21 @@ void main() {
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
     });
+
+    testWidgets(
+        "Plot PLOT TEST SINE, get a progress indicator while data is fetched",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST SINE"
+      final channelList = {"PLOT TEST SINE": ChannelSetting()};
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
+
+      // Then I should see the progress indicator
+      assertPlotLoadingIndicator(isVisible: true);
+      await waitForPlotDataToLoad(tester);
+    });
   });
 
   group("PlotWidget (implementation = Fermi) widget tests", () {});
