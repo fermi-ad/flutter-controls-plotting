@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -79,55 +80,55 @@ void assertPlotYAxisLimits(WidgetTester tester,
   expect(plotState.maxY, closeTo(max, 0.01));
 }
 
-void assertPlotContainsHorizontalLine(
+void assertPlotContainsHorizontalLine(WidgetTester tester,
     {required int numberOfPoints, required double atY, int lineBarIndex = 0}) {
-  assertPlotContainsNPoints(numberOfPoints);
+  assertPlotContainsNPoints(tester, numberOfPoints);
 
-  final plotPoints = _getPlotPoints(lineBarIndex: lineBarIndex);
+  final plotPoints = _getPlotPoints(tester, lineBarIndex: lineBarIndex);
   for (int i = 0; i != numberOfPoints; i++) {
     expect(plotPoints[i].y, closeTo(atY, 0.01));
   }
 }
 
-void assertPlotContainsRamp(
+void assertPlotContainsRamp(WidgetTester tester,
     {required int numberOfPoints,
     required double startingAtY,
     int lineBarIndex = 0}) {
-  assertPlotContainsNPoints(numberOfPoints);
+  assertPlotContainsNPoints(tester, numberOfPoints);
 
-  final plotPoints = _getPlotPoints(lineBarIndex: lineBarIndex);
+  final plotPoints = _getPlotPoints(tester, lineBarIndex: lineBarIndex);
   for (int i = 0; i != numberOfPoints; i++) {
     expect(plotPoints[i].y, closeTo(startingAtY + i, 0.01));
   }
 }
 
-void assertPlotContainsParabola(
+void assertPlotContainsParabola(WidgetTester tester,
     {required int numberOfPoints, required double startingAtX}) {
-  assertPlotContainsNPoints(numberOfPoints);
+  assertPlotContainsNPoints(tester, numberOfPoints);
 
-  final plotPoints = _getPlotPoints();
+  final plotPoints = _getPlotPoints(tester);
   for (int i = 0; i != numberOfPoints; i++) {
     final x = startingAtX + i;
     expect(plotPoints[i].y, closeTo(pow(x, 2), 0.01));
   }
 }
 
-void assertPlotContainsSineWave(
+void assertPlotContainsSineWave(WidgetTester tester,
     {required int numberOfPoints, required int startingAtX}) {
-  assertPlotContainsNPoints(numberOfPoints);
+  assertPlotContainsNPoints(tester, numberOfPoints);
 
-  final plotPoints = _getPlotPoints();
+  final plotPoints = _getPlotPoints(tester);
   for (int i = 0; i != numberOfPoints; i++) {
     final x = startingAtX + i;
     expect(plotPoints[i].y, closeTo(sin(x * 6.28 / 500), 0.01));
   }
 }
 
-void assertPlotContainsNormalDistribution(
+void assertPlotContainsNormalDistribution(WidgetTester tester,
     {required int numberOfPoints, required int centeredAtX}) {
-  assertPlotContainsNPoints(numberOfPoints);
+  assertPlotContainsNPoints(tester, numberOfPoints);
 
-  final plotPoints = _getPlotPoints();
+  final plotPoints = _getPlotPoints(tester);
   for (int i = 0; i != numberOfPoints; i++) {
     expect(
         plotPoints[i].y,
@@ -139,8 +140,8 @@ void assertPlotContainsNormalDistribution(
   }
 }
 
-void assertPlotContainsNPoints(int numberOfPoints) {
-  final plotPoints = _getPlotPoints();
+void assertPlotContainsNPoints(WidgetTester tester, int numberOfPoints) {
+  final plotPoints = _getPlotPoints(tester);
 
   expect(plotPoints.length, numberOfPoints);
 }
@@ -149,9 +150,8 @@ void assertPlotLoadingIndicator({required bool isVisible}) => expect(
     find.byType(LinearProgressIndicator),
     isVisible ? findsOneWidget : findsNothing);
 
-List<FlSpot> _getPlotPoints({int lineBarIndex = 0}) {
-  return (find.byType(LineChart).evaluate().first.widget as LineChart)
-      .data
-      .lineBarsData[lineBarIndex]
-      .spots;
+List<PlotPoint> _getPlotPoints(WidgetTester tester, {int lineBarIndex = 0}) {
+  final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
+
+  return plotState.points[lineBarIndex];
 }
