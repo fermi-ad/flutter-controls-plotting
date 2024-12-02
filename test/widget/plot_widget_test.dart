@@ -341,7 +341,7 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Then the plot contains 500 points with y = 5.0
-      // assertPlotContainsHorizontalLine(numberOfPoints: 500, atY: 5.0);
+      assertPlotContainsHorizontalLine(numberOfPoints: 500, atY: 5.0);
 
       // ... and the Y axis is labeled...
       assertPlotYAxisTitles(tester,
