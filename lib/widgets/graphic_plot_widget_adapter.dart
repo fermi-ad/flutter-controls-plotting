@@ -67,8 +67,8 @@ class GraphicPlotWidgetAdapter extends PlotWidgetAdapter {
       }
     } else {
       data = [
-        {'Index': 0, 'Value': 0, "Channel": "None"},
-        {'Index': 1, 'Value': 1, "Channel": "None"}
+        {'Index': 0.0, 'Value': 0.0, "Channel": "None"},
+        {'Index': 1.0, 'Value': 1.0, "Channel": "None"}
       ];
     }
 
