@@ -356,6 +356,30 @@ void main() {
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
     });
+
+    testWidgets(
+        "Plot PLOT TEST RAMP, get a ramp starting at Y=0.0 and ending at y = 500.0",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST RAMP"
+      final channelList = {"PLOT TEST RAMP": ChannelSetting()};
+
+      // When I build the PlotWidget with implementation = Graphic
+      await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
+      await waitForPlotDataToLoad(tester);
+
+      // Then the plot contains a ramp with 500 points starting at Y=0.0
+      assertPlotContainsRamp(tester, numberOfPoints: 500, startingAtY: 0.0);
+
+      // ... and the Y-axis is labeled
+      assertPlotYAxisTitles(tester, titles: ["PLOT TEST RAMP"], units: ["V"]);
+
+      // ... and the limits for the Y-axis are 0 to 500
+      assertPlotYAxisLimits(tester, min: 0, max: 499);
+
+      // ... and the X-axis is labeled...
+      assertPlotXAxisTitle(tester, title: "Index");
+    });
   });
 
   group("PlotWidget (implementation = Fermi) widget tests", () {});
