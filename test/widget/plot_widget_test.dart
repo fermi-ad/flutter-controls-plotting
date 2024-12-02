@@ -496,6 +496,31 @@ void main() {
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
     });
+
+    testWidgets(
+        "Plot PLOT TEST NORMAL, get a normal distribution centered around 250",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST PARABOLA"
+      final channelList = {"PLOT TEST NORMAL": ChannelSetting()};
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
+      await waitForPlotDataToLoad(tester);
+
+      // Then the plot contains a normal distribution around x=250
+      assertPlotContainsNormalDistribution(tester,
+          numberOfPoints: 500, centeredAtX: 250);
+
+      // ... and the Y-axis is labeled
+      assertPlotYAxisTitles(tester, titles: ["PLOT TEST NORMAL"], units: ["V"]);
+
+      // ... and the limits for the X-axis are 0 to 499
+      assertPlotXAxisLimits(tester, min: 0.0, max: 499.0);
+
+      // ... and the X-axis is labeled...
+      assertPlotXAxisTitle(tester, title: "Index");
+    });
   });
 
   group("PlotWidget (implementation = Fermi) widget tests", () {});
