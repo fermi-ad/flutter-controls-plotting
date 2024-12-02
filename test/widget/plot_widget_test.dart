@@ -9,201 +9,7 @@ import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group("PlotWidget (implementation = FlCharts) widget tests", () {
-    testWidgets("Plot channel list is empty, plot is empty",
-        (WidgetTester tester) async {
-      // Given nothing
-      // When I build the PlotWidget with an empty channel list
-      await tester.pumpWidget(_buildPlotWidget(const {}));
-      await waitForPlotDataToLoad(tester);
-
-      // Then the plot is empty
-      assertEmptyPlot(tester, isVisible: true);
-
-      // ... and the Y-axis limits are 0 to 1
-      assertPlotYAxisLimits(tester, min: 0, max: 1);
-
-      // ... and the X-axis limits are 0 to 1
-      assertPlotXAxisLimits(min: 0, max: 1);
-    });
-
-    testWidgets("Plot PLOT TEST CONSTANT, get a horizontal line at y=5.0",
-        (WidgetTester tester) async {
-      // Given a channel list containing "PLOT TEST CONSTANT"
-      final channelList = {"PLOT TEST CONSTANT": ChannelSetting()};
-
-      // When I build the PlotWidget
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
-
-      // Then the plot contains 500 points with y = 5.0
-      assertPlotContainsHorizontalLine(numberOfPoints: 500, atY: 5.0);
-
-      // ... and the Y axis is labeled...
-      assertPlotYAxisTitles(tester,
-          titles: ["PLOT TEST CONSTANT"], units: ["V"]);
-
-      // ... and the Y-axis has limits of...
-      assertPlotYAxisLimits(tester, min: 0, max: 5);
-
-      // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(title: "Index");
-    });
-
-    testWidgets(
-        "Plot PLOT TEST RAMP, get a ramp starting at Y=0.0 and ending at y = 500.0",
-        (WidgetTester tester) async {
-      // Given a channel list containing "PLOT TEST RAMP"
-      final channelList = {"PLOT TEST RAMP": ChannelSetting()};
-
-      // When I build the PlotWidget
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
-
-      // Then the plot contains a ramp with 500 points starting at Y=0.0
-      assertPlotContainsRamp(numberOfPoints: 500, startingAtY: 0.0);
-
-      // ... and the Y-axis is labeled
-      assertPlotYAxisTitles(tester, titles: ["PLOT TEST RAMP"], units: ["V"]);
-
-      // ... and the limits for the Y-axis are 0 to 500
-      assertPlotYAxisLimits(tester, min: 0, max: 499);
-
-      // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(title: "Index");
-    });
-
-    testWidgets(
-        "Plot multiple plots and ensure that the Y and X axis limits are adjusted",
-        (WidgetTester tester) async {
-      final channelList = {"PLOT TEST SINE": ChannelSetting()};
-      // When I build the PlotWidget
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
-
-      // Ensure that the axis limits accomodate the sine plot test.
-      assertPlotXAxisLimits(min: -250.0, max: 250.0);
-      assertPlotYAxisLimits(tester, min: -1, max: 1);
-
-      // Plot a second channel.
-      channelList["PLOT TEST CONSTANT"] = ChannelSetting();
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
-
-      // Ensure that the axis limits changed to accomodate the new plot.
-      assertPlotXAxisLimits(min: -250, max: 499);
-      assertPlotYAxisLimits(tester, min: -1, max: 5);
-    });
-
-    testWidgets(
-        "Plot PLOT TEST PARABOLA, get a parabola starting at X=-50 and ending at X=50",
-        (WidgetTester tester) async {
-      // Given a channel list containing "PLOT TEST PARABOLA"
-      final channelList = {"PLOT TEST PARABOLA": ChannelSetting()};
-
-      // When I build the PlotWidget
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
-
-      // Then the plot contains a parabola with 500 points starting at X=-250
-      assertPlotContainsParabola(numberOfPoints: 501, startingAtX: -250);
-
-      // ... and the Y-axis is labeled
-      assertPlotYAxisTitles(tester,
-          titles: ["PLOT TEST PARABOLA"], units: ["V"]);
-
-      // ... and the limits for the X-axis are -250 to 250
-      assertPlotXAxisLimits(min: -250.0, max: 250.0);
-
-      // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(title: "Index");
-    });
-
-    testWidgets(
-        "Plot PLOT TEST SINE, get a sine wave starting at X=-250 and ending at X=250",
-        (WidgetTester tester) async {
-      // Given a channel list containing "PLOT TEST SINE"
-      final channelList = {"PLOT TEST SINE": ChannelSetting()};
-
-      // When I build the PlotWidget
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
-
-      // Then the plot contains a parabola with 500 points starting at X=-250
-      assertPlotContainsSineWave(numberOfPoints: 501, startingAtX: -250);
-
-      // ... and the Y-axis is labeled
-      assertPlotYAxisTitles(tester, titles: ["PLOT TEST SINE"], units: ["V"]);
-
-      // ... and the limits for the X-axis are -250 to 250
-      assertPlotXAxisLimits(min: -250.0, max: 250.0);
-
-      // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(title: "Index");
-    });
-
-    testWidgets(
-        "Plot PLOT TEST SINE, get a progress indicator while data is fetched",
-        (WidgetTester tester) async {
-      // Given a channel list containing "PLOT TEST SINE"
-      final channelList = {"PLOT TEST SINE": ChannelSetting()};
-
-      // When I build the PlotWidget
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-
-      // Then I should see the progress indicator
-      assertPlotLoadingIndicator(isVisible: true);
-      await waitForPlotDataToLoad(tester);
-    });
-
-    testWidgets(
-        "Plot PLOT TEST PARABOLA 64K, get a parabola starting at X=-32767 and ending at X=32767",
-        (WidgetTester tester) async {
-      // Given a channel list containing "PLOT TEST PARABOLA"
-      final channelList = {"PLOT TEST PARABOLA 64K": ChannelSetting()};
-
-      // When I build the PlotWidget
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
-
-      // Then the plot contains a parabola with 500 points starting at X=-250
-      assertPlotContainsParabola(numberOfPoints: 65535, startingAtX: -32767);
-
-      // ... and the Y-axis is labeled
-      assertPlotYAxisTitles(tester,
-          titles: ["PLOT TEST PARABOLA 64K"], units: ["V"]);
-
-      // ... and the limits for the X-axis are -250 to 250
-      assertPlotXAxisLimits(min: -32767.0, max: 32767.0);
-
-      // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(title: "Index");
-    });
-
-    testWidgets(
-        "Plot PLOT TEST NORMAL, get a normal distribution centered around 250",
-        (WidgetTester tester) async {
-      // Given a channel list containing "PLOT TEST PARABOLA"
-      final channelList = {"PLOT TEST NORMAL": ChannelSetting()};
-
-      // When I build the PlotWidget
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
-
-      // Then the plot contains a normal distribution around x=250
-      assertPlotContainsNormalDistribution(
-          numberOfPoints: 500, centeredAtX: 250);
-
-      // ... and the Y-axis is labeled
-      assertPlotYAxisTitles(tester, titles: ["PLOT TEST NORMAL"], units: ["V"]);
-
-      // ... and the limits for the X-axis are 0 to 499
-      assertPlotXAxisLimits(min: 0.0, max: 499.0);
-
-      // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(title: "Index");
-    });
-
+  group("Error handling", () {
     testWidgets("Dismiss error message, error banner goes away",
         (WidgetTester tester) async {
       // Given I tried to plot a channel that had an error
@@ -250,6 +56,204 @@ void main() {
 
       expect(find.text(errorMessage), findsOne);
     });
+  });
+  group("PlotWidget (implementation = FlCharts) widget tests", () {
+    testWidgets("Plot channel list is empty, plot is empty",
+        (WidgetTester tester) async {
+      // Given nothing
+      // When I build the PlotWidget with an empty channel list
+      await tester.pumpWidget(_buildPlotWidget(const {}));
+      await waitForPlotDataToLoad(tester);
+
+      // Then the plot is empty
+      assertEmptyPlot(tester, isVisible: true);
+
+      // ... and the Y-axis limits are 0 to 1
+      assertPlotYAxisLimits(tester, min: 0, max: 1);
+
+      // ... and the X-axis limits are 0 to 1
+      assertPlotXAxisLimits(tester, min: 0, max: 1);
+    });
+
+    testWidgets("Plot PLOT TEST CONSTANT, get a horizontal line at y=5.0",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST CONSTANT"
+      final channelList = {"PLOT TEST CONSTANT": ChannelSetting()};
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(_buildPlotWidget(channelList));
+      await waitForPlotDataToLoad(tester);
+
+      // Then the plot contains 500 points with y = 5.0
+      assertPlotContainsHorizontalLine(tester, numberOfPoints: 500, atY: 5.0);
+
+      // ... and the Y axis is labeled...
+      assertPlotYAxisTitles(tester,
+          titles: ["PLOT TEST CONSTANT"], units: ["V"]);
+
+      // ... and the Y-axis has limits of...
+      assertPlotYAxisLimits(tester, min: 0, max: 5);
+
+      // ... and the X-axis is labeled...
+      assertPlotXAxisTitle(tester, title: "Index");
+    });
+
+    testWidgets(
+        "Plot PLOT TEST RAMP, get a ramp starting at Y=0.0 and ending at y = 500.0",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST RAMP"
+      final channelList = {"PLOT TEST RAMP": ChannelSetting()};
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(_buildPlotWidget(channelList));
+      await waitForPlotDataToLoad(tester);
+
+      // Then the plot contains a ramp with 500 points starting at Y=0.0
+      assertPlotContainsRamp(tester, numberOfPoints: 500, startingAtY: 0.0);
+
+      // ... and the Y-axis is labeled
+      assertPlotYAxisTitles(tester, titles: ["PLOT TEST RAMP"], units: ["V"]);
+
+      // ... and the limits for the Y-axis are 0 to 500
+      assertPlotYAxisLimits(tester, min: 0, max: 499);
+
+      // ... and the X-axis is labeled...
+      assertPlotXAxisTitle(tester, title: "Index");
+    });
+
+    testWidgets(
+        "Plot multiple plots and ensure that the Y and X axis limits are adjusted",
+        (WidgetTester tester) async {
+      final channelList = {"PLOT TEST SINE": ChannelSetting()};
+      // When I build the PlotWidget
+      await tester.pumpWidget(_buildPlotWidget(channelList));
+      await waitForPlotDataToLoad(tester);
+
+      // Ensure that the axis limits accomodate the sine plot test.
+      assertPlotXAxisLimits(tester, min: -250.0, max: 250.0);
+      assertPlotYAxisLimits(tester, min: -1, max: 1);
+
+      // Plot a second channel.
+      channelList["PLOT TEST CONSTANT"] = ChannelSetting();
+      await tester.pumpWidget(_buildPlotWidget(channelList));
+      await waitForPlotDataToLoad(tester);
+
+      // Ensure that the axis limits changed to accomodate the new plot.
+      assertPlotXAxisLimits(tester, min: -250, max: 499);
+      assertPlotYAxisLimits(tester, min: -1, max: 5);
+    });
+
+    testWidgets(
+        "Plot PLOT TEST PARABOLA, get a parabola starting at X=-50 and ending at X=50",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST PARABOLA"
+      final channelList = {"PLOT TEST PARABOLA": ChannelSetting()};
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(_buildPlotWidget(channelList));
+      await waitForPlotDataToLoad(tester);
+
+      // Then the plot contains a parabola with 500 points starting at X=-250
+      assertPlotContainsParabola(tester,
+          numberOfPoints: 501, startingAtX: -250);
+
+      // ... and the Y-axis is labeled
+      assertPlotYAxisTitles(tester,
+          titles: ["PLOT TEST PARABOLA"], units: ["V"]);
+
+      // ... and the limits for the X-axis are -250 to 250
+      assertPlotXAxisLimits(tester, min: -250.0, max: 250.0);
+
+      // ... and the X-axis is labeled...
+      assertPlotXAxisTitle(tester, title: "Index");
+    });
+
+    testWidgets(
+        "Plot PLOT TEST SINE, get a sine wave starting at X=-250 and ending at X=250",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST SINE"
+      final channelList = {"PLOT TEST SINE": ChannelSetting()};
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(_buildPlotWidget(channelList));
+      await waitForPlotDataToLoad(tester);
+
+      // Then the plot contains a parabola with 500 points starting at X=-250
+      assertPlotContainsSineWave(tester,
+          numberOfPoints: 501, startingAtX: -250);
+
+      // ... and the Y-axis is labeled
+      assertPlotYAxisTitles(tester, titles: ["PLOT TEST SINE"], units: ["V"]);
+
+      // ... and the limits for the X-axis are -250 to 250
+      assertPlotXAxisLimits(tester, min: -250.0, max: 250.0);
+
+      // ... and the X-axis is labeled...
+      assertPlotXAxisTitle(tester, title: "Index");
+    });
+
+    testWidgets(
+        "Plot PLOT TEST SINE, get a progress indicator while data is fetched",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST SINE"
+      final channelList = {"PLOT TEST SINE": ChannelSetting()};
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(_buildPlotWidget(channelList));
+
+      // Then I should see the progress indicator
+      assertPlotLoadingIndicator(isVisible: true);
+      await waitForPlotDataToLoad(tester);
+    });
+
+    testWidgets(
+        "Plot PLOT TEST PARABOLA 64K, get a parabola starting at X=-32767 and ending at X=32767",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST PARABOLA"
+      final channelList = {"PLOT TEST PARABOLA 64K": ChannelSetting()};
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(_buildPlotWidget(channelList));
+      await waitForPlotDataToLoad(tester);
+
+      // Then the plot contains a parabola with 500 points starting at X=-250
+      assertPlotContainsParabola(tester,
+          numberOfPoints: 65535, startingAtX: -32767);
+
+      // ... and the Y-axis is labeled
+      assertPlotYAxisTitles(tester,
+          titles: ["PLOT TEST PARABOLA 64K"], units: ["V"]);
+
+      // ... and the limits for the X-axis are -250 to 250
+      assertPlotXAxisLimits(tester, min: -32767.0, max: 32767.0);
+
+      // ... and the X-axis is labeled...
+      assertPlotXAxisTitle(tester, title: "Index");
+    });
+
+    testWidgets(
+        "Plot PLOT TEST NORMAL, get a normal distribution centered around 250",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST PARABOLA"
+      final channelList = {"PLOT TEST NORMAL": ChannelSetting()};
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(_buildPlotWidget(channelList));
+      await waitForPlotDataToLoad(tester);
+
+      // Then the plot contains a normal distribution around x=250
+      assertPlotContainsNormalDistribution(tester,
+          numberOfPoints: 500, centeredAtX: 250);
+
+      // ... and the Y-axis is labeled
+      assertPlotYAxisTitles(tester, titles: ["PLOT TEST NORMAL"], units: ["V"]);
+
+      // ... and the limits for the X-axis are 0 to 499
+      assertPlotXAxisLimits(tester, min: 0.0, max: 499.0);
+
+      // ... and the X-axis is labeled...
+      assertPlotXAxisTitle(tester, title: "Index");
+    });
 
     testWidgets("Plot API TEST CONST, get a horizontal line at y=5.0",
         (WidgetTester tester) async {
@@ -261,17 +265,17 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Then the plot contains a parabola with 500 points starting at X=-250
-      assertPlotContainsHorizontalLine(numberOfPoints: 500, atY: 5.0);
+      assertPlotContainsHorizontalLine(tester, numberOfPoints: 500, atY: 5.0);
 
       // ... and the Y-axis is labeled
       assertPlotYAxisTitles(tester,
           titles: ["API TEST CONSTANT"], units: ["A"]);
 
       // ... and the limits for the X-axis are -250 to 250
-      assertPlotXAxisLimits(min: 0, max: 499);
+      assertPlotXAxisLimits(tester, min: 0, max: 499);
 
       // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(title: "Index");
+      assertPlotXAxisTitle(tester, title: "Index");
     });
 
     testWidgets("Small screen, y-axis labels are on top",
@@ -303,7 +307,7 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Verify that color is as expected.
-      assertColorOfPlot(expectedColor: PlotColor.blue.color);
+      assertColorOfPlot(tester, expectedColor: PlotColor.blue.color);
     });
   });
 
@@ -327,7 +331,7 @@ void main() {
       assertPlotYAxisLimits(tester, min: 0, max: 1);
 
       // ... and the X-axis limits are 0 to 1
-      // assertPlotXAxisLimits(min: 0, max: 1);
+      // assertPlotXAxisLimits(tester, min: 0, max: 1);
     });
 
     testWidgets("Plot PLOT TEST CONSTANT, get a horizontal line at y=5.0",
@@ -341,7 +345,7 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Then the plot contains 500 points with y = 5.0
-      // assertPlotContainsHorizontalLine(numberOfPoints: 500, atY: 5.0);
+      assertPlotContainsHorizontalLine(tester, numberOfPoints: 500, atY: 5.0);
 
       // ... and the Y axis is labeled...
       assertPlotYAxisTitles(tester,
@@ -351,7 +355,212 @@ void main() {
       assertPlotYAxisLimits(tester, min: 0, max: 5);
 
       // ... and the X-axis is labeled...
-      // assertPlotXAxisTitle(title: "Index");
+      assertPlotXAxisTitle(tester, title: "Index");
+    });
+
+    testWidgets(
+        "Plot PLOT TEST RAMP, get a ramp starting at Y=0.0 and ending at y = 500.0",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST RAMP"
+      final channelList = {"PLOT TEST RAMP": ChannelSetting()};
+
+      // When I build the PlotWidget with implementation = Graphic
+      await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
+      await waitForPlotDataToLoad(tester);
+
+      // Then the plot contains a ramp with 500 points starting at Y=0.0
+      assertPlotContainsRamp(tester, numberOfPoints: 500, startingAtY: 0.0);
+
+      // ... and the Y-axis is labeled
+      assertPlotYAxisTitles(tester, titles: ["PLOT TEST RAMP"], units: ["V"]);
+
+      // ... and the limits for the Y-axis are 0 to 500
+      assertPlotYAxisLimits(tester, min: 0, max: 499);
+
+      // ... and the X-axis is labeled...
+      assertPlotXAxisTitle(tester, title: "Index");
+    });
+
+    testWidgets(
+        "Plot multiple plots and ensure that the Y and X axis limits are adjusted",
+        (WidgetTester tester) async {
+      final channelList = {"PLOT TEST SINE": ChannelSetting()};
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
+      await waitForPlotDataToLoad(tester);
+
+      // Ensure that the axis limits accomodate the sine plot test.
+      assertPlotXAxisLimits(tester, min: -250.0, max: 250.0);
+      assertPlotYAxisLimits(tester, min: -1, max: 1);
+
+      // Plot a second channel.
+      channelList["PLOT TEST CONSTANT"] = ChannelSetting();
+      await tester.pumpWidget(_buildPlotWidget(channelList));
+      await waitForPlotDataToLoad(tester);
+
+      // Ensure that the axis limits changed to accomodate the new plot.
+      assertPlotXAxisLimits(tester, min: -250, max: 499);
+      assertPlotYAxisLimits(tester, min: -1, max: 5);
+    });
+
+    testWidgets(
+        "Plot PLOT TEST PARABOLA, get a parabola starting at X=-50 and ending at X=50",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST PARABOLA"
+      final channelList = {"PLOT TEST PARABOLA": ChannelSetting()};
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
+      await waitForPlotDataToLoad(tester);
+
+      // Then the plot contains a parabola with 500 points starting at X=-250
+      assertPlotContainsParabola(tester,
+          numberOfPoints: 501, startingAtX: -250);
+
+      // ... and the Y-axis is labeled
+      assertPlotYAxisTitles(tester,
+          titles: ["PLOT TEST PARABOLA"], units: ["V"]);
+
+      // ... and the limits for the X-axis are -250 to 250
+      assertPlotXAxisLimits(tester, min: -250.0, max: 250.0);
+
+      // ... and the X-axis is labeled...
+      assertPlotXAxisTitle(tester, title: "Index");
+    });
+
+    testWidgets(
+        "Plot PLOT TEST SINE, get a sine wave starting at X=-250 and ending at X=250",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST SINE"
+      final channelList = {"PLOT TEST SINE": ChannelSetting()};
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
+      await waitForPlotDataToLoad(tester);
+
+      // Then the plot contains a parabola with 500 points starting at X=-250
+      assertPlotContainsSineWave(tester,
+          numberOfPoints: 501, startingAtX: -250);
+
+      // ... and the Y-axis is labeled
+      assertPlotYAxisTitles(tester, titles: ["PLOT TEST SINE"], units: ["V"]);
+
+      // ... and the limits for the X-axis are -250 to 250
+      assertPlotXAxisLimits(tester, min: -250.0, max: 250.0);
+
+      // ... and the X-axis is labeled...
+      assertPlotXAxisTitle(tester, title: "Index");
+    });
+
+    testWidgets(
+        "Plot PLOT TEST SINE, get a progress indicator while data is fetched",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST SINE"
+      final channelList = {"PLOT TEST SINE": ChannelSetting()};
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
+
+      // Then I should see the progress indicator
+      assertPlotLoadingIndicator(isVisible: true);
+      await waitForPlotDataToLoad(tester);
+    });
+
+    testWidgets(
+        "Plot PLOT TEST PARABOLA 64K, get a parabola starting at X=-32767 and ending at X=32767",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST PARABOLA"
+      final channelList = {"PLOT TEST PARABOLA 64K": ChannelSetting()};
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
+      await waitForPlotDataToLoad(tester);
+
+      // Then the plot contains a parabola with 500 points starting at X=-250
+      assertPlotContainsParabola(tester,
+          numberOfPoints: 65535, startingAtX: -32767);
+
+      // ... and the Y-axis is labeled
+      assertPlotYAxisTitles(tester,
+          titles: ["PLOT TEST PARABOLA 64K"], units: ["V"]);
+
+      // ... and the limits for the X-axis are -250 to 250
+      assertPlotXAxisLimits(tester, min: -32767.0, max: 32767.0);
+
+      // ... and the X-axis is labeled...
+      assertPlotXAxisTitle(tester, title: "Index");
+    });
+
+    testWidgets(
+        "Plot PLOT TEST NORMAL, get a normal distribution centered around 250",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST PARABOLA"
+      final channelList = {"PLOT TEST NORMAL": ChannelSetting()};
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
+      await waitForPlotDataToLoad(tester);
+
+      // Then the plot contains a normal distribution around x=250
+      assertPlotContainsNormalDistribution(tester,
+          numberOfPoints: 500, centeredAtX: 250);
+
+      // ... and the Y-axis is labeled
+      assertPlotYAxisTitles(tester, titles: ["PLOT TEST NORMAL"], units: ["V"]);
+
+      // ... and the limits for the X-axis are 0 to 499
+      assertPlotXAxisLimits(tester, min: 0.0, max: 499.0);
+
+      // ... and the X-axis is labeled...
+      assertPlotXAxisTitle(tester, title: "Index");
+    });
+
+    testWidgets("Plot API TEST CONST, get a horizontal line at y=5.0",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST PARABOLA"
+      final channelList = {"API TEST CONSTANT": ChannelSetting()};
+
+      // When I build the PlotWidget with an AcsysProvider
+      await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
+      await waitForPlotDataToLoad(tester);
+
+      // Then the plot contains a parabola with 500 points starting at X=-250
+      assertPlotContainsHorizontalLine(tester, numberOfPoints: 500, atY: 5.0);
+
+      // ... and the Y-axis is labeled
+      assertPlotYAxisTitles(tester,
+          titles: ["API TEST CONSTANT"], units: ["A"]);
+
+      // ... and the limits for the X-axis are -250 to 250
+      assertPlotXAxisLimits(tester, min: 0, max: 499);
+
+      // ... and the X-axis is labeled...
+      assertPlotXAxisTitle(tester, title: "Index");
+    });
+
+    testWidgets("Verify plot color applied to newly added channel.",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST PARABOLA"
+      final channelList = {
+        "PLOT TEST CONSTANT": ChannelSetting(lineColor: PlotColor.blue.color)
+      };
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
+      await waitForPlotDataToLoad(tester);
+
+      // Verify that color is as expected.
+      assertColorOfPlot(tester, expectedColor: PlotColor.blue.color);
     });
   });
 
