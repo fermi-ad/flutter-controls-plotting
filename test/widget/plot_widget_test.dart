@@ -521,6 +521,30 @@ void main() {
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
     });
+
+    testWidgets("Plot API TEST CONST, get a horizontal line at y=5.0",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST PARABOLA"
+      final channelList = {"API TEST CONSTANT": ChannelSetting()};
+
+      // When I build the PlotWidget with an AcsysProvider
+      await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
+      await waitForPlotDataToLoad(tester);
+
+      // Then the plot contains a parabola with 500 points starting at X=-250
+      assertPlotContainsHorizontalLine(tester, numberOfPoints: 500, atY: 5.0);
+
+      // ... and the Y-axis is labeled
+      assertPlotYAxisTitles(tester,
+          titles: ["API TEST CONSTANT"], units: ["A"]);
+
+      // ... and the limits for the X-axis are -250 to 250
+      assertPlotXAxisLimits(tester, min: 0, max: 499);
+
+      // ... and the X-axis is labeled...
+      assertPlotXAxisTitle(tester, title: "Index");
+    });
   });
 
   group("PlotWidget (implementation = Fermi) widget tests", () {});
