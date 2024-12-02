@@ -380,6 +380,30 @@ void main() {
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
     });
+
+    testWidgets(
+        "Plot multiple plots and ensure that the Y and X axis limits are adjusted",
+        (WidgetTester tester) async {
+      final channelList = {"PLOT TEST SINE": ChannelSetting()};
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
+      await waitForPlotDataToLoad(tester);
+
+      // Ensure that the axis limits accomodate the sine plot test.
+      assertPlotXAxisLimits(min: -250.0, max: 250.0);
+      assertPlotYAxisLimits(tester, min: -1, max: 1);
+
+      // Plot a second channel.
+      channelList["PLOT TEST CONSTANT"] = ChannelSetting();
+      await tester.pumpWidget(_buildPlotWidget(channelList));
+      await waitForPlotDataToLoad(tester);
+
+      // Ensure that the axis limits changed to accomodate the new plot.
+      assertPlotXAxisLimits(min: -250, max: 499);
+      assertPlotYAxisLimits(tester, min: -1, max: 5);
+    });
   });
 
   group("PlotWidget (implementation = Fermi) widget tests", () {});
