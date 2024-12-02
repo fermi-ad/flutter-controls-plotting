@@ -41,7 +41,7 @@ jobs:
       - name: Building web application
         run: flutter build web
 
-Acceptance-Tests:
+  Acceptance-Tests:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
