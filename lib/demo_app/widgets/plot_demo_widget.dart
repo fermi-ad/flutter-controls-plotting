@@ -14,16 +14,19 @@ class PlotDemoState extends State<PlotDemoWidget> {
   Widget build(BuildContext context) => Padding(
       padding: const EdgeInsets.all(10),
       child: Column(children: [
-        DropdownMenu<String>(
-          initialSelection: "Fl_Charts",
-          label: const Text("Plot Implementation"),
-          onSelected: _handleImplementationSelected,
-          dropdownMenuEntries: const [
-            DropdownMenuEntry<String>(value: "Fl_Charts", label: "Fl_Charts"),
-            DropdownMenuEntry<String>(value: "Graphic", label: "Graphic"),
-            DropdownMenuEntry<String>(value: "Fermi", label: "Custom")
-          ],
-        ),
+        Padding(
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+            child: DropdownMenu<String>(
+              initialSelection: "Fl_Charts",
+              label: const Text("Plot Implementation"),
+              onSelected: _handleImplementationSelected,
+              dropdownMenuEntries: const [
+                DropdownMenuEntry<String>(
+                    value: "Fl_Charts", label: "Fl_Charts"),
+                DropdownMenuEntry<String>(value: "Graphic", label: "Graphic"),
+                DropdownMenuEntry<String>(value: "Fermi", label: "Custom")
+              ],
+            )),
         Expanded(
             child: LayoutBuilder(
                 builder: (context, constraints) => GridView.count(
