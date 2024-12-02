@@ -351,7 +351,7 @@ void main() {
       assertPlotYAxisLimits(tester, min: 0, max: 5);
 
       // ... and the X-axis is labeled...
-      // assertPlotXAxisTitle(title: "Index");
+      assertPlotXAxisTitle(title: "Index");
     });
   });
 
