@@ -71,6 +71,9 @@ class PlotState extends State<PlotWidget> {
 
   double get maxY => _adapter.maxY;
 
+  String get xAxisTitle =>
+      _adapter.plotReply != null ? _adapter.plotReply!.xAxisUnits : "";
+
   @override
   void didChangeDependencies() {
     _resetAdapter();

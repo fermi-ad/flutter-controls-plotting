@@ -23,9 +23,11 @@ void assertColorOfPlot({required Color expectedColor}) {
   expect(lineChart.data.lineBarsData.first.color, expectedColor);
 }
 
-void assertPlotXAxisTitle({required String title}) => expect(
-    find.descendant(of: find.byType(LineChart), matching: find.text(title)),
-    findsOneWidget);
+void assertPlotXAxisTitle(WidgetTester tester, {required String title}) {
+  final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
+
+  expect(plotState.xAxisTitle, title);
+}
 
 void assertPlotYAxisTitles(WidgetTester tester,
     {required List<String> titles, required List<String> units}) {

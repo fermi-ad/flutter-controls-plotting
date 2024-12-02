@@ -47,7 +47,7 @@ void main() {
       assertPlotYAxisLimits(tester, min: 0, max: 5);
 
       // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(title: "Index");
+      assertPlotXAxisTitle(tester, title: "Index");
     });
 
     testWidgets(
@@ -70,7 +70,7 @@ void main() {
       assertPlotYAxisLimits(tester, min: 0, max: 499);
 
       // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(title: "Index");
+      assertPlotXAxisTitle(tester, title: "Index");
     });
 
     testWidgets(
@@ -116,7 +116,7 @@ void main() {
       assertPlotXAxisLimits(min: -250.0, max: 250.0);
 
       // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(title: "Index");
+      assertPlotXAxisTitle(tester, title: "Index");
     });
 
     testWidgets(
@@ -139,7 +139,7 @@ void main() {
       assertPlotXAxisLimits(min: -250.0, max: 250.0);
 
       // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(title: "Index");
+      assertPlotXAxisTitle(tester, title: "Index");
     });
 
     testWidgets(
@@ -177,7 +177,7 @@ void main() {
       assertPlotXAxisLimits(min: -32767.0, max: 32767.0);
 
       // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(title: "Index");
+      assertPlotXAxisTitle(tester, title: "Index");
     });
 
     testWidgets(
@@ -201,7 +201,7 @@ void main() {
       assertPlotXAxisLimits(min: 0.0, max: 499.0);
 
       // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(title: "Index");
+      assertPlotXAxisTitle(tester, title: "Index");
     });
 
     testWidgets("Dismiss error message, error banner goes away",
@@ -271,7 +271,7 @@ void main() {
       assertPlotXAxisLimits(min: 0, max: 499);
 
       // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(title: "Index");
+      assertPlotXAxisTitle(tester, title: "Index");
     });
 
     testWidgets("Small screen, y-axis labels are on top",
@@ -351,7 +351,7 @@ void main() {
       assertPlotYAxisLimits(tester, min: 0, max: 5);
 
       // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(title: "Index");
+      assertPlotXAxisTitle(tester, title: "Index");
     });
   });
 
