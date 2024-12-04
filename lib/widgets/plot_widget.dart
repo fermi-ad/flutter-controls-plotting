@@ -38,6 +38,8 @@ class PlotWidget extends StatefulWidget {
 
   final List<String> yLimits;
 
+  final Function(String channelName)? onInternalChannelSettingChange;
+
   final PlotImplementation implementation;
 
   const PlotWidget(
@@ -45,6 +47,7 @@ class PlotWidget extends StatefulWidget {
       this.plotChannels = const <String, ChannelSetting>{},
       this.daqService = const StandardPlotDAQ(),
       this.yLimits = const ["", ""],
+      this.onInternalChannelSettingChange, 
       this.implementation = PlotImplementation.flCharts});
 
   @override

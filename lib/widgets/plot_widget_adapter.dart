@@ -52,6 +52,8 @@ abstract class PlotWidgetAdapter {
       // No more colors, default to blue.
       candidateColor ??= PlotColor.blue.color;
       setting.lineColor = candidateColor;
+
+      widget.onInternalChannelSettingChange?.call(channelName);
     }
 
     return setting.lineColor!;
