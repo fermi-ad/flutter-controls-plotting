@@ -19,7 +19,7 @@ abstract class PlotWidgetAdapter {
 
   double minX = 0, maxX = 1.0;
 
-  List<List<PlotPoint>> filteredPoints = [[]];
+  Map<String, List<PlotPoint>> filteredPoints = {};
 
   PlotWidgetAdapter({required this.widget});
 

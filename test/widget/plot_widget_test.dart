@@ -56,6 +56,30 @@ void main() {
 
       expect(find.text(errorMessage), findsOne);
     });
+
+    testWidgets(
+        "Plot a channel with error and channel without, see one channel plotted and an error message",
+        (WidgetTester tester) async {
+      // Given a channel list with one channel name that doesn't exist
+      final channelList = {
+        "PLOT TEST CONSTANT": ChannelSetting(),
+        "PLOT TEST DOESN'T EXIST": ChannelSetting()
+      };
+
+      // When I try to plot both channels
+      await tester.pumpWidget(_buildPlotWidget(channelList));
+      await waitForPlotDataToLoad(tester);
+
+      // Then I should the first channel plotted
+      assertPlotContainsHorizontalLine(tester,
+          numberOfPoints: 500, atY: 5.0, channelName: "PLOT TEST CONSTANT");
+
+      // ... and an error message
+      expect(
+          find.text(
+              "An error occured when attempting to acquire data for PLOT TEST DOESN'T EXIST"),
+          findsOneWidget);
+    });
   });
   group("PlotWidget (implementation = FlCharts) widget tests", () {
     testWidgets("Plot channel list is empty, plot is empty",
@@ -85,7 +109,8 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Then the plot contains 500 points with y = 5.0
-      assertPlotContainsHorizontalLine(tester, numberOfPoints: 500, atY: 5.0);
+      assertPlotContainsHorizontalLine(tester,
+          numberOfPoints: 500, atY: 5.0, channelName: "PLOT TEST CONSTANT");
 
       // ... and the Y axis is labeled...
       assertPlotYAxisTitles(tester,
@@ -109,7 +134,8 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Then the plot contains a ramp with 500 points starting at Y=0.0
-      assertPlotContainsRamp(tester, numberOfPoints: 500, startingAtY: 0.0);
+      assertPlotContainsRamp(tester,
+          numberOfPoints: 500, startingAtY: 0.0, channelName: "PLOT TEST RAMP");
 
       // ... and the Y-axis is labeled
       assertPlotYAxisTitles(tester, titles: ["PLOT TEST RAMP"], units: ["V"]);
@@ -155,7 +181,9 @@ void main() {
 
       // Then the plot contains a parabola with 500 points starting at X=-250
       assertPlotContainsParabola(tester,
-          numberOfPoints: 501, startingAtX: -250);
+          numberOfPoints: 501,
+          startingAtX: -250,
+          channelName: "PLOT TEST PARABOLA");
 
       // ... and the Y-axis is labeled
       assertPlotYAxisTitles(tester,
@@ -180,7 +208,9 @@ void main() {
 
       // Then the plot contains a parabola with 500 points starting at X=-250
       assertPlotContainsSineWave(tester,
-          numberOfPoints: 501, startingAtX: -250);
+          numberOfPoints: 501,
+          startingAtX: -250,
+          channelName: "PLOT TEST SINE");
 
       // ... and the Y-axis is labeled
       assertPlotYAxisTitles(tester, titles: ["PLOT TEST SINE"], units: ["V"]);
@@ -218,7 +248,9 @@ void main() {
 
       // Then the plot contains a parabola with 500 points starting at X=-250
       assertPlotContainsParabola(tester,
-          numberOfPoints: 65535, startingAtX: -32767);
+          numberOfPoints: 65535,
+          startingAtX: -32767,
+          channelName: "PLOT TEST PARABOLA 64K");
 
       // ... and the Y-axis is labeled
       assertPlotYAxisTitles(tester,
@@ -243,7 +275,9 @@ void main() {
 
       // Then the plot contains a normal distribution around x=250
       assertPlotContainsNormalDistribution(tester,
-          numberOfPoints: 500, centeredAtX: 250);
+          numberOfPoints: 500,
+          centeredAtX: 250,
+          channelName: "PLOT TEST NORMAL");
 
       // ... and the Y-axis is labeled
       assertPlotYAxisTitles(tester, titles: ["PLOT TEST NORMAL"], units: ["V"]);
@@ -265,7 +299,8 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Then the plot contains a parabola with 500 points starting at X=-250
-      assertPlotContainsHorizontalLine(tester, numberOfPoints: 500, atY: 5.0);
+      assertPlotContainsHorizontalLine(tester,
+          numberOfPoints: 500, atY: 5.0, channelName: "API TEST CONSTANT");
 
       // ... and the Y-axis is labeled
       assertPlotYAxisTitles(tester,
@@ -345,7 +380,8 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Then the plot contains 500 points with y = 5.0
-      assertPlotContainsHorizontalLine(tester, numberOfPoints: 500, atY: 5.0);
+      assertPlotContainsHorizontalLine(tester,
+          numberOfPoints: 500, atY: 5.0, channelName: "PLOT TEST CONSTANT");
 
       // ... and the Y axis is labeled...
       assertPlotYAxisTitles(tester,
@@ -370,7 +406,8 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Then the plot contains a ramp with 500 points starting at Y=0.0
-      assertPlotContainsRamp(tester, numberOfPoints: 500, startingAtY: 0.0);
+      assertPlotContainsRamp(tester,
+          numberOfPoints: 500, startingAtY: 0.0, channelName: "PLOT TEST RAMP");
 
       // ... and the Y-axis is labeled
       assertPlotYAxisTitles(tester, titles: ["PLOT TEST RAMP"], units: ["V"]);
@@ -419,7 +456,9 @@ void main() {
 
       // Then the plot contains a parabola with 500 points starting at X=-250
       assertPlotContainsParabola(tester,
-          numberOfPoints: 501, startingAtX: -250);
+          numberOfPoints: 501,
+          startingAtX: -250,
+          channelName: "PLOT TEST PARABOLA");
 
       // ... and the Y-axis is labeled
       assertPlotYAxisTitles(tester,
@@ -445,7 +484,9 @@ void main() {
 
       // Then the plot contains a parabola with 500 points starting at X=-250
       assertPlotContainsSineWave(tester,
-          numberOfPoints: 501, startingAtX: -250);
+          numberOfPoints: 501,
+          startingAtX: -250,
+          channelName: "PLOT TEST SINE");
 
       // ... and the Y-axis is labeled
       assertPlotYAxisTitles(tester, titles: ["PLOT TEST SINE"], units: ["V"]);
@@ -485,7 +526,9 @@ void main() {
 
       // Then the plot contains a parabola with 500 points starting at X=-250
       assertPlotContainsParabola(tester,
-          numberOfPoints: 65535, startingAtX: -32767);
+          numberOfPoints: 65535,
+          startingAtX: -32767,
+          channelName: "PLOT TEST PARABOLA 64K");
 
       // ... and the Y-axis is labeled
       assertPlotYAxisTitles(tester,
@@ -511,7 +554,9 @@ void main() {
 
       // Then the plot contains a normal distribution around x=250
       assertPlotContainsNormalDistribution(tester,
-          numberOfPoints: 500, centeredAtX: 250);
+          numberOfPoints: 500,
+          centeredAtX: 250,
+          channelName: "PLOT TEST NORMAL");
 
       // ... and the Y-axis is labeled
       assertPlotYAxisTitles(tester, titles: ["PLOT TEST NORMAL"], units: ["V"]);
@@ -534,7 +579,8 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Then the plot contains a parabola with 500 points starting at X=-250
-      assertPlotContainsHorizontalLine(tester, numberOfPoints: 500, atY: 5.0);
+      assertPlotContainsHorizontalLine(tester,
+          numberOfPoints: 500, atY: 5.0, channelName: "API TEST CONSTANT");
 
       // ... and the Y-axis is labeled
       assertPlotYAxisTitles(tester,
