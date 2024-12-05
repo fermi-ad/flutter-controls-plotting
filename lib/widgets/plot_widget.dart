@@ -47,7 +47,7 @@ class PlotWidget extends StatefulWidget {
       this.plotChannels = const <String, ChannelSetting>{},
       this.daqService = const StandardPlotDAQ(),
       this.yLimits = const ["", ""],
-      this.onInternalChannelSettingChange, 
+      this.onInternalChannelSettingChange,
       this.implementation = PlotImplementation.flCharts});
 
   @override
@@ -85,11 +85,12 @@ class PlotState extends State<PlotWidget> {
       .map((String channelName) => _adapter.lineColorForChannel(channelName))
       .toList();
 
-  List<List<PlotPoint>> get points => _adapter.plotReply != null
-      ? _adapter.plotReply!.data
-          .map((PlotChannelData channelData) => channelData.points)
-          .toList()
-      : [];
+  Map<String, List<PlotPoint>> get points => _adapter.plotReply != null
+      ? Map.fromEntries(_adapter.plotReply!.data
+          .map((PlotChannelData channelData) =>
+              MapEntry(channelData.name, channelData.points))
+          .toList())
+      : {};
 
   @override
   void didChangeDependencies() {
@@ -256,7 +257,7 @@ class PlotState extends State<PlotWidget> {
               .where((PlotPoint point) => point.y >= minY && point.y <= maxY)
               .toList()
           : points;
-      _adapter.filteredPoints.add(filteredPoints);
+      _adapter.filteredPoints[plotChannel.name] = filteredPoints;
     }
   }
 

@@ -130,15 +130,16 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
 
   List<LineChartBarData> _toLineChartBarDataList(
       List<PlotChannelData> plotChannels,
-      List<List<PlotPoint>> filteredChannelPoints) {
+      Map<String, List<PlotPoint>> filteredChannelPoints) {
     List<LineChartBarData> lineChartList = [];
 
     plotChannels.asMap().forEach((index, plotChannel) {
-      if (_channelHasError(plotChannel)) {
+      if (_channelHasError(plotChannel) ||
+          !filteredChannelPoints.containsKey(plotChannel)) {
         return;
       }
 
-      var spots = _toSpots(filteredChannelPoints[index]);
+      var spots = _toSpots(filteredChannelPoints[plotChannel.name]!);
 
       lineChartList.add(LineChartBarData(
         color: lineColorForChannel(plotChannel.name),
