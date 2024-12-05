@@ -56,6 +56,29 @@ void main() {
 
       expect(find.text(errorMessage), findsOne);
     });
+
+    testWidgets(
+        "Plot a channel with error and channel without, see one channel plotted and an error message",
+        (WidgetTester tester) async {
+      // Given a channel list with one channel name that doesn't exist
+      final channelList = {
+        "PLOT TEST CONSTANT": ChannelSetting(),
+        "PLOT TEST DOESN'T EXIST": ChannelSetting()
+      };
+
+      // When I try to plot both channels
+      await tester.pumpWidget(_buildPlotWidget(channelList));
+      await waitForPlotDataToLoad(tester);
+
+      // Then I should the first channel plotted
+      assertPlotContainsHorizontalLine(tester, numberOfPoints: 500, atY: 5.0);
+
+      // ... and an error message
+      expect(
+          find.text(
+              "An error occured when attempting to acquire data for PLOT TEST DOESN'T EXIST"),
+          findsNothing);
+    });
   });
   group("PlotWidget (implementation = FlCharts) widget tests", () {
     testWidgets("Plot channel list is empty, plot is empty",
