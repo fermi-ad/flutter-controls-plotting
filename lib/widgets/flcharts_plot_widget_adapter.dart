@@ -135,7 +135,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
 
     plotChannels.asMap().forEach((index, plotChannel) {
       if (_channelHasError(plotChannel) ||
-          !filteredChannelPoints.containsKey(plotChannel)) {
+          !filteredChannelPoints.containsKey(plotChannel.name)) {
         return;
       }
 
