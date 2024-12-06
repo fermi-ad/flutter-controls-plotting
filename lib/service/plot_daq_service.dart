@@ -166,7 +166,7 @@ enum GenPlots {
   ramp("PLOT TEST RAMP"),
   randRamp("PLOT TEST RAND RAMP"),
   parabola("PLOT TEST PARABOLA"),
-  parabola64k("PLOT TEST PARABOLA"),
+  parabola64k("PLOT TEST PARABOLA 64K"),
   sine("PLOT TEST SINE"),
   normal("PLOT TEST NORMAL");
 
