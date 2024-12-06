@@ -16,7 +16,7 @@ class StandardPlotDAQ implements PlotDAQService {
   Stream<PlotReply> retrievePlot(BuildContext context,
       {required Set<String> forChannels, int updateRate = 0}) {
     var containsGenPlots = false;
-    var plotArgs = _PlotArgs();
+    var plotArgs = _PlotArgs(xMin: 0, xMax: 499, windowSize: 500);
     for (var genChannel in GenPlots.values) {
       if (forChannels.contains(genChannel.name)) {
         containsGenPlots = true;
@@ -72,16 +72,17 @@ class StandardPlotDAQ implements PlotDAQService {
       // Refresh cycle only API provided.
       while (true) {
         await Future.delayed(Duration(milliseconds: updateRate));
-        yield _generatePlot(forChannels: forChannels, args: args, markChannelNameErrors: true);
+        yield _generatePlot(
+            forChannels: forChannels, args: args, markChannelNameErrors: true);
       }
     }
   }
 
   PlotReply _generatePlot(
-      {required Set<String> forChannels, required _PlotArgs args, bool markChannelNameErrors = false}) {
+      {required Set<String> forChannels,
+      required _PlotArgs args,
+      bool markChannelNameErrors = false}) {
     List<PlotChannelData> internalDaqData = [];
-
-    bool addSimlatedWait = false;
 
     for (var forChannel in forChannels) {
       List<PlotPoint>? data;
@@ -112,7 +113,6 @@ class StandardPlotDAQ implements PlotDAQService {
             (i) => PlotPoint(
                 x: (i - 32767.0).toDouble(), y: pow(i - 32767, 2).toDouble()));
       } else if (forChannel == GenPlots.sine.name) {
-        addSimlatedWait = true;
         data = List.generate(
             501,
             (i) => PlotPoint(
@@ -126,7 +126,7 @@ class StandardPlotDAQ implements PlotDAQService {
                 y: (pow(500, 2) / 4) *
                     pow(e, -(pow(i - 250, 2) / (2 * pow(50, 2)))).toDouble() /
                     (50 * sqrt(2 * pi))));
-      } 
+      }
 
       if (data != null) {
         internalDaqData
@@ -134,7 +134,8 @@ class StandardPlotDAQ implements PlotDAQService {
         args.xMax = max(args.xMax, data.length - 1);
         args.windowSize = max(args.windowSize, data.length);
       } else if (markChannelNameErrors) {
-        internalDaqData.add(PlotChannelData(name: forChannel, units: "", status: -1)); 
+        internalDaqData
+            .add(PlotChannelData(name: forChannel, units: "", status: -1));
       }
     }
 
@@ -144,7 +145,7 @@ class StandardPlotDAQ implements PlotDAQService {
         xAxisMin: args.xMin + 0.0,
         xAxisMax: args.xMax + 0.0,
         windowSize: args.windowSize,
-        data: internalDaqData);    
+        data: internalDaqData);
 
     return generatedPlotReply;
   }
@@ -156,7 +157,7 @@ class _PlotArgs {
   int xMax;
   int windowSize;
 
-  _PlotArgs({this.xMin = 0, this.xMax = 499, this.windowSize = 500});
+  _PlotArgs({required this.xMin, required this.xMax, required this.windowSize});
 }
 
 enum GenPlots {
