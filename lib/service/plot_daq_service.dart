@@ -6,7 +6,7 @@ import 'package:flutter_controls_core/flutter_controls_core.dart';
 
 abstract class PlotDAQService {
   Stream<PlotReply> retrievePlot(BuildContext context,
-      {required Set<String> forChannels});
+      {required Set<String> forChannels, int updateRate});
 }
 
 class StandardPlotDAQ implements PlotDAQService {
@@ -14,115 +14,162 @@ class StandardPlotDAQ implements PlotDAQService {
 
   @override
   Stream<PlotReply> retrievePlot(BuildContext context,
-      {required Set<String> forChannels}) {
-    List<String> apiChannels = [];
-    List<PlotChannelData> internalDaqData = [];
+      {required Set<String> forChannels, int updateRate = 0}) {
+    var containsGenPlots = false;
+    var plotArgs = _PlotArgs(xMin: 0, xMax: 499, windowSize: 500);
+    for (var genChannel in GenPlots.values) {
+      if (forChannels.contains(genChannel.name)) {
+        containsGenPlots = true;
+        break;
+      }
+    }
 
-    bool addSimlatedWait = false;
-    var xMin = 0;
-    var xMax = 499;
-    var windowSize = 500;
+    if (containsGenPlots) {
+      return _retrieveInternalPlot(context,
+          forChannels: forChannels, args: plotArgs, updateRate: updateRate);
+    } else {
+      // API only
+      return ACSys.api(context).startPlot(forChannels.toList(),
+          xMin: plotArgs.xMin,
+          xMax: plotArgs.xMax,
+          windowSize: plotArgs.windowSize,
+          updateRate: updateRate);
+    }
+  }
+
+  Stream<PlotReply> _retrieveInternalPlot(BuildContext context,
+      {required Set<String> forChannels,
+      required _PlotArgs args,
+      int updateRate = 0}) async* {
+    if (updateRate == 0) {
+      // No refresh cycle, attempt to combine gen plots with api results
+      var generatePlot = _generatePlot(forChannels: forChannels, args: args);
+
+      // Verify if any apiChannels provided
+      List<String> apiChannels = [];
+      apiChannels.addAll(forChannels);
+      for (var genChannel in GenPlots.values) {
+        if (forChannels.contains(genChannel.name)) {
+          apiChannels.remove(genChannel.name);
+        }
+      }
+
+      if (apiChannels.isNotEmpty) {
+        // Internal and API request
+        var apiStream = ACSys.api(context).startPlot(apiChannels,
+            xMin: args.xMin, xMax: args.xMax, windowSize: args.windowSize);
+
+        var apiResponse = apiStream.first;
+        apiResponse.then((PlotReply value) {
+          generatePlot.data.addAll(value.data);
+        });
+
+        yield generatePlot;
+      }
+
+      yield generatePlot;
+    } else {
+      // Refresh cycle only API provided.
+      while (true) {
+        await Future.delayed(Duration(milliseconds: updateRate));
+        yield _generatePlot(
+            forChannels: forChannels, args: args, markChannelNameErrors: true);
+      }
+    }
+  }
+
+  PlotReply _generatePlot(
+      {required Set<String> forChannels,
+      required _PlotArgs args,
+      bool markChannelNameErrors = false}) {
+    List<PlotChannelData> internalDaqData = [];
 
     for (var forChannel in forChannels) {
       List<PlotPoint>? data;
-      switch (forChannel) {
-        case "PLOT TEST CONSTANT":
-          data = List.generate(500, (i) => PlotPoint(x: i.toDouble(), y: 5.0));
-          break;
-
-        case "PLOT TEST RAMP":
-          data = List.generate(
-              500, (i) => PlotPoint(x: i.toDouble(), y: i.toDouble()));
-          break;
-
-        case "PLOT TEST RAND RAMP":
-          var rand = Random();
-          data = List.generate(
-              500,
-              (i) => PlotPoint(
-                  x: i.toDouble(), y: i.toDouble() + (rand.nextInt(50) - 25)));
-          break;
-
-        case "PLOT TEST PARABOLA":
-          data = List.generate(
-              501,
-              (i) => PlotPoint(
-                  x: (i - 250.0).toDouble(), y: pow(i - 250, 2).toDouble()));
-          break;
-
-        case "PLOT TEST PARABOLA 64K":
-          data = List.generate(
-              65535,
-              (i) => PlotPoint(
-                  x: (i - 32767.0).toDouble(),
-                  y: pow(i - 32767, 2).toDouble()));
-          break;
-
-        case "PLOT TEST SINE":
-          addSimlatedWait = true;
-          data = List.generate(
-              501,
-              (i) => PlotPoint(
-                  x: (i - 250.0).toDouble(),
-                  y: sin((i - 250) / 500 * 6.28).toDouble()));
-          break;
-
-        case "PLOT TEST NORMAL":
-          data = List.generate(
-              500,
-              (i) => PlotPoint(
-                  x: i.toDouble(),
-                  y: (pow(500, 2) / 4) *
-                      pow(e, -(pow(i - 250, 2) / (2 * pow(50, 2)))).toDouble() /
-                      (50 * sqrt(2 * pi))));
-          break;
-
-        default:
-          apiChannels.add(forChannel);
-          break;
+      if (forChannel == GenPlots.constant.name) {
+        data = List.generate(500, (i) => PlotPoint(x: i.toDouble(), y: 5.0));
+      } else if (forChannel == GenPlots.randConst.name) {
+        var rand = Random();
+        var constant = rand.nextInt(25);
+        data = List.generate(
+            500, (i) => PlotPoint(x: i.toDouble(), y: constant.toDouble()));
+      } else if (forChannel == GenPlots.ramp.name) {
+        data = List.generate(
+            500, (i) => PlotPoint(x: i.toDouble(), y: i.toDouble()));
+      } else if (forChannel == GenPlots.randRamp.name) {
+        var rand = Random();
+        data = List.generate(
+            500,
+            (i) => PlotPoint(
+                x: i.toDouble(), y: i.toDouble() + (rand.nextInt(50) - 25)));
+      } else if (forChannel == GenPlots.parabola.name) {
+        data = List.generate(
+            501,
+            (i) => PlotPoint(
+                x: (i - 250.0).toDouble(), y: pow(i - 250, 2).toDouble()));
+      } else if (forChannel == GenPlots.parabola64k.name) {
+        data = List.generate(
+            65535,
+            (i) => PlotPoint(
+                x: (i - 32767.0).toDouble(), y: pow(i - 32767, 2).toDouble()));
+      } else if (forChannel == GenPlots.sine.name) {
+        data = List.generate(
+            501,
+            (i) => PlotPoint(
+                x: (i - 250.0).toDouble(),
+                y: sin((i - 250) / 500 * 6.28).toDouble()));
+      } else if (forChannel == GenPlots.normal.name) {
+        data = List.generate(
+            500,
+            (i) => PlotPoint(
+                x: i.toDouble(),
+                y: (pow(500, 2) / 4) *
+                    pow(e, -(pow(i - 250, 2) / (2 * pow(50, 2)))).toDouble() /
+                    (50 * sqrt(2 * pi))));
       }
 
       if (data != null) {
         internalDaqData
             .add(PlotChannelData(name: forChannel, units: "V", points: data));
-        xMax = max(xMax, data.length - 1);
-        windowSize = max(windowSize, data.length);
+        args.xMax = max(args.xMax, data.length - 1);
+        args.windowSize = max(args.windowSize, data.length);
+      } else if (markChannelNameErrors) {
+        internalDaqData
+            .add(PlotChannelData(name: forChannel, units: "", status: -1));
       }
     }
 
-    if (apiChannels.isNotEmpty && internalDaqData.isEmpty) {
-      // API only request
-      return ACSys.api(context).startPlot(apiChannels,
-          xMin: xMin, xMax: xMax, windowSize: windowSize);
-    } else if (apiChannels.isNotEmpty) {
-      // Internal and API request
-      var apiStream = ACSys.api(context).startPlot(apiChannels,
-          xMin: xMin, xMax: xMax, windowSize: windowSize);
-
-      var apiResponse = apiStream.first;
-      var modifiedResponse = apiResponse.then((PlotReply value) {
-        value.data.addAll(internalDaqData);
-        return value;
-      });
-
-      return Stream<PlotReply>.fromFuture(modifiedResponse);
-    }
-    // Internal only request.
     var generatedPlotReply = PlotReply(
         plotId: "Internal",
         xAxisUnits: "Index",
-        xAxisMin: xMin + 0.0,
-        xAxisMax: xMax + 0.0,
-        windowSize: windowSize,
+        xAxisMin: args.xMin + 0.0,
+        xAxisMax: args.xMax + 0.0,
+        windowSize: args.windowSize,
         data: internalDaqData);
 
-    if (addSimlatedWait) {
-      return Stream<PlotReply>.fromFuture(
-          Future.delayed(const Duration(seconds: 1), () {
-        return generatedPlotReply;
-      }));
-    }
-
-    return Stream<PlotReply>.value(generatedPlotReply);
+    return generatedPlotReply;
   }
+}
+
+// Facilitates passing plot arguments by reference for generation of plot from API and local.
+class _PlotArgs {
+  int xMin;
+  int xMax;
+  int windowSize;
+
+  _PlotArgs({required this.xMin, required this.xMax, required this.windowSize});
+}
+
+enum GenPlots {
+  constant("PLOT TEST CONSTANT"),
+  randConst("PLOT TEST RAND CONSTANT"),
+  ramp("PLOT TEST RAMP"),
+  randRamp("PLOT TEST RAND RAMP"),
+  parabola("PLOT TEST PARABOLA"),
+  parabola64k("PLOT TEST PARABOLA 64K"),
+  sine("PLOT TEST SINE"),
+  normal("PLOT TEST NORMAL");
+
+  const GenPlots(this.name);
+  final String name;
 }

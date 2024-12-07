@@ -38,6 +38,8 @@ class PlotWidget extends StatefulWidget {
 
   final List<String> yLimits;
 
+  final int updateRate; 
+
   final bool isShowLabels;
 
   final Function(String channelName)? onInternalChannelSettingChange;
@@ -49,6 +51,7 @@ class PlotWidget extends StatefulWidget {
       this.plotChannels = const <String, ChannelSetting>{},
       this.daqService = const StandardPlotDAQ(),
       this.yLimits = const ["", ""],
+      this.updateRate = 0, 
       this.isShowLabels = true,
       this.onInternalChannelSettingChange,
       this.implementation = PlotImplementation.flCharts});
@@ -210,7 +213,7 @@ class PlotState extends State<PlotWidget> {
     if (widget.plotChannels.isNotEmpty) {
       _errorsDismissed = false;
       _plotStream = widget.daqService
-          .retrievePlot(context, forChannels: widget.plotChannels.keys.toSet());
+          .retrievePlot(context, forChannels: widget.plotChannels.keys.toSet(), updateRate: widget.updateRate);
     }
   }
 
