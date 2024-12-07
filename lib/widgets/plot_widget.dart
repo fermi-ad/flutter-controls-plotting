@@ -40,6 +40,8 @@ class PlotWidget extends StatefulWidget {
 
   final int updateRate; 
 
+  final bool isShowLabels;
+
   final Function(String channelName)? onInternalChannelSettingChange;
 
   final PlotImplementation implementation;
@@ -50,6 +52,7 @@ class PlotWidget extends StatefulWidget {
       this.daqService = const StandardPlotDAQ(),
       this.yLimits = const ["", ""],
       this.updateRate = 0, 
+      this.isShowLabels = true,
       this.onInternalChannelSettingChange,
       this.implementation = PlotImplementation.flCharts});
 
@@ -191,7 +194,7 @@ class PlotState extends State<PlotWidget> {
   void _resetAdapter() {
     switch (widget.implementation) {
       case PlotImplementation.flCharts:
-        _adapter = FlchartsPlotWidgetAdapter(widget: widget);
+        _adapter = FlchartsPlotWidgetAdapter(widget: widget, isShowLabels: widget.isShowLabels);
         break;
 
       case PlotImplementation.graphic:

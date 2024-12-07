@@ -1,7 +1,9 @@
 part of plotadapter;
 
 class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
-  FlchartsPlotWidgetAdapter({required super.widget});
+  final bool isShowLabels;
+  
+  FlchartsPlotWidgetAdapter({required super.widget, required this.isShowLabels}) ;
 
   @override
   Widget buildPlot() => LayoutBuilder(
@@ -86,8 +88,8 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       leftTitles = AxisTitles(
         axisNameSize: axisNameSize,
         axisNameWidget: axisNameWidget,
-        sideTitles: const SideTitles(
-          showTitles: true,
+        sideTitles: SideTitles(
+          showTitles: isShowLabels,     //zyuan true,
           reservedSize: 60,
         ),
       );
@@ -95,9 +97,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       topTitles = emptyTitles;
     } else {
       // Displayed on narrow screen
-      leftTitles = const AxisTitles(
+      leftTitles = AxisTitles(
         sideTitles: SideTitles(
-          showTitles: true,
+          showTitles: isShowLabels, // zyuan true,
           reservedSize: 60,
         ),
       );
@@ -116,8 +118,8 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
               xAxisLabel,
               style: const TextStyle(),
             ),
-            sideTitles: const SideTitles(
-              showTitles: true,
+            sideTitles: SideTitles(
+              showTitles: isShowLabels,    // zyuan true,
               reservedSize: 40,
             )),
         topTitles: topTitles,
