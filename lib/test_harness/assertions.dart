@@ -140,13 +140,11 @@ Future<void> assertPlotPointsDifferent(WidgetTester tester,
     var pointsAfter = plotPointsAfter[i];
 
     if (pointsBefore.x != pointsAfter.x) {
-      print("differenent");
       changed = true;
       break;
     }
 
     if (pointsBefore.y != pointsAfter.y) {
-      print("differenenty");
       changed = true;
       break;
     }
