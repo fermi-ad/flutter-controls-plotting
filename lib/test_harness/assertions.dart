@@ -124,6 +124,35 @@ void assertPlotContainsSineWave(WidgetTester tester,
   }
 }
 
+Future<void> assertPlotPointsDifferent(WidgetTester tester,
+    {required String channelName}) async {
+  final plotPoints = _getPlotPoints(tester, channelName: channelName);
+  var changed = false;
+
+  await tester.pumpAndSettle();
+
+  final plotPointsAfter = _getPlotPoints(tester, channelName: channelName);
+
+  expect(plotPoints.length, plotPointsAfter.length);
+
+  for (int i = 0; i < plotPoints.length; i++) {
+    var pointsBefore = plotPoints[i];
+    var pointsAfter = plotPointsAfter[i];
+
+    if (pointsBefore.x != pointsAfter.x) {
+      changed = true;
+      break;
+    }
+
+    if (pointsBefore.y != pointsAfter.y) {
+      changed = true;
+      break;
+    }
+  }
+
+  expect(changed, true);
+}
+
 void assertPlotContainsNormalDistribution(WidgetTester tester,
     {required int numberOfPoints,
     required int centeredAtX,
