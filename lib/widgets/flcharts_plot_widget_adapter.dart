@@ -2,13 +2,15 @@ part of plotadapter;
 
 class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   final bool isShowLabels;
-  
-  FlchartsPlotWidgetAdapter({required super.widget, required this.isShowLabels}) ;
+
+  FlchartsPlotWidgetAdapter(
+      {required super.widget, required this.isShowLabels});
 
   @override
   Widget buildPlot() => LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) =>
           LineChart(LineChartData(
+            clipData: const FlClipData.all(),
             minX: minX,
             maxX: maxX,
             minY: minY,
@@ -89,7 +91,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         axisNameSize: axisNameSize,
         axisNameWidget: axisNameWidget,
         sideTitles: SideTitles(
-          showTitles: isShowLabels,     //zyuan true,
+          showTitles: isShowLabels, //zyuan true,
           reservedSize: 60,
         ),
       );
@@ -119,7 +121,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
               style: const TextStyle(),
             ),
             sideTitles: SideTitles(
-              showTitles: isShowLabels,    // zyuan true,
+              showTitles: isShowLabels, // zyuan true,
               reservedSize: 40,
             )),
         topTitles: topTitles,

@@ -38,7 +38,7 @@ class PlotWidget extends StatefulWidget {
 
   final List<String> yLimits;
 
-  final int updateRate; 
+  final int updateRate;
 
   final bool isShowLabels;
 
@@ -51,7 +51,7 @@ class PlotWidget extends StatefulWidget {
       this.plotChannels = const <String, ChannelSetting>{},
       this.daqService = const StandardPlotDAQ(),
       this.yLimits = const ["", ""],
-      this.updateRate = 0, 
+      this.updateRate = 0,
       this.isShowLabels = true,
       this.onInternalChannelSettingChange,
       this.implementation = PlotImplementation.flCharts});
@@ -194,7 +194,8 @@ class PlotState extends State<PlotWidget> {
   void _resetAdapter() {
     switch (widget.implementation) {
       case PlotImplementation.flCharts:
-        _adapter = FlchartsPlotWidgetAdapter(widget: widget, isShowLabels: widget.isShowLabels);
+        _adapter = FlchartsPlotWidgetAdapter(
+            widget: widget, isShowLabels: widget.isShowLabels);
         break;
 
       case PlotImplementation.graphic:
@@ -212,8 +213,9 @@ class PlotState extends State<PlotWidget> {
 
     if (widget.plotChannels.isNotEmpty) {
       _errorsDismissed = false;
-      _plotStream = widget.daqService
-          .retrievePlot(context, forChannels: widget.plotChannels.keys.toSet(), updateRate: widget.updateRate);
+      _plotStream = widget.daqService.retrievePlot(context,
+          forChannels: widget.plotChannels.keys.toSet(),
+          updateRate: widget.updateRate);
     }
   }
 
@@ -253,17 +255,10 @@ class PlotState extends State<PlotWidget> {
   void _filterPoints() {
     _adapter.filteredPoints.clear();
     final plotChannels = _adapter.plotReply!.data;
-    for (var plotChannel in plotChannels) {
-      if (_channelHasError(plotChannel)) {
-        continue;
+    for (final plotChannel in plotChannels) {
+      if (!_channelHasError(plotChannel)) {
+        _adapter.filteredPoints[plotChannel.name] = plotChannel.points;
       }
-      final points = plotChannel.points;
-      final filteredPoints = widget.yLimits.isNotEmpty
-          ? points
-              .where((PlotPoint point) => point.y >= minY && point.y <= maxY)
-              .toList()
-          : points;
-      _adapter.filteredPoints[plotChannel.name] = filteredPoints;
     }
   }
 
