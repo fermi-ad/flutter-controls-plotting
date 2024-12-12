@@ -25,6 +25,51 @@ void main() {
       // Then startPlot was called only once
       expect(service.startPlotCount, 1);
     });
+
+    testWidgets(
+        "Plot API TEST CONSTANT and then add API TEST RAMP, startPlot is called twice",
+        (WidgetTester tester) async {
+      // Given a FakeAcsysService
+      final service = FakeACSysService();
+
+      // ... and a channel list containing API TEST CONSTANT
+      final channelList = {"API TEST CONSTANT": ChannelSetting()};
+
+      // ... and I have built the PlotWidget one time
+      await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
+      await waitForPlotDataToLoad(tester);
+
+      // When I add a channel
+      channelList["API TEST RAMP"] = ChannelSetting();
+
+      // ... amd rebuild the PlotWidget
+      await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
+      await waitForPlotDataToLoad(tester);
+
+      // Then startPlot was called only once
+      expect(service.startPlotCount, 2);
+    });
+
+    testWidgets(
+        "Plot API TEST CONSTANT and then rebuild, startPlot is called only once",
+        (WidgetTester tester) async {
+      // Given a FakeAcsysService
+      final service = FakeACSysService();
+
+      // ... and a channel list containing API TEST CONSTANT
+      final channelList = {"API TEST CONSTANT": ChannelSetting()};
+
+      // ... and I have built the PlotWidget one time
+      await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
+      await waitForPlotDataToLoad(tester);
+
+      // When I rebuild the PlotWidget
+      await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
+      await waitForPlotDataToLoad(tester);
+
+      // Then startPlot was called only once
+      expect(service.startPlotCount, 1);
+    });
   });
 
   group("Error handling", () {
