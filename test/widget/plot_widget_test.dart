@@ -9,6 +9,24 @@ import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  group("Stream handling", () {
+    testWidgets("Plot API TEST CONSTANT, startPlot is called once",
+        (WidgetTester tester) async {
+      // Given a FakeAcsysService
+      final service = FakeACSysService();
+
+      // ... and a channel list containing API TEST CONSTANT
+      final channelList = {"API TEST CONSTANT": ChannelSetting()};
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
+      await waitForPlotDataToLoad(tester);
+
+      // Then startPlot was called only once
+      expect(service.startPlotCount, 1);
+    });
+  });
+
   group("Error handling", () {
     testWidgets("Dismiss error message, error banner goes away",
         (WidgetTester tester) async {
@@ -620,11 +638,12 @@ void assertPlotImplementationIs(
 }
 
 Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
-        {PlotImplementation impl = PlotImplementation.flCharts}) =>
+        {PlotImplementation impl = PlotImplementation.flCharts,
+        ACSysServiceAPI? service}) =>
     MaterialApp(
         home: Scaffold(
             body: ACSysProvider(
-                service: FakeACSysService(),
+                service: service ?? FakeACSysService(),
                 child: PlotWidget(
                     plotChannels: channelList,
                     implementation: impl,
