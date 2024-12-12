@@ -38,6 +38,8 @@ class PlotWidget extends StatefulWidget {
 
   final List<String> yLimits;
 
+  final List<String> xLimits;
+
   final int updateRate;
 
   final bool isShowLabels;
@@ -51,6 +53,7 @@ class PlotWidget extends StatefulWidget {
       this.plotChannels = const <String, ChannelSetting>{},
       this.daqService = const StandardPlotDAQ(),
       this.yLimits = const ["", ""],
+      this.xLimits = const ["", ""],
       this.updateRate = 0,
       this.isShowLabels = true,
       this.onInternalChannelSettingChange,
@@ -250,6 +253,23 @@ class PlotState extends State<PlotWidget> {
         _adapter.maxY = double.parse(widget.yLimits[1]);
       }
     }
+
+    if (widget.xLimits.isNotEmpty) {
+      if (widget.xLimits[0] != "") {
+        _adapter.minX = double.parse(widget.xLimits[0]);
+      }
+      if (widget.xLimits[1] != "") {
+        _adapter.maxX = double.parse(widget.xLimits[1]);
+      }
+    }
+
+
+
+
+
+
+
+
   }
 
   void _filterPoints() {
