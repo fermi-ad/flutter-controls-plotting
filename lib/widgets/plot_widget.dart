@@ -38,12 +38,12 @@ class PlotWidget extends StatefulWidget {
   final PlotDAQService daqService;
 
   final List<String> yLimits;
-  
+
   final List<String> xLimits;
 
   final int updateDelay;
 
-  final int? triggerEvent;     
+  final int? triggerEvent;
 
   final bool isShowLabels;
 
@@ -58,7 +58,7 @@ class PlotWidget extends StatefulWidget {
       this.yLimits = const ["", ""],
       this.xLimits = const ["", ""],
       this.updateDelay = 0,
-      this.triggerEvent, 
+      this.triggerEvent,
       this.isShowLabels = true,
       this.onInternalChannelSettingChange,
       this.implementation = PlotImplementation.flCharts});
@@ -222,7 +222,7 @@ class PlotState extends State<PlotWidget> {
     _adapter.plotReply = null;
 
     _channels = Map.from(widget.plotChannels);
-    _updateRate = widget.updateDelay;
+    _updateDelay = widget.updateDelay;
 
     if (widget.plotChannels.isNotEmpty) {
       _errorsDismissed = false;
@@ -274,14 +274,6 @@ class PlotState extends State<PlotWidget> {
         _adapter.maxX = double.parse(widget.xLimits[1]);
       }
     }
-
-
-
-
-
-
-
-
   }
 
   void _filterPoints() {
@@ -311,7 +303,7 @@ class PlotState extends State<PlotWidget> {
   }
 
   bool get _streamShouldReset => !(mapEquals(widget.plotChannels, _channels) &&
-      _updateRate == widget.updateDelay);
+      _updateDelay == widget.updateDelay);
 
   late PlotWidgetAdapter _adapter;
 
@@ -319,7 +311,7 @@ class PlotState extends State<PlotWidget> {
 
   Map<String, ChannelSetting> _channels = {};
 
-  int _updateRate = 0;
+  int _updateDelay = 0;
 
   bool _errorsDismissed = false;
 }
