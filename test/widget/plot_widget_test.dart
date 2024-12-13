@@ -9,6 +9,91 @@ import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  group("Stream handling", () {
+    testWidgets("Plot API TEST CONSTANT, startPlot is called once",
+        (WidgetTester tester) async {
+      // Given a FakeAcsysService
+      final service = FakeACSysService();
+
+      // ... and a channel list containing API TEST CONSTANT
+      final channelList = {"API TEST CONSTANT": ChannelSetting()};
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
+      await waitForPlotDataToLoad(tester);
+
+      // Then startPlot was called only once
+      expect(service.startPlotCount, 1);
+    });
+
+    testWidgets(
+        "Plot API TEST CONSTANT and then add API TEST RAMP, startPlot is called twice",
+        (WidgetTester tester) async {
+      // Given a FakeAcsysService
+      final service = FakeACSysService();
+
+      // ... and a channel list containing API TEST CONSTANT
+      final channelList = {"API TEST CONSTANT": ChannelSetting()};
+
+      // ... and I have built the PlotWidget one time
+      await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
+      await waitForPlotDataToLoad(tester);
+
+      // When I add a channel
+      channelList["API TEST RAMP"] = ChannelSetting();
+
+      // ... amd rebuild the PlotWidget
+      await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
+      await waitForPlotDataToLoad(tester);
+
+      // Then startPlot was called only once
+      expect(service.startPlotCount, 2);
+    });
+
+    testWidgets(
+        "Plot API TEST CONSTANT and then rebuild, startPlot is called only once",
+        (WidgetTester tester) async {
+      // Given a FakeAcsysService
+      final service = FakeACSysService();
+
+      // ... and a channel list containing API TEST CONSTANT
+      final channelList = {"API TEST CONSTANT": ChannelSetting()};
+
+      // ... and I have built the PlotWidget one time
+      await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
+      await waitForPlotDataToLoad(tester);
+
+      // When I rebuild the PlotWidget
+      await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
+      await waitForPlotDataToLoad(tester);
+
+      // Then startPlot was called only once
+      expect(service.startPlotCount, 1);
+    });
+
+    testWidgets(
+        "Change updateRate and then rebuild PlotWidget, startPlot is called again",
+        (WidgetTester tester) async {
+      // Given a FakeAcsysService
+      final service = FakeACSysService();
+
+      // ... and a channel list containing API TEST CONSTANT
+      final channelList = {"API TEST CONSTANT": ChannelSetting()};
+
+      // ... and I have built the PlotWidget one time
+      await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
+      await waitForPlotDataToLoad(tester);
+
+      // When I change the DAQ settings and rebuild the PlotWidget
+      await tester.pumpWidget(
+          _buildPlotWidget(channelList, service: service, updateRate: 50));
+      await waitForPlotDataToLoad(tester);
+
+      // Then startPlot was called only once
+      expect(service.startPlotCount, 2);
+    });
+  });
+
   group("Error handling", () {
     testWidgets("Dismiss error message, error banner goes away",
         (WidgetTester tester) async {
@@ -620,12 +705,15 @@ void assertPlotImplementationIs(
 }
 
 Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
-        {PlotImplementation impl = PlotImplementation.flCharts}) =>
+        {PlotImplementation impl = PlotImplementation.flCharts,
+        int updateRate = 0,
+        ACSysServiceAPI? service}) =>
     MaterialApp(
         home: Scaffold(
             body: ACSysProvider(
-                service: FakeACSysService(),
+                service: service ?? FakeACSysService(),
                 child: PlotWidget(
                     plotChannels: channelList,
                     implementation: impl,
+                    updateRate: updateRate,
                     daqService: const StandardPlotDAQ()))));

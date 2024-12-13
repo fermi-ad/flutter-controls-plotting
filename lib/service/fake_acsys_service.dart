@@ -1,6 +1,8 @@
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 
 class FakeACSysService implements ACSysServiceAPI {
+  int startPlotCount = 0;
+
   @override
   Future<List<DeviceInfo>> getDeviceInfo(List<String> devices) =>
       throw UnimplementedError();
@@ -29,6 +31,8 @@ class FakeACSysService implements ACSysServiceAPI {
   @override
   Stream<PlotReply> startPlot(List<String> drfs,
       {int? xMin, int? xMax, int? windowSize, int? updateRate}) {
+    startPlotCount++;
+
     switch (drfs.first) {
       case "API TEST CONSTANT":
         return Stream<PlotReply>.value(PlotReply(
