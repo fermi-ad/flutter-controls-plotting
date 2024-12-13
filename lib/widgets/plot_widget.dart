@@ -222,7 +222,7 @@ class PlotState extends State<PlotWidget> {
     _adapter.plotReply = null;
 
     _channels = Map.from(widget.plotChannels);
-    _updateRate = widget.updateRate;
+    _updateRate = widget.updateDelay;
 
     if (widget.plotChannels.isNotEmpty) {
       _errorsDismissed = false;
@@ -311,7 +311,7 @@ class PlotState extends State<PlotWidget> {
   }
 
   bool get _streamShouldReset => !(mapEquals(widget.plotChannels, _channels) &&
-      _updateRate == widget.updateRate);
+      _updateRate == widget.updateDelay);
 
   late PlotWidgetAdapter _adapter;
 

@@ -706,7 +706,7 @@ void assertPlotImplementationIs(
 
 Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
         {PlotImplementation impl = PlotImplementation.flCharts,
-        int updateRate = 0,
+        int updateDelay = 0,
         ACSysServiceAPI? service}) =>
     MaterialApp(
         home: Scaffold(
@@ -715,5 +715,5 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
                 child: PlotWidget(
                     plotChannels: channelList,
                     implementation: impl,
-                    updateRate: updateRate,
+                    updateDelay: updateDelay,
                     daqService: const StandardPlotDAQ()))));
