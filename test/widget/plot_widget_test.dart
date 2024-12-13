@@ -72,7 +72,7 @@ void main() {
     });
 
     testWidgets(
-        "Change updateRate and then rebuild PlotWidget, startPlot is called again",
+        "Change updateDelay and then rebuild PlotWidget, startPlot is called again",
         (WidgetTester tester) async {
       // Given a FakeAcsysService
       final service = FakeACSysService();
@@ -86,7 +86,7 @@ void main() {
 
       // When I change the DAQ settings and rebuild the PlotWidget
       await tester.pumpWidget(
-          _buildPlotWidget(channelList, service: service, updateRate: 50));
+          _buildPlotWidget(channelList, service: service, updateDelay: 50));
       await waitForPlotDataToLoad(tester);
 
       // Then startPlot was called only once
