@@ -6,7 +6,10 @@ import 'package:flutter_controls_core/flutter_controls_core.dart';
 
 abstract class PlotDAQService {
   Stream<PlotReply> retrievePlot(BuildContext context,
-      {required Set<String> forChannels, int updateDelay});
+      {required Set<String> forChannels,
+      int updateDelay = 0,
+      int nAcquisitions = 0,
+      int? triggerEvent});
 }
 
 class StandardPlotDAQ implements PlotDAQService {
@@ -29,7 +32,10 @@ class StandardPlotDAQ implements PlotDAQService {
 
     if (containsGenPlots) {
       return _retrieveInternalPlot(context,
-          forChannels: forChannels, args: plotArgs, updateDelay: updateDelay);
+          forChannels: forChannels,
+          args: plotArgs,
+          updateDelay: updateDelay,
+          triggerEvent: triggerEvent);
     } else {
       // API only
       return ACSys.api(context).startPlot(forChannels.toList(),
@@ -43,7 +49,8 @@ class StandardPlotDAQ implements PlotDAQService {
   Stream<PlotReply> _retrieveInternalPlot(BuildContext context,
       {required Set<String> forChannels,
       required _PlotArgs args,
-      int updateDelay = 0}) async* {
+      int updateDelay = 0,
+      int? triggerEvent}) async* {
     if (updateDelay == 0) {
       // No refresh cycle, attempt to combine gen plots with api results
       var generatePlot = _generatePlot(forChannels: forChannels, args: args);
