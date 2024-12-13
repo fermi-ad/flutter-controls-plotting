@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
@@ -108,7 +109,10 @@ class PlotState extends State<PlotWidget> {
   @override
   void didUpdateWidget(PlotWidget oldWidget) {
     _resetAdapter();
-    _resetStream();
+
+    if (_streamShouldReset) {
+      _resetStream();
+    }
     super.didUpdateWidget(oldWidget);
   }
 
@@ -211,8 +215,12 @@ class PlotState extends State<PlotWidget> {
   void _resetStream() {
     _adapter.plotReply = null;
 
+    _channels = Map.from(widget.plotChannels);
+    _updateRate = widget.updateRate;
+
     if (widget.plotChannels.isNotEmpty) {
       _errorsDismissed = false;
+
       _plotStream = widget.daqService.retrievePlot(context,
           forChannels: widget.plotChannels.keys.toSet(),
           updateRate: widget.updateRate);
@@ -278,9 +286,16 @@ class PlotState extends State<PlotWidget> {
     return chData.status < 0;
   }
 
+  bool get _streamShouldReset => !(mapEquals(widget.plotChannels, _channels) &&
+      _updateRate == widget.updateRate);
+
   late PlotWidgetAdapter _adapter;
 
   Stream<PlotReply>? _plotStream;
+
+  Map<String, ChannelSetting> _channels = {};
+
+  int _updateRate = 0;
 
   bool _errorsDismissed = false;
 }
