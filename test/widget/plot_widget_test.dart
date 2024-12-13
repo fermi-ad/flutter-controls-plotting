@@ -72,7 +72,7 @@ void main() {
     });
 
     testWidgets(
-        "Change updateRate and then rebuild PlotWidget, startPlot is called again",
+        "Change updateDelay and then rebuild PlotWidget, startPlot is called again",
         (WidgetTester tester) async {
       // Given a FakeAcsysService
       final service = FakeACSysService();
@@ -86,7 +86,7 @@ void main() {
 
       // When I change the DAQ settings and rebuild the PlotWidget
       await tester.pumpWidget(
-          _buildPlotWidget(channelList, service: service, updateRate: 50));
+          _buildPlotWidget(channelList, service: service, updateDelay: 50));
       await waitForPlotDataToLoad(tester);
 
       // Then startPlot was called only once
@@ -706,7 +706,7 @@ void assertPlotImplementationIs(
 
 Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
         {PlotImplementation impl = PlotImplementation.flCharts,
-        int updateRate = 0,
+        int updateDelay = 0,
         ACSysServiceAPI? service}) =>
     MaterialApp(
         home: Scaffold(
@@ -715,5 +715,5 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
                 child: PlotWidget(
                     plotChannels: channelList,
                     implementation: impl,
-                    updateRate: updateRate,
+                    updateDelay: updateDelay,
                     daqService: const StandardPlotDAQ()))));

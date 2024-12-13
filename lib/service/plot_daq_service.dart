@@ -6,7 +6,10 @@ import 'package:flutter_controls_core/flutter_controls_core.dart';
 
 abstract class PlotDAQService {
   Stream<PlotReply> retrievePlot(BuildContext context,
-      {required Set<String> forChannels, int updateRate});
+      {required Set<String> forChannels,
+      int updateDelay = 0,
+      int nAcquisitions = 0,
+      int? triggerEvent});
 }
 
 class StandardPlotDAQ implements PlotDAQService {
@@ -14,7 +17,10 @@ class StandardPlotDAQ implements PlotDAQService {
 
   @override
   Stream<PlotReply> retrievePlot(BuildContext context,
-      {required Set<String> forChannels, int updateRate = 0}) {
+      {required Set<String> forChannels,
+      int updateDelay = 0,
+      int nAcquisitions = 0,
+      int? triggerEvent}) {
     var containsGenPlots = false;
     var plotArgs = _PlotArgs(xMin: 0, xMax: 499, windowSize: 500);
     for (var genChannel in GenPlots.values) {
@@ -26,22 +32,26 @@ class StandardPlotDAQ implements PlotDAQService {
 
     if (containsGenPlots) {
       return _retrieveInternalPlot(context,
-          forChannels: forChannels, args: plotArgs, updateRate: updateRate);
+          forChannels: forChannels,
+          args: plotArgs,
+          updateDelay: updateDelay,
+          triggerEvent: triggerEvent);
     } else {
       // API only
       return ACSys.api(context).startPlot(forChannels.toList(),
           xMin: plotArgs.xMin,
           xMax: plotArgs.xMax,
           windowSize: plotArgs.windowSize,
-          updateRate: updateRate);
+          updateRate: updateDelay);
     }
   }
 
   Stream<PlotReply> _retrieveInternalPlot(BuildContext context,
       {required Set<String> forChannels,
       required _PlotArgs args,
-      int updateRate = 0}) async* {
-    if (updateRate == 0) {
+      int updateDelay = 0,
+      int? triggerEvent}) async* {
+    if (updateDelay == 0) {
       // No refresh cycle, attempt to combine gen plots with api results
       var generatePlot = _generatePlot(forChannels: forChannels, args: args);
 
@@ -71,7 +81,7 @@ class StandardPlotDAQ implements PlotDAQService {
     } else {
       // Refresh cycle only API provided.
       while (true) {
-        await Future.delayed(Duration(milliseconds: updateRate));
+        await Future.delayed(Duration(milliseconds: updateDelay));
         yield _generatePlot(
             forChannels: forChannels, args: args, markChannelNameErrors: true);
       }
