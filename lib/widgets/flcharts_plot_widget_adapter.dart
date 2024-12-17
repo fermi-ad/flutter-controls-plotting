@@ -92,7 +92,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         axisNameSize: axisNameSize,
         axisNameWidget: axisNameWidget,
         sideTitles: SideTitles(
-          showTitles: isShowLabels, //zyuan true,
+          showTitles: isShowLabels,
           reservedSize: 60,
         ),
       );
@@ -102,7 +102,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       // Displayed on narrow screen
       leftTitles = AxisTitles(
         sideTitles: SideTitles(
-          showTitles: isShowLabels, // zyuan true,
+          showTitles: isShowLabels,
           reservedSize: 60,
         ),
       );
