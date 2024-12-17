@@ -63,26 +63,27 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     final AxisTitles leftTitles;
     final AxisTitles topTitles;
 
-    List<Row> rowDataContents = [];
+    List<Widget> rowDataContents = [];
 
     for (var channelData in plotReply.data) {
       if (_channelHasError(channelData)) {
         continue;
       }
-      rowDataContents
-          .add(Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Text(
-          channelData.name,
-          style: TextStyle(color: lineColorForChannel(channelData.name)),
-        ),
-        Text(
-          " (${channelData.units})",
-          style: TextStyle(color: lineColorForChannel(channelData.name)),
-        )
-      ]));
+      rowDataContents.add(Padding(
+          padding: const EdgeInsets.fromLTRB(0, 0, 0, 5),
+          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Text(
+              channelData.name,
+              style: TextStyle(color: lineColorForChannel(channelData.name)),
+            ),
+            Text(
+              " (${channelData.units})",
+              style: TextStyle(color: lineColorForChannel(channelData.name)),
+            )
+          ])));
     }
 
-    double axisNameSize = plotReply.data.length * 20;
+    double axisNameSize = plotReply.data.length * 25;
     var axisNameWidget = Column(children: rowDataContents);
 
     if (wide) {
@@ -91,7 +92,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         axisNameSize: axisNameSize,
         axisNameWidget: axisNameWidget,
         sideTitles: SideTitles(
-          showTitles: isShowLabels, //zyuan true,
+          showTitles: isShowLabels,
           reservedSize: 60,
         ),
       );
@@ -101,7 +102,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       // Displayed on narrow screen
       leftTitles = AxisTitles(
         sideTitles: SideTitles(
-          showTitles: isShowLabels, // zyuan true,
+          showTitles: isShowLabels,
           reservedSize: 60,
         ),
       );
