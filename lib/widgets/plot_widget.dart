@@ -223,6 +223,7 @@ class PlotState extends State<PlotWidget> {
 
     _channels = Map.from(widget.plotChannels);
     _updateDelay = widget.updateDelay;
+    _triggerEvent = widget.triggerEvent; 
 
     if (widget.plotChannels.isNotEmpty) {
       _errorsDismissed = false;
@@ -303,7 +304,7 @@ class PlotState extends State<PlotWidget> {
   }
 
   bool get _streamShouldReset => !(mapEquals(widget.plotChannels, _channels) &&
-      _updateDelay == widget.updateDelay);
+      _updateDelay == widget.updateDelay && _triggerEvent == widget.triggerEvent);
 
   late PlotWidgetAdapter _adapter;
 
@@ -312,6 +313,8 @@ class PlotState extends State<PlotWidget> {
   Map<String, ChannelSetting> _channels = {};
 
   int _updateDelay = 0;
+
+  int? _triggerEvent = 0; 
 
   bool _errorsDismissed = false;
 }
