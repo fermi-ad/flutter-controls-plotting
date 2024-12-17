@@ -13,8 +13,6 @@ abstract class PlotDAQService {
 }
 
 class StandardPlotDAQ implements PlotDAQService {
-  final List<int> triggeredEvents = const [];
-
   const StandardPlotDAQ();
 
   @override
@@ -44,7 +42,8 @@ class StandardPlotDAQ implements PlotDAQService {
           xMin: plotArgs.xMin,
           xMax: plotArgs.xMax,
           windowSize: plotArgs.windowSize,
-          updateRate: updateDelay);
+          updateRate: updateDelay,
+          triggerEvent: triggerEvent);
     }
   }
 
@@ -53,11 +52,6 @@ class StandardPlotDAQ implements PlotDAQService {
       required _PlotArgs args,
       int updateDelay = 0,
       int? triggerEvent}) async* {
-    if (triggerEvent != null && updateDelay == 0) {
-      // Check for event every 10ms. 
-      updateDelay = 10;
-    }
-
     if (updateDelay == 0) {
       // No refresh cycle, attempt to combine gen plots with api results
       var generatePlot = _generatePlot(forChannels: forChannels, args: args);
@@ -87,24 +81,10 @@ class StandardPlotDAQ implements PlotDAQService {
       yield generatePlot;
     } else {
       // Refresh cycle only API provided.
-      var genPlot = true;
       while (true) {
         await Future.delayed(Duration(milliseconds: updateDelay));
-
-        if (triggerEvent != null) {
-          if (triggeredEvents.contains(triggerEvent)) {
-            triggeredEvents.clear();
-          } else {
-            genPlot = false;
-          }
-        }
-
-        if (genPlot == true) {
-          yield _generatePlot(
-              forChannels: forChannels,
-              args: args,
-              markChannelNameErrors: true);
-        }
+        yield _generatePlot(
+            forChannels: forChannels, args: args, markChannelNameErrors: true);
       }
     }
   }
@@ -179,10 +159,6 @@ class StandardPlotDAQ implements PlotDAQService {
         data: internalDaqData);
 
     return generatedPlotReply;
-  }
-
-  void triggerInternalPlotEvent(int eventTrigger) {
-    triggeredEvents.add(eventTrigger);
   }
 }
 
