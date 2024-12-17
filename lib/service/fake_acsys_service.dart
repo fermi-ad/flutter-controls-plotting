@@ -30,7 +30,12 @@ class FakeACSysService implements ACSysServiceAPI {
 
   @override
   Stream<PlotReply> startPlot(List<String> drfs,
-      {int? xMin, int? xMax, int? windowSize, int? updateRate}) {
+      {int? xMin,
+      int? xMax,
+      int? windowSize,
+      int? updateRate,
+      int? nAcquisitions,
+      int? triggerEvent}) {
     startPlotCount++;
 
     switch (drfs.first) {
