@@ -1,3 +1,5 @@
+// ignore_for_file: invalid_use_of_protected_member
+
 library plotadapter;
 
 import 'package:fl_chart/fl_chart.dart';
@@ -9,6 +11,7 @@ import 'package:graphic/graphic.dart';
 part 'flcharts_plot_widget_adapter.dart';
 part 'graphic_plot_widget_adapter.dart';
 part 'fermi_plot_widget_adapter.dart';
+
 
 abstract class PlotWidgetAdapter {
   final PlotWidget widget;
@@ -120,15 +123,6 @@ class CustomDotPainter extends FlDotPainter {
 
   @override
   FlDotPainter lerp(FlDotPainter a, FlDotPainter b, double t) {
-    if (a is CustomDotPainter && b is CustomDotPainter) {
-      return CustomDotPainter(
-        size: Tween<double>(begin: a.size, end: b.size).lerp(t),
-        color: Color.lerp(a.color, b.color, t)!,
-        character: t < 0.5 ? a.character : b.character,
-        icon: t < 0.5 ? a.icon : b.icon,
-      );
-    } else {
-      throw ArgumentError('Cannot interpolate between different types of FlDotPainter');
-    }
+    throw UnimplementedError('lerp is not implemented');
   }
 }
