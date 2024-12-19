@@ -1,5 +1,4 @@
 part of plotadapter;
-
 class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   final bool isShowLabels;
 
@@ -63,26 +62,27 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     final AxisTitles leftTitles;
     final AxisTitles topTitles;
 
-    List<Row> rowDataContents = [];
+    List<Widget> rowDataContents = [];
 
     for (var channelData in plotReply.data) {
       if (_channelHasError(channelData)) {
         continue;
       }
-      rowDataContents
-          .add(Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Text(
-          channelData.name,
-          style: TextStyle(color: lineColorForChannel(channelData.name)),
-        ),
-        Text(
-          " (${channelData.units})",
-          style: TextStyle(color: lineColorForChannel(channelData.name)),
-        )
-      ]));
+      rowDataContents.add(Padding(
+          padding: const EdgeInsets.fromLTRB(0, 0, 0, 5),
+          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Text(
+              channelData.name,
+              style: TextStyle(color: lineColorForChannel(channelData.name)),
+            ),
+            Text(
+              " (${channelData.units})",
+              style: TextStyle(color: lineColorForChannel(channelData.name)),
+            )
+          ])));
     }
 
-    double axisNameSize = plotReply.data.length * 20;
+    double axisNameSize = plotReply.data.length * 25;
     var axisNameWidget = Column(children: rowDataContents);
 
     if (wide) {
@@ -91,7 +91,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         axisNameSize: axisNameSize,
         axisNameWidget: axisNameWidget,
         sideTitles: SideTitles(
-          showTitles: isShowLabels, //zyuan true,
+          showTitles: isShowLabels,
           reservedSize: 60,
         ),
       );
@@ -101,7 +101,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       // Displayed on narrow screen
       leftTitles = AxisTitles(
         sideTitles: SideTitles(
-          showTitles: isShowLabels, // zyuan true,
+          showTitles: isShowLabels,
           reservedSize: 60,
         ),
       );
@@ -150,14 +150,54 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         spots: spots,
         isCurved: true,
         isStrokeCapRound: true,
-        barWidth: 3,
         belowBarData: BarAreaData(
           show: false,
         ),
-        dotData: const FlDotData(show: false),
+        barWidth: plotMarker == 0? 3 : 0,   // zyuan
+
+        dotData: _selectFlDotData(plotMarker, lineColorForChannel(plotChannel.name)),
+
+
+
+
       ));
     });
 
     return lineChartList;
+  }
+}
+
+FlDotData _selectFlDotData(int plotMarker, Color channelColor) {
+  switch (plotMarker) {
+    case 1:
+      return FlDotData(
+        show: true, // Show dots
+        getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
+          radius: 4, // Set the size of the dots
+          color: channelColor, // Set the color of the dots
+          strokeWidth: 0,
+        ),
+      );
+    case 2:
+      return FlDotData(
+        show: true, // Show dots
+        getDotPainter: (spot, percent, bar, index) => CustomDotPainter(
+          size: 8, // Set the size of the character
+          color: channelColor, // Set the color of the character
+          character: 'o', // Set the character to be used as the marker
+        ),
+      );
+    case 3:
+      return FlDotData(
+        show: true, // Show dots
+        getDotPainter: (spot, percent, bar, index) => CustomDotPainter(
+          size: 8, // Set the size of the character
+          color: channelColor, // Set the color of the character
+          character: 'o', // Set the character to be used as the marker
+          icon: Icons.favorite_border,
+        ),
+      );
+    default:
+      return FlDotData(show: false);
   }
 }

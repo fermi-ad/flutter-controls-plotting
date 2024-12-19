@@ -19,6 +19,8 @@ abstract class PlotWidgetAdapter {
 
   double minX = 0, maxX = 1.0;
 
+  int plotMarker = 1;
+
   Map<String, List<PlotPoint>> filteredPoints = {};
 
   PlotWidgetAdapter({required this.widget});
@@ -61,5 +63,72 @@ abstract class PlotWidgetAdapter {
 
   bool _channelHasError(PlotChannelData chData) {
     return chData.status < 0;
+  }
+}
+
+
+class CustomDotPainter extends FlDotPainter {
+  final double size;
+  final Color color;
+  final String? character;
+  final IconData? icon;
+
+  CustomDotPainter({required this.size, required this.color, this.character, this.icon});
+
+  @override
+  void draw(Canvas canvas, FlSpot spot, Offset offsetInCanvas) {
+    if (icon != null) {
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: String.fromCharCode(icon!.codePoint),
+          style: TextStyle(
+            fontSize: size,
+            fontFamily: icon!.fontFamily,
+            color: color,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, offsetInCanvas - Offset(textPainter.width / 2, textPainter.height / 2));
+    } else if (character != null) {
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: character,
+          style: TextStyle(
+            fontSize: size,
+            color: color,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, offsetInCanvas - Offset(textPainter.width / 2, textPainter.height / 2));
+    }
+  }
+
+  @override
+  Size getSize(FlSpot spot) {
+    return Size(size, size);
+  }
+
+  @override
+  Color get mainColor => color;
+
+  @override
+  List<Object?> get props => [size, color, character, icon];
+
+  @override
+  FlDotPainter lerp(FlDotPainter a, FlDotPainter b, double t) {
+    if (a is CustomDotPainter && b is CustomDotPainter) {
+      return CustomDotPainter(
+        size: Tween<double>(begin: a.size, end: b.size).lerp(t),
+        color: Color.lerp(a.color, b.color, t)!,
+        character: t < 0.5 ? a.character : b.character,
+        icon: t < 0.5 ? a.icon : b.icon,
+      );
+    } else {
+      throw ArgumentError('Cannot interpolate between different types of FlDotPainter');
+    }
   }
 }
