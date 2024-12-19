@@ -22,7 +22,7 @@ abstract class PlotWidgetAdapter {
 
   double minX = 0, maxX = 1.0;
 
-  int plotMarker = 1;
+  int plotMarker = 0;
 
   Map<String, List<PlotPoint>> filteredPoints = {};
 
