@@ -198,6 +198,6 @@ FlDotData _selectFlDotData(int plotMarker, Color channelColor) {
         ),
       );
     default:
-      return FlDotData(show: false);
+      return const FlDotData(show: false);
   }
 }
