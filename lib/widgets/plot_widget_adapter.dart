@@ -1,3 +1,5 @@
+// ignore_for_file: invalid_use_of_protected_member
+
 library plotadapter;
 
 import 'package:fl_chart/fl_chart.dart';
@@ -10,6 +12,7 @@ part 'flcharts_plot_widget_adapter.dart';
 part 'graphic_plot_widget_adapter.dart';
 part 'fermi_plot_widget_adapter.dart';
 
+
 abstract class PlotWidgetAdapter {
   final PlotWidget widget;
 
@@ -18,6 +21,8 @@ abstract class PlotWidgetAdapter {
   double minY = 0, maxY = 1.0;
 
   double minX = 0, maxX = 1.0;
+
+  int plotMarker = 0;
 
   Map<String, List<PlotPoint>> filteredPoints = {};
 
@@ -61,5 +66,63 @@ abstract class PlotWidgetAdapter {
 
   bool _channelHasError(PlotChannelData chData) {
     return chData.status < 0;
+  }
+}
+
+
+class CustomDotPainter extends FlDotPainter {
+  final double size;
+  final Color color;
+  final String? character;
+  final IconData? icon;
+
+  CustomDotPainter({required this.size, required this.color, this.character, this.icon});
+
+  @override
+  void draw(Canvas canvas, FlSpot spot, Offset offsetInCanvas) {
+    if (icon != null) {
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: String.fromCharCode(icon!.codePoint),
+          style: TextStyle(
+            fontSize: size,
+            fontFamily: icon!.fontFamily,
+            color: color,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, offsetInCanvas - Offset(textPainter.width / 2, textPainter.height / 2));
+    } else if (character != null) {
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: character,
+          style: TextStyle(
+            fontSize: size,
+            color: color,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, offsetInCanvas - Offset(textPainter.width / 2, textPainter.height / 2));
+    }
+  }
+
+  @override
+  Size getSize(FlSpot spot) {
+    return Size(size, size);
+  }
+
+  @override
+  Color get mainColor => color;
+
+  @override
+  List<Object?> get props => [size, color, character, icon];
+
+  @override
+  FlDotPainter lerp(FlDotPainter a, FlDotPainter b, double t) {
+    throw UnimplementedError('lerp is not implemented');
   }
 }

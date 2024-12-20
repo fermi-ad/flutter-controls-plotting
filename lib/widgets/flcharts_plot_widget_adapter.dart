@@ -1,5 +1,4 @@
 part of plotadapter;
-
 class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   final bool isShowLabels;
 
@@ -151,14 +150,54 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         spots: spots,
         isCurved: true,
         isStrokeCapRound: true,
-        barWidth: 3,
         belowBarData: BarAreaData(
           show: false,
         ),
-        dotData: const FlDotData(show: false),
+        barWidth: plotMarker == 0? 3 : 0,   // zyuan
+
+        dotData: _selectFlDotData(plotMarker, lineColorForChannel(plotChannel.name)),
+
+
+
+
       ));
     });
 
     return lineChartList;
+  }
+}
+
+FlDotData _selectFlDotData(int plotMarker, Color channelColor) {
+  switch (plotMarker) {
+    case 1:
+      return FlDotData(
+        show: true, // Show dots
+        getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
+          radius: 4, // Set the size of the dots
+          color: channelColor, // Set the color of the dots
+          strokeWidth: 0,
+        ),
+      );
+    case 2:
+      return FlDotData(
+        show: true, // Show dots
+        getDotPainter: (spot, percent, bar, index) => CustomDotPainter(
+          size: 8, // Set the size of the character
+          color: channelColor, // Set the color of the character
+          character: 'o', // Set the character to be used as the marker
+        ),
+      );
+    case 3:
+      return FlDotData(
+        show: true, // Show dots
+        getDotPainter: (spot, percent, bar, index) => CustomDotPainter(
+          size: 8, // Set the size of the character
+          color: channelColor, // Set the color of the character
+          character: 'o', // Set the character to be used as the marker
+          icon: Icons.favorite_border,
+        ),
+      );
+    default:
+      return const FlDotData(show: false);
   }
 }
