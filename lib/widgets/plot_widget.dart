@@ -234,7 +234,8 @@ class PlotState extends State<PlotWidget> {
       _plotStream = widget.daqService.retrievePlot(context,
           forChannels: widget.plotChannels.keys.toSet(),
           updateDelay: widget.updateDelay,
-          triggerEvent: widget.triggerEvent);
+          triggerEvent: widget.triggerEvent,
+          nAcquisitions: widget.nAcquisitions);
     }
   }
 

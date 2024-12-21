@@ -43,7 +43,8 @@ class StandardPlotDAQ implements PlotDAQService {
           xMax: plotArgs.xMax,
           windowSize: plotArgs.windowSize,
           updateRate: updateDelay,
-          triggerEvent: triggerEvent);
+          triggerEvent: triggerEvent,
+          nAcquisitions: nAcquisitions);
     }
   }
 
