@@ -45,6 +45,8 @@ class PlotWidget extends StatefulWidget {
 
   final int? triggerEvent;
 
+  final int nAcquisitions;
+
   final bool isShowLabels;
 
   final Function(String channelName)? onInternalChannelSettingChange;
@@ -58,6 +60,7 @@ class PlotWidget extends StatefulWidget {
       this.yLimits = const ["", ""],
       this.xLimits = const ["", ""],
       this.updateDelay = 0,
+      this.nAcquisitions = 0,
       this.triggerEvent,
       this.isShowLabels = true,
       this.onInternalChannelSettingChange,
@@ -223,7 +226,8 @@ class PlotState extends State<PlotWidget> {
 
     _channels = Map.from(widget.plotChannels);
     _updateDelay = widget.updateDelay;
-    _triggerEvent = widget.triggerEvent; 
+    _triggerEvent = widget.triggerEvent;
+    _nAcquisitions = widget.nAcquisitions;
 
     if (widget.plotChannels.isNotEmpty) {
       _errorsDismissed = false;
@@ -231,7 +235,8 @@ class PlotState extends State<PlotWidget> {
       _plotStream = widget.daqService.retrievePlot(context,
           forChannels: widget.plotChannels.keys.toSet(),
           updateDelay: widget.updateDelay,
-          triggerEvent: widget.triggerEvent);
+          triggerEvent: widget.triggerEvent,
+          nAcquisitions: widget.nAcquisitions);
     }
   }
 
@@ -303,8 +308,10 @@ class PlotState extends State<PlotWidget> {
     return chData.status < 0;
   }
 
-  bool get _streamShouldReset => !(mapEquals(widget.plotChannels, _channels) &&
-      _updateDelay == widget.updateDelay && _triggerEvent == widget.triggerEvent);
+  bool get _streamShouldReset => !((mapEquals(widget.plotChannels, _channels) &&
+      _updateDelay == widget.updateDelay &&
+      _nAcquisitions == widget.nAcquisitions &&
+      _triggerEvent == widget.triggerEvent));
 
   late PlotWidgetAdapter _adapter;
 
@@ -314,7 +321,9 @@ class PlotState extends State<PlotWidget> {
 
   int _updateDelay = 0;
 
-  int? _triggerEvent = 0; 
+  int? _triggerEvent = 0;
+
+  int _nAcquisitions = 0;
 
   bool _errorsDismissed = false;
 }

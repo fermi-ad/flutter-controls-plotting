@@ -92,6 +92,64 @@ void main() {
       // Then startPlot was called only once
       expect(service.startPlotCount, 2);
     });
+
+    testWidgets(
+        "Build PlotWidget without passing nAcquisitions, startPlot is called with nAcquisitions set to null",
+        (WidgetTester tester) async {
+      // Given a FakeAcsysService
+      final service = FakeACSysService();
+
+      // ... and a channel list containing API TEST CONSTANT
+      final channelList = {"API TEST CONSTANT": ChannelSetting()};
+
+      // When I build PlotWidget without specifying nAcquisitions
+      await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
+      await waitForPlotDataToLoad(tester);
+
+      // Then nAcquistions = null is passed to the API
+      expect(service.startPlotnAcquistions, null);
+    });
+
+    testWidgets(
+        "Pass nAcquisitions = 1 to PlotWidget, startPlot is called with nAcquisitions = 1",
+        (WidgetTester tester) async {
+      // Given a FakeAcsysService
+      final service = FakeACSysService();
+
+      // ... and a channel list containing API TEST CONSTANT
+      final channelList = {"API TEST CONSTANT": ChannelSetting()};
+
+      // When I build PlotWidget with nAcquisitions = 1
+      await tester.pumpWidget(
+          _buildPlotWidget(channelList, service: service, nAcquisitions: 1));
+      await waitForPlotDataToLoad(tester);
+
+      // Then nAcquistions = 0 is passed to the API
+      expect(service.startPlotnAcquistions, 1);
+    });
+
+    testWidgets(
+        "Change nAcquisitions and then rebuild PlotWidget, startPlot is called again",
+        (WidgetTester tester) async {
+      // Given a FakeAcsysService
+      final service = FakeACSysService();
+
+      // ... and a channel list containing API TEST CONSTANT
+      final channelList = {"API TEST CONSTANT": ChannelSetting()};
+
+      // ... and I have built the PlotWidget one time
+      await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
+      await waitForPlotDataToLoad(tester);
+
+      // When I change the nAcquisitions and rebuild the PlotWidget
+      await tester.pumpWidget(
+          _buildPlotWidget(channelList, service: service, nAcquisitions: 1));
+      await waitForPlotDataToLoad(tester);
+
+      // Then startPlot was called twiced
+      expect(service.startPlotCount, 2);
+      expect(service.startPlotnAcquistions, 1);
+    });
   });
 
   group("Error handling", () {
@@ -707,6 +765,7 @@ void assertPlotImplementationIs(
 Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
         {PlotImplementation impl = PlotImplementation.flCharts,
         int updateDelay = 0,
+        int nAcquisitions = 0,
         ACSysServiceAPI? service}) =>
     MaterialApp(
         home: Scaffold(
@@ -716,4 +775,5 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
                     plotChannels: channelList,
                     implementation: impl,
                     updateDelay: updateDelay,
+                    nAcquisitions: nAcquisitions,
                     daqService: const StandardPlotDAQ()))));
