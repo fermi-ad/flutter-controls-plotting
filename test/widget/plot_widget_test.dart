@@ -94,7 +94,7 @@ void main() {
     });
 
     testWidgets(
-        "Build PlotWidget without passing nAcquisitions, startPlot is called with nAcquisitions = 0",
+        "Build PlotWidget without passing nAcquisitions, startPlot is called with nAcquisitions set to null",
         (WidgetTester tester) async {
       // Given a FakeAcsysService
       final service = FakeACSysService();
@@ -106,8 +106,8 @@ void main() {
       await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
       await waitForPlotDataToLoad(tester);
 
-      // Then nAcquistions = 0 is passed to the API
-      expect(service.startPlotnAcquistions, 0);
+      // Then nAcquistions = null is passed to the API
+      expect(service.startPlotnAcquistions, null);
     });
 
     testWidgets(

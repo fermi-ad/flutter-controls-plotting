@@ -44,7 +44,7 @@ class StandardPlotDAQ implements PlotDAQService {
           windowSize: plotArgs.windowSize,
           updateRate: updateDelay,
           triggerEvent: triggerEvent,
-          nAcquisitions: nAcquisitions);
+          nAcquisitions: nAcquisitions == 0 ? null : nAcquisitions);
     }
   }
 
