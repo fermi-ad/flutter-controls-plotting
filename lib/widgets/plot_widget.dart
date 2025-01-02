@@ -30,6 +30,12 @@ class ChannelSetting {
   Color? lineColor;
 
   ChannelSetting({this.lineColor});
+
+  // Clone functionality.
+  static ChannelSetting from(ChannelSetting setting) {
+    var newChannelSetting = ChannelSetting(lineColor: setting.lineColor);
+    return newChannelSetting;
+  }
 }
 
 class PlotWidget extends StatefulWidget {
