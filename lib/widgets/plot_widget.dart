@@ -43,9 +43,10 @@ class PlotWidget extends StatefulWidget {
 
   final PlotDAQService daqService;
 
-  final List<String> yLimits;
-
-  final List<String> xLimits;
+  final double? yMin;
+  final double? yMax;
+  final double? xMin;
+  final double? xMax;
 
   final int updateDelay;
 
@@ -63,8 +64,10 @@ class PlotWidget extends StatefulWidget {
       {super.key,
       this.plotChannels = const <String, ChannelSetting>{},
       this.daqService = const StandardPlotDAQ(),
-      this.yLimits = const ["", ""],
-      this.xLimits = const ["", ""],
+      this.yMin,
+      this.yMax,
+      this.xMin,
+      this.xMax,
       this.updateDelay = 0,
       this.nAcquisitions = 0,
       this.triggerEvent,
@@ -269,22 +272,18 @@ class PlotState extends State<PlotWidget> {
       }
     }
 
-    if (widget.yLimits.isNotEmpty) {
-      if (widget.yLimits[0] != "") {
-        _adapter.minY = double.parse(widget.yLimits[0]);
-      }
-      if (widget.yLimits[1] != "") {
-        _adapter.maxY = double.parse(widget.yLimits[1]);
-      }
+    if (widget.yMin != null) {
+      _adapter.minY = widget.yMin!;
+    }
+    if (widget.yMax != null) {
+      _adapter.maxY = widget.yMax!;
     }
 
-    if (widget.xLimits.isNotEmpty) {
-      if (widget.xLimits[0] != "") {
-        _adapter.minX = double.parse(widget.xLimits[0]);
-      }
-      if (widget.xLimits[1] != "") {
-        _adapter.maxX = double.parse(widget.xLimits[1]);
-      }
+    if (widget.xMin != null) {
+      _adapter.minX = widget.xMin!;
+    }
+    if (widget.xMax != null) {
+      _adapter.maxX = widget.xMax!;
     }
   }
 
