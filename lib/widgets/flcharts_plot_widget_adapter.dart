@@ -1,9 +1,11 @@
 part of plotadapter;
+
 class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   final bool isShowLabels;
+  //final PlotMarker theMarker; 
 
   FlchartsPlotWidgetAdapter(
-      {required super.widget, required this.isShowLabels});
+      {required super.widget, required this.isShowLabels}); // Update this line
 
   @override
   Widget buildPlot() => LayoutBuilder(
@@ -26,8 +28,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
                 getTooltipItems: (touchedSpots) {
                   return touchedSpots.map((LineBarSpot touchedSpot) {
                     final textStyle = TextStyle(
-                      color: touchedSpot.bar.gradient?.colors[0] ??
-                          touchedSpot.bar.color,
+                      color: touchedSpot.bar.gradient?.colors[0] ?? touchedSpot.bar.color,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     );
@@ -153,13 +154,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         belowBarData: BarAreaData(
           show: false,
         ),
-        barWidth: plotMarker == 0? 3 : 0,   // zyuan
-
-        dotData: _selectFlDotData(plotMarker, lineColorForChannel(plotChannel.name)),
-
-
-
-
+        barWidth: int.parse( markerIndexForChannel(plotChannel.name))== 0 || int.parse( markerIndexForChannel(plotChannel.name))== 1  ? 3 : 0,      
+        //dotData: _selectFlDotData(int.parse(widget.plotMarker.markerIndex)  , lineColorForChannel(plotChannel.name)), 
+        dotData: _selectFlDotData(int.parse( markerIndexForChannel(plotChannel.name))  , lineColorForChannel(plotChannel.name)), 
       ));
     });
 
@@ -168,8 +165,13 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
 }
 
 FlDotData _selectFlDotData(int plotMarker, Color channelColor) {
+   print ("plotMarker: $plotMarker");
+
+
   switch (plotMarker) {
-    case 1:
+    //  case 0 : line
+    case 1:     // line and dot
+    case 2:     //dot
       return FlDotData(
         show: true, // Show dots
         getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
@@ -178,23 +180,101 @@ FlDotData _selectFlDotData(int plotMarker, Color channelColor) {
           strokeWidth: 0,
         ),
       );
-    case 2:
+    case 3:   // circles
       return FlDotData(
         show: true, // Show dots
-        getDotPainter: (spot, percent, bar, index) => CustomDotPainter(
-          size: 8, // Set the size of the character
-          color: channelColor, // Set the color of the character
-          character: 'o', // Set the character to be used as the marker
+        getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
+          radius: 4, // Set the size of the dots
+          color: channelColor, // Set the color of the dots
+          strokeWidth: 2,
         ),
       );
-    case 3:
+    case 4:
       return FlDotData(
-        show: true, // Show dots
+        show: true, // Show cross dots
+        getDotPainter: (spot, percent, bar, index) => FlDotCrossPainter(
+          color: channelColor, 
+          size: 10,
+          width: 2
+        ),
+      );
+    case 5:
+      return FlDotData(
+        show: true, // Show square dots
+        getDotPainter: (spot, percent, bar, index) => FlDotSquarePainter(
+          color: channelColor, 
+          size: 6,
+          strokeWidth: 0
+        ),
+      );
+    case 6:
+      return FlDotData(
+        show: true, // Show letter 'O'
         getDotPainter: (spot, percent, bar, index) => CustomDotPainter(
-          size: 8, // Set the size of the character
+          size: 10, // Set the size of the character
+          color: channelColor, // Set the color of the character
+          character: 'O', // Set the character to be used as the marker
+          
+        ),
+      );
+    case 7:
+      return FlDotData(
+        show: true, // Show letter 'K'
+        getDotPainter: (spot, percent, bar, index) => CustomDotPainter(
+          size: 10, // Set the size of the character
+          color: channelColor, // Set the color of the character
+          character: 'K', // Set the character to be used as the marker
+          
+        ),
+      );
+    case 8:
+      return FlDotData(
+        show: true, // Show letter 'V'
+        getDotPainter: (spot, percent, bar, index) => CustomDotPainter(
+          size: 10, // Set the size of the character
+          color: channelColor, // Set the color of the character
+          character: 'V', // Set the character to be used as the marker
+          
+        ),
+      );
+    case 9:
+      return FlDotData(
+        show: true, // Show icon hearts
+        getDotPainter: (spot, percent, bar, index) => CustomDotPainter(
+          size: 10, // Set the size of the character
           color: channelColor, // Set the color of the character
           character: 'o', // Set the character to be used as the marker
           icon: Icons.favorite_border,
+        ),
+      );
+    case 10:
+      return FlDotData(
+        show: true, // Show icon arrow
+        getDotPainter: (spot, percent, bar, index) => CustomDotPainter(
+          size: 10, // Set the size of the character
+          color: channelColor, // Set the color of the character
+          character: 'o', // Set the character to be used as the marker
+          icon: Icons.arrow_forward,
+        ),
+      );
+    case 11:
+      return FlDotData(
+        show: true, // Show icon stars
+        getDotPainter: (spot, percent, bar, index) => CustomDotPainter(
+          size: 14, // Set the size of the character
+          color: channelColor, // Set the color of the character
+          character: 'o', // Set the character to be used as the marker
+          icon: Icons.star_border_rounded,
+        ),
+      );
+    case 12:
+      return FlDotData(
+        show: true, // Show icon triangle
+        getDotPainter: (spot, percent, bar, index) => CustomDotPainter(
+          size: 14, // Set the size of the character
+          color: channelColor, // Set the color of the character
+          character: 'o', // Set the character to be used as the marker
+          icon: Icons.change_history,
         ),
       );
     default:
