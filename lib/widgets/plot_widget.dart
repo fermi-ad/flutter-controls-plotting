@@ -156,15 +156,7 @@ class PlotState extends State<PlotWidget> {
 
   @override
   void didUpdateWidget(PlotWidget oldWidget) {
-    print("state didUpdateWidget : ");
     _resetAdapter(); 
-    /*
-    if (oldWidget.plotMarker != widget.plotMarker) {
-        setState(() {
-            _resetAdapter(); // Ensure the adapter is reset when the plotMarker changes
-        });
-    }
-*/
     if (_streamShouldReset) {
       _resetStream();
     }
