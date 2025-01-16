@@ -22,13 +22,19 @@ abstract class PlotWidgetAdapter {
 
   double minX = 0, maxX = 1.0;
 
-  int plotMarker = 0;
+  //int plotMarker = 0;
 
   Map<String, List<PlotPoint>> filteredPoints = {};
 
   PlotWidgetAdapter({required this.widget});
 
   Widget buildPlot();
+  /*
+  PlotMarker getTheMarker() {
+     widget.onInternalChannelSettingChange?.call("some");
+    return widget.plotMarker;
+  }
+   */
 
   Color lineColorForChannel(String channelName) {
     var plotChannels = widget.plotChannels;
@@ -63,6 +69,45 @@ abstract class PlotWidgetAdapter {
 
     return setting.lineColor!;
   }
+
+String markerIndexForChannel(String channelName) {
+  var plotChannels = widget.plotChannels;
+  ChannelSetting setting = plotChannels[channelName]!;
+
+  // Find unique marker index
+  if (setting.plotMarker == null) {
+    String? candidateMarkerIndex;
+    List<String> displayedMarkerIndices = [];
+    plotChannels.forEach((name, setting) {
+      if (name != channelName) {
+        if (setting.plotMarker != null) {
+          displayedMarkerIndices.add(setting.plotMarker!.index.toString());
+        }
+      }
+    });
+
+    for (var plotMarker in PlotMarker.values) {
+      if (displayedMarkerIndices.contains(plotMarker.index.toString())) {
+        continue;
+      }
+      candidateMarkerIndex = plotMarker.index.toString();
+      break;
+    }
+
+    // No more unique markers, default to "0" (Circle).
+    candidateMarkerIndex ??= PlotMarker.zero.index.toString();
+    setting.plotMarker = PlotMarker.values[int.parse(candidateMarkerIndex)];
+
+    widget.onInternalChannelSettingChange?.call(channelName);
+  }
+
+
+
+  return setting.plotMarker!.markerIndex;
+}
+
+
+
 
   bool _channelHasError(PlotChannelData chData) {
     return chData.status < 0;

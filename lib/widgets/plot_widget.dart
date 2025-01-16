@@ -26,14 +26,37 @@ enum PlotColor {
   final Color color;
 }
 
+enum PlotMarker {
+  zero("Line", "0"),
+  one("Line Dot", "1"),
+  two("Dots", "2"),
+  three("Circles", "3"),
+  four("Cross", "4"),
+  five("Square", "5"),
+  six("OOOOOO", "6"),
+  seven("KKKKKK", "7"),
+  eight("VVVVVV", "8"),
+  nine("Icon heart", "9"),
+  ten("Icon arrow", "10"),
+  eleven("Icon star", "11"),
+  twelve("Icon Triangle", "12");
+
+  const PlotMarker(this.name, this.markerIndex); // Ensure this line is correct
+  final String name;
+  final String markerIndex; // Ensure this line is correct
+}
+
+
 class ChannelSetting {
   Color? lineColor;
+  PlotMarker? plotMarker;
 
-  ChannelSetting({this.lineColor});
+
+  ChannelSetting({this.lineColor, this.plotMarker});
 
   // Clone functionality.
   static ChannelSetting from(ChannelSetting setting) {
-    var newChannelSetting = ChannelSetting(lineColor: setting.lineColor);
+    var newChannelSetting = ChannelSetting(lineColor: setting.lineColor, plotMarker: setting.plotMarker);
     return newChannelSetting;
   }
 }
@@ -59,6 +82,7 @@ class PlotWidget extends StatefulWidget {
   final Function(String channelName)? onInternalChannelSettingChange;
 
   final PlotImplementation implementation;
+
 
   const PlotWidget(
       {super.key,
@@ -95,6 +119,7 @@ class PlotState extends State<PlotWidget> {
           .toList()
       : [];
 
+
   double get minY => _adapter.minY;
 
   double get maxY => _adapter.maxY;
@@ -106,9 +131,16 @@ class PlotState extends State<PlotWidget> {
   String get xAxisTitle =>
       _adapter.plotReply != null ? _adapter.plotReply!.xAxisUnits : "";
 
+
+
   List<Color> get channelColors => widget.plotChannels.keys
       .map((String channelName) => _adapter.lineColorForChannel(channelName))
       .toList();
+
+  List<String> get markerIndices => widget.plotChannels.keys
+      .map((String channelName) => _adapter.markerIndexForChannel(channelName))
+      .toList();
+
 
   Map<String, List<PlotPoint>> get points => _adapter.plotReply != null
       ? Map.fromEntries(_adapter.plotReply!.data
@@ -116,6 +148,7 @@ class PlotState extends State<PlotWidget> {
               MapEntry(channelData.name, channelData.points))
           .toList())
       : {};
+
 
   @override
   void didChangeDependencies() {
@@ -217,7 +250,7 @@ class PlotState extends State<PlotWidget> {
     switch (widget.implementation) {
       case PlotImplementation.flCharts:
         _adapter = FlchartsPlotWidgetAdapter(
-            widget: widget, isShowLabels: widget.isShowLabels);
+            widget: widget, isShowLabels: widget.isShowLabels); // Update this line
         break;
 
       case PlotImplementation.graphic:
@@ -238,11 +271,19 @@ class PlotState extends State<PlotWidget> {
     _triggerEvent = widget.triggerEvent;
     _nAcquisitions = widget.nAcquisitions;
 
+    _channels = Map.from(widget.plotChannels);
+    _updateDelay = widget.updateDelay;
+    _triggerEvent = widget.triggerEvent;
+    _nAcquisitions = widget.nAcquisitions;
+
     if (widget.plotChannels.isNotEmpty) {
       _errorsDismissed = false;
 
       _plotStream = widget.daqService.retrievePlot(context,
           forChannels: widget.plotChannels.keys.toSet(),
+          updateDelay: widget.updateDelay,
+          triggerEvent: widget.triggerEvent,
+          nAcquisitions: widget.nAcquisitions);
           updateDelay: widget.updateDelay,
           triggerEvent: widget.triggerEvent,
           nAcquisitions: widget.nAcquisitions);
@@ -312,6 +353,11 @@ class PlotState extends State<PlotWidget> {
   bool _channelHasError(PlotChannelData chData) {
     return chData.status < 0;
   }
+
+  bool get _streamShouldReset => !((mapEquals(widget.plotChannels, _channels) &&
+      _updateDelay == widget.updateDelay &&
+      _nAcquisitions == widget.nAcquisitions &&
+      _triggerEvent == widget.triggerEvent));
 
   bool get _streamShouldReset => !((mapEquals(widget.plotChannels, _channels) &&
       _updateDelay == widget.updateDelay &&
