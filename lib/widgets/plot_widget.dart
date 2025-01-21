@@ -27,19 +27,19 @@ enum PlotColor {
 }
 
 enum PlotMarker {
-  zero("Line", 0),
-  one("Line Dot", 1),
-  two("Dots", 2),
-  three("Circles", 3),
-  four("Cross", 4),
-  five("Square", 5),
-  six("OOOOOO", 6),
-  seven("KKKKKK", 7),
-  eight("VVVVVV", 8),
-  nine("Icon heart", 9),
-  ten("Icon arrow", 10),
-  eleven("Icon star", 11),
-  twelve("Icon Triangle", 12);
+  line("Line", 0),
+  lineDots("Line Dot", 1),
+  dot("Dots", 2),
+  cirle("Circles", 3),
+  cross("Cross", 4),
+  square("Square", 5),
+  oooooo("OOOOOO", 6),
+  kkkkkk("KKKKKK", 7),
+  vvvvvv("VVVVVV", 8),
+  heart("Icon heart", 9),
+  arrow("Icon arrow", 10),
+  star("Icon star", 11),
+  triangle("Icon Triangle", 12);
 
   const PlotMarker(this.name, this.markerIndex); // Ensure this line is correct
   final String name;
@@ -48,9 +48,9 @@ enum PlotMarker {
 
 class ChannelSetting {
   Color? lineColor;
-  PlotMarker? plotMarker;
+  PlotMarker plotMarker;
 
-  ChannelSetting({this.lineColor, this.plotMarker});
+  ChannelSetting({this.lineColor, this.plotMarker = PlotMarker.line});
 
   // Clone functionality.
   static ChannelSetting from(ChannelSetting setting) {
