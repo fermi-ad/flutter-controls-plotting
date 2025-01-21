@@ -165,8 +165,8 @@ class StandardPlotDAQ implements PlotDAQService {
 
 // Facilitates passing plot arguments by reference for generation of plot from API and local.
 class _PlotArgs {
-  int xMin;
-  int xMax;
+  double xMin;
+  double xMax;
   int windowSize;
 
   _PlotArgs({required this.xMin, required this.xMax, required this.windowSize});

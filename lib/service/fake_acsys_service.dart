@@ -32,8 +32,8 @@ class FakeACSysService implements ACSysServiceAPI {
 
   @override
   Stream<PlotReply> startPlot(List<String> drfs,
-      {int? xMin,
-      int? xMax,
+      {double? xMin,
+      double? xMax,
       int? windowSize,
       int? updateRate,
       int? nAcquisitions,
@@ -77,4 +77,36 @@ class FakeACSysService implements ACSysServiceAPI {
   Future<SettingStatus> submit(
           {required String forDRF, required DeviceValue newSetting}) =>
       throw UnimplementedError();
+
+  @override
+  Future<List<PlotConfigurationListing>> listPlotConfigurations() {
+    // TODO: implement listPlotConfigurations
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> removePlotConfiguration({required int configurationId}) {
+    // TODO: implement removePlotConfiguration
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<PlotConfigurationSnapshot> retrieveLastUserConfiguration() {
+    // TODO: implement retrieveLastUserConfiguration
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<PlotConfigurationSnapshot> retrievePlotConfiguration(
+      {required int configurationId}) {
+    // TODO: implement retrievePlotConfiguration
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> savePlotConfiguration(
+      {required PlotConfigurationSnapshot snapshot}) {
+    // TODO: implement savePlotConfiguration
+    throw UnimplementedError();
+  }
 }
