@@ -2,7 +2,7 @@ part of plotadapter;
 
 class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   final bool isShowLabels;
-  //final PlotMarker theMarker; 
+  //final PlotMarker theMarker;
 
   FlchartsPlotWidgetAdapter(
       {required super.widget, required this.isShowLabels}); // Update this line
@@ -28,7 +28,8 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
                 getTooltipItems: (touchedSpots) {
                   return touchedSpots.map((LineBarSpot touchedSpot) {
                     final textStyle = TextStyle(
-                      color: touchedSpot.bar.gradient?.colors[0] ?? touchedSpot.bar.color,
+                      color: touchedSpot.bar.gradient?.colors[0] ??
+                          touchedSpot.bar.color,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     );
@@ -154,9 +155,14 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         belowBarData: BarAreaData(
           show: false,
         ),
-        barWidth: int.parse( markerIndexForChannel(plotChannel.name))== 0 || int.parse( markerIndexForChannel(plotChannel.name))== 1  ? 3 : 0,      
-        //dotData: _selectFlDotData(int.parse(widget.plotMarker.markerIndex)  , lineColorForChannel(plotChannel.name)), 
-        dotData: _selectFlDotData(int.parse( markerIndexForChannel(plotChannel.name))  , lineColorForChannel(plotChannel.name)), 
+        barWidth: int.parse(markerIndexForChannel(plotChannel.name)) == 0 ||
+                int.parse(markerIndexForChannel(plotChannel.name)) == 1
+            ? 3
+            : 0,
+        //dotData: _selectFlDotData(int.parse(widget.plotMarker.markerIndex)  , lineColorForChannel(plotChannel.name)),
+        dotData: _selectFlDotData(
+            int.parse(markerIndexForChannel(plotChannel.name)),
+            lineColorForChannel(plotChannel.name)),
       ));
     });
 
@@ -165,13 +171,10 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
 }
 
 FlDotData _selectFlDotData(int plotMarker, Color channelColor) {
-   print ("plotMarker: $plotMarker");
-
-
   switch (plotMarker) {
     //  case 0 : line
-    case 1:     // line and dot
-    case 2:     //dot
+    case 1: // line and dot
+    case 2: //dot
       return FlDotData(
         show: true, // Show dots
         getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
@@ -180,7 +183,7 @@ FlDotData _selectFlDotData(int plotMarker, Color channelColor) {
           strokeWidth: 0,
         ),
       );
-    case 3:   // circles
+    case 3: // circles
       return FlDotData(
         show: true, // Show dots
         getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
@@ -192,20 +195,14 @@ FlDotData _selectFlDotData(int plotMarker, Color channelColor) {
     case 4:
       return FlDotData(
         show: true, // Show cross dots
-        getDotPainter: (spot, percent, bar, index) => FlDotCrossPainter(
-          color: channelColor, 
-          size: 10,
-          width: 2
-        ),
+        getDotPainter: (spot, percent, bar, index) =>
+            FlDotCrossPainter(color: channelColor, size: 10, width: 2),
       );
     case 5:
       return FlDotData(
         show: true, // Show square dots
-        getDotPainter: (spot, percent, bar, index) => FlDotSquarePainter(
-          color: channelColor, 
-          size: 6,
-          strokeWidth: 0
-        ),
+        getDotPainter: (spot, percent, bar, index) =>
+            FlDotSquarePainter(color: channelColor, size: 6, strokeWidth: 0),
       );
     case 6:
       return FlDotData(
@@ -214,7 +211,6 @@ FlDotData _selectFlDotData(int plotMarker, Color channelColor) {
           size: 10, // Set the size of the character
           color: channelColor, // Set the color of the character
           character: 'O', // Set the character to be used as the marker
-          
         ),
       );
     case 7:
@@ -224,7 +220,6 @@ FlDotData _selectFlDotData(int plotMarker, Color channelColor) {
           size: 10, // Set the size of the character
           color: channelColor, // Set the color of the character
           character: 'K', // Set the character to be used as the marker
-          
         ),
       );
     case 8:
@@ -234,7 +229,6 @@ FlDotData _selectFlDotData(int plotMarker, Color channelColor) {
           size: 10, // Set the size of the character
           color: channelColor, // Set the color of the character
           character: 'V', // Set the character to be used as the marker
-          
         ),
       );
     case 9:
