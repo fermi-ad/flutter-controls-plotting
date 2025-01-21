@@ -155,13 +155,12 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         belowBarData: BarAreaData(
           show: false,
         ),
-        barWidth: int.parse(markerIndexForChannel(plotChannel.name)) == 0 ||
-                int.parse(markerIndexForChannel(plotChannel.name)) == 1
+        barWidth: markerIndexForChannel(plotChannel.name) == 0 ||
+                markerIndexForChannel(plotChannel.name) == 1
             ? 3
             : 0,
         //dotData: _selectFlDotData(int.parse(widget.plotMarker.markerIndex)  , lineColorForChannel(plotChannel.name)),
-        dotData: _selectFlDotData(
-            int.parse(markerIndexForChannel(plotChannel.name)),
+        dotData: _selectFlDotData(markerIndexForChannel(plotChannel.name),
             lineColorForChannel(plotChannel.name)),
       ));
     });

@@ -12,7 +12,6 @@ part 'flcharts_plot_widget_adapter.dart';
 part 'graphic_plot_widget_adapter.dart';
 part 'fermi_plot_widget_adapter.dart';
 
-
 abstract class PlotWidgetAdapter {
   final PlotWidget widget;
 
@@ -70,50 +69,44 @@ abstract class PlotWidgetAdapter {
     return setting.lineColor!;
   }
 
-String markerIndexForChannel(String channelName) {
-  var plotChannels = widget.plotChannels;
-  ChannelSetting setting = plotChannels[channelName]!;
+  int markerIndexForChannel(String channelName) {
+    var plotChannels = widget.plotChannels;
+    ChannelSetting setting = plotChannels[channelName]!;
 
-  // Find unique marker index
-  if (setting.plotMarker == null) {
-    String? candidateMarkerIndex;
-    List<String> displayedMarkerIndices = [];
-    plotChannels.forEach((name, setting) {
-      if (name != channelName) {
-        if (setting.plotMarker != null) {
-          displayedMarkerIndices.add(setting.plotMarker!.index.toString());
+    // Find unique marker index
+    if (setting.plotMarker == null) {
+      String? candidateMarkerIndex;
+      List<String> displayedMarkerIndices = [];
+      plotChannels.forEach((name, setting) {
+        if (name != channelName) {
+          if (setting.plotMarker != null) {
+            displayedMarkerIndices.add(setting.plotMarker!.index.toString());
+          }
         }
-      }
-    });
+      });
 
-    for (var plotMarker in PlotMarker.values) {
-      if (displayedMarkerIndices.contains(plotMarker.index.toString())) {
-        continue;
+      for (var plotMarker in PlotMarker.values) {
+        if (displayedMarkerIndices.contains(plotMarker.index.toString())) {
+          continue;
+        }
+        candidateMarkerIndex = plotMarker.index.toString();
+        break;
       }
-      candidateMarkerIndex = plotMarker.index.toString();
-      break;
+
+      // No more unique markers, default to "0" (Circle).
+      candidateMarkerIndex ??= PlotMarker.zero.index.toString();
+      setting.plotMarker = PlotMarker.values[int.parse(candidateMarkerIndex)];
+
+      widget.onInternalChannelSettingChange?.call(channelName);
     }
 
-    // No more unique markers, default to "0" (Circle).
-    candidateMarkerIndex ??= PlotMarker.zero.index.toString();
-    setting.plotMarker = PlotMarker.values[int.parse(candidateMarkerIndex)];
-
-    widget.onInternalChannelSettingChange?.call(channelName);
+    return setting.plotMarker!.markerIndex;
   }
-
-
-
-  return setting.plotMarker!.markerIndex;
-}
-
-
-
 
   bool _channelHasError(PlotChannelData chData) {
     return chData.status < 0;
   }
 }
-
 
 class CustomDotPainter extends FlDotPainter {
   final double size;
@@ -121,7 +114,8 @@ class CustomDotPainter extends FlDotPainter {
   final String? character;
   final IconData? icon;
 
-  CustomDotPainter({required this.size, required this.color, this.character, this.icon});
+  CustomDotPainter(
+      {required this.size, required this.color, this.character, this.icon});
 
   @override
   void draw(Canvas canvas, FlSpot spot, Offset offsetInCanvas) {
@@ -138,7 +132,10 @@ class CustomDotPainter extends FlDotPainter {
         textDirection: TextDirection.ltr,
       );
       textPainter.layout();
-      textPainter.paint(canvas, offsetInCanvas - Offset(textPainter.width / 2, textPainter.height / 2));
+      textPainter.paint(
+          canvas,
+          offsetInCanvas -
+              Offset(textPainter.width / 2, textPainter.height / 2));
     } else if (character != null) {
       final textPainter = TextPainter(
         text: TextSpan(
@@ -151,7 +148,10 @@ class CustomDotPainter extends FlDotPainter {
         textDirection: TextDirection.ltr,
       );
       textPainter.layout();
-      textPainter.paint(canvas, offsetInCanvas - Offset(textPainter.width / 2, textPainter.height / 2));
+      textPainter.paint(
+          canvas,
+          offsetInCanvas -
+              Offset(textPainter.width / 2, textPainter.height / 2));
     }
   }
 

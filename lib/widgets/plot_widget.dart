@@ -27,23 +27,23 @@ enum PlotColor {
 }
 
 enum PlotMarker {
-  zero("Line", "0"),
-  one("Line Dot", "1"),
-  two("Dots", "2"),
-  three("Circles", "3"),
-  four("Cross", "4"),
-  five("Square", "5"),
-  six("OOOOOO", "6"),
-  seven("KKKKKK", "7"),
-  eight("VVVVVV", "8"),
-  nine("Icon heart", "9"),
-  ten("Icon arrow", "10"),
-  eleven("Icon star", "11"),
-  twelve("Icon Triangle", "12");
+  zero("Line", 0),
+  one("Line Dot", 1),
+  two("Dots", 2),
+  three("Circles", 3),
+  four("Cross", 4),
+  five("Square", 5),
+  six("OOOOOO", 6),
+  seven("KKKKKK", 7),
+  eight("VVVVVV", 8),
+  nine("Icon heart", 9),
+  ten("Icon arrow", 10),
+  eleven("Icon star", 11),
+  twelve("Icon Triangle", 12);
 
   const PlotMarker(this.name, this.markerIndex); // Ensure this line is correct
   final String name;
-  final String markerIndex; // Ensure this line is correct
+  final int markerIndex; // Ensure this line is correct
 }
 
 class ChannelSetting {
@@ -132,7 +132,7 @@ class PlotState extends State<PlotWidget> {
       .map((String channelName) => _adapter.lineColorForChannel(channelName))
       .toList();
 
-  List<String> get markerIndices => widget.plotChannels.keys
+  List<int> get markerIndices => widget.plotChannels.keys
       .map((String channelName) => _adapter.markerIndexForChannel(channelName))
       .toList();
 
