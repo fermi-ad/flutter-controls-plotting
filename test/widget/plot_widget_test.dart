@@ -150,6 +150,31 @@ void main() {
       expect(service.startPlotCount, 2);
       expect(service.startPlotnAcquistions, 1);
     });
+
+    testWidgets(
+        "Supply an onPlotUpdate handler, receive a PlotReply when data is plotted",
+        (WidgetTester tester) async {
+      // Given a FakeAcsysService and an empty PlotReply
+      final service = FakeACSysService();
+      PlotReply? lastUpdate;
+
+      // ... and a channel list containing API TEST CONSTANT
+      final channelList = {"API TEST CONSTANT": ChannelSetting()};
+
+      // ... and I have built the PlotWidget supplying it with an onPlotUpdate handler
+      await tester.pumpWidget(_buildPlotWidget(channelList,
+          service: service,
+          onPlotUpdate: (PlotReply update) => lastUpdate = update));
+
+      // When I wait for data to load
+      await waitForPlotDataToLoad(tester);
+
+      // Then a PlotReply was received
+      expect(lastUpdate, isNotNull);
+
+      // ... and the PlotReply contains 500 samples of data
+      expect(lastUpdate!.data.first.points.length, 500);
+    });
   });
 
   group("Error handling", () {
@@ -766,7 +791,8 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
         {PlotImplementation impl = PlotImplementation.flCharts,
         int updateDelay = 0,
         int nAcquisitions = 0,
-        ACSysServiceAPI? service}) =>
+        ACSysServiceAPI? service,
+        Function(PlotReply reply)? onPlotUpdate}) =>
     MaterialApp(
         home: Scaffold(
             body: ACSysProvider(
@@ -776,4 +802,5 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
                     implementation: impl,
                     updateDelay: updateDelay,
                     nAcquisitions: nAcquisitions,
+                    onPlotUpdate: onPlotUpdate,
                     daqService: const StandardPlotDAQ()))));
