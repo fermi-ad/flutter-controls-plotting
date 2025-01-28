@@ -80,6 +80,8 @@ class PlotWidget extends StatefulWidget {
 
   final Function(String channelName)? onInternalChannelSettingChange;
 
+  final Function(PlotReply update)? onPlotUpdate;
+
   final PlotImplementation implementation;
 
   const PlotWidget(
@@ -95,6 +97,7 @@ class PlotWidget extends StatefulWidget {
       this.triggerEvent,
       this.isShowLabels = true,
       this.onInternalChannelSettingChange,
+      this.onPlotUpdate,
       this.implementation = PlotImplementation.flCharts});
 
   @override
@@ -287,6 +290,8 @@ class PlotState extends State<PlotWidget> {
     _findLimits();
 
     _filterPoints();
+
+    widget.onPlotUpdate?.call(plotReply);
   }
 
   void _findLimits() {
