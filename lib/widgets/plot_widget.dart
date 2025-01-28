@@ -290,6 +290,8 @@ class PlotState extends State<PlotWidget> {
     _findLimits();
 
     _filterPoints();
+
+    widget.onPlotUpdate?.call(plotReply);
   }
 
   void _findLimits() {
