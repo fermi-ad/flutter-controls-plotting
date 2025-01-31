@@ -85,7 +85,8 @@ class FakeACSysService implements ACSysServiceAPI {
   }
 
   @override
-  Future<void> removePlotConfiguration({required int configurationId}) {
+  Future<void> removePlotConfiguration(
+      {required PlotConfigId configurationId}) {
     // TODO: implement removePlotConfiguration
     throw UnimplementedError();
   }
@@ -98,13 +99,13 @@ class FakeACSysService implements ACSysServiceAPI {
 
   @override
   Future<PlotConfigurationSnapshot> retrievePlotConfiguration(
-      {required int configurationId}) {
+      {required PlotConfigId configurationId}) {
     // TODO: implement retrievePlotConfiguration
     throw UnimplementedError();
   }
 
   @override
-  Future<void> savePlotConfiguration(
+  Future<PlotConfigurationSnapshot> savePlotConfiguration(
       {required PlotConfigurationSnapshot snapshot}) {
     // TODO: implement savePlotConfiguration
     throw UnimplementedError();
