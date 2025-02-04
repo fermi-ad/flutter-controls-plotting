@@ -13,7 +13,9 @@ abstract class PlotDAQService {
 }
 
 class StandardPlotDAQ implements PlotDAQService {
-  const StandardPlotDAQ();
+  StandardPlotDAQ();
+
+  double? lastScalarEpochTime;
 
   @override
   Stream<PlotReply> retrievePlot(BuildContext context,
@@ -114,6 +116,14 @@ class StandardPlotDAQ implements PlotDAQService {
             500,
             (i) => PlotPoint(
                 x: i.toDouble(), y: i.toDouble() + (rand.nextInt(50) - 25)));
+      } else if (forChannel == GenPlots.scalarRamp.name) {
+        DateTime now = DateTime.now();
+        var currentEpochTime = now.millisecondsSinceEpoch / 1000;
+        lastScalarEpochTime ??= currentEpochTime;
+
+        var difference = currentEpochTime - lastScalarEpochTime!;
+
+        data = [PlotPoint(x: lastScalarEpochTime!, y: difference)];
       } else if (forChannel == GenPlots.parabola.name) {
         data = List.generate(
             501,
@@ -177,6 +187,7 @@ enum GenPlots {
   randConst("PLOT TEST RAND CONSTANT"),
   ramp("PLOT TEST RAMP"),
   randRamp("PLOT TEST RAND RAMP"),
+  scalarRamp("PLOT TEST SCALAR RAMP"),
   parabola("PLOT TEST PARABOLA"),
   parabola64k("PLOT TEST PARABOLA 64K"),
   sine("PLOT TEST SINE"),
