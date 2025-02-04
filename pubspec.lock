@@ -217,9 +217,11 @@ packages:
   flutter_controls_core:
     dependency: "direct main"
     description:
-      path: "../flutter-controls-core"
-      relative: true
-    source: path
+      path: "."
+      ref: "v0.2.x"
+      resolved-ref: "0778aaf9d39f8cd92c4a2b08eda9bfd26f7bf9d3"
+      url: "https://github.com/fermi-ad/flutter-controls-core.git"
+    source: git
     version: "0.2.9"
   flutter_driver:
     dependency: transitive
