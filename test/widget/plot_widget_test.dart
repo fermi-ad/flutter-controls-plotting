@@ -803,4 +803,4 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
                     updateDelay: updateDelay,
                     nAcquisitions: nAcquisitions,
                     onPlotUpdate: onPlotUpdate,
-                    daqService: const StandardPlotDAQ()))));
+                    daqService: StandardPlotDAQ()))));

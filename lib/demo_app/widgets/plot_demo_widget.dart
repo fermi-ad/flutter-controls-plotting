@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 import 'package:flutter_controls_plotting/widgets/plot_card_widget.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 
@@ -42,20 +43,25 @@ class PlotDemoState extends State<PlotDemoWidget> {
       title: "Empty Plot",
       plot: PlotWidget(
         implementation: _implementation,
+        daqService: StandardPlotDAQ(),
       ));
 
   Widget _buildWaveformPlot() => PlotCardWidget(
       title: "Single Waveform Plot",
       plot: PlotWidget(
           implementation: _implementation,
+          daqService: StandardPlotDAQ(),
           plotChannels: {"PLOT TEST PARABOLA": ChannelSetting()}));
 
   Widget _buildMultipleWaveformPlot() => PlotCardWidget(
       title: "Multiple Waveforms Plot",
-      plot: PlotWidget(implementation: _implementation, plotChannels: {
-        "PLOT TEST RAND RAMP": ChannelSetting(),
-        "PLOT TEST NORMAL": ChannelSetting()
-      }));
+      plot: PlotWidget(
+          implementation: _implementation,
+          daqService: StandardPlotDAQ(),
+          plotChannels: {
+            "PLOT TEST RAND RAMP": ChannelSetting(),
+            "PLOT TEST NORMAL": ChannelSetting()
+          }));
 
   void _handleImplementationSelected(String? implementation) {
     if (implementation == null) {

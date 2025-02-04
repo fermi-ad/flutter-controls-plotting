@@ -87,7 +87,7 @@ class PlotWidget extends StatefulWidget {
   const PlotWidget(
       {super.key,
       this.plotChannels = const <String, ChannelSetting>{},
-      this.daqService = const StandardPlotDAQ(),
+      required this.daqService,
       this.yMin,
       this.yMax,
       this.xMin,
