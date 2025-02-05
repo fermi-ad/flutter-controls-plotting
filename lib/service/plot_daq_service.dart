@@ -97,6 +97,7 @@ class StandardPlotDAQ implements PlotDAQService {
       required _PlotArgs args,
       bool markChannelNameErrors = false}) {
     List<PlotChannelData> internalDaqData = [];
+    var xAxisUnits = 'index';
 
     for (var forChannel in forChannels) {
       List<PlotPoint>? data;
@@ -122,8 +123,9 @@ class StandardPlotDAQ implements PlotDAQService {
         lastScalarEpochTime ??= currentEpochTime;
 
         var difference = currentEpochTime - lastScalarEpochTime!;
+        xAxisUnits = 'Time';
 
-        data = [PlotPoint(x: lastScalarEpochTime!, y: difference)];
+        data = [PlotPoint(x: currentEpochTime, y: difference)];
       } else if (forChannel == GenPlots.parabola.name) {
         data = List.generate(
             501,
@@ -163,7 +165,7 @@ class StandardPlotDAQ implements PlotDAQService {
 
     var generatedPlotReply = PlotReply(
         plotId: "Internal",
-        xAxisUnits: "Index",
+        xAxisUnits: xAxisUnits,
         xAxisMin: args.xMin + 0.0,
         xAxisMax: args.xMax + 0.0,
         windowSize: args.windowSize,
