@@ -15,7 +15,8 @@ abstract class PlotDAQService {
 class StandardPlotDAQ implements PlotDAQService {
   StandardPlotDAQ();
 
-  double? lastScalarEpochTime;
+  double? lastScalarRampEpochTime;
+  double? lastScalarRandRampEpochTime;
 
   @override
   Stream<PlotReply> retrievePlot(BuildContext context,
@@ -120,12 +121,24 @@ class StandardPlotDAQ implements PlotDAQService {
       } else if (forChannel == GenPlots.scalarRamp.name) {
         DateTime now = DateTime.now();
         var currentEpochTime = now.millisecondsSinceEpoch / 1000;
-        lastScalarEpochTime ??= currentEpochTime;
+        lastScalarRampEpochTime ??= currentEpochTime;
 
-        var difference = currentEpochTime - lastScalarEpochTime!;
+        var difference = currentEpochTime - lastScalarRampEpochTime!;
         xAxisUnits = 'Time';
 
         data = [PlotPoint(x: currentEpochTime, y: difference)];
+      } else if (forChannel == GenPlots.scalarRandRamp.name) {
+        var rand = Random();
+        DateTime now = DateTime.now();
+        var currentEpochTime = now.millisecondsSinceEpoch / 1000;
+        lastScalarRandRampEpochTime ??= currentEpochTime;
+
+        var value = currentEpochTime - lastScalarRandRampEpochTime!;
+        value = value + (rand.nextInt(50) - 25);
+
+        xAxisUnits = 'Time';
+
+        data = [PlotPoint(x: currentEpochTime, y: value)];
       } else if (forChannel == GenPlots.parabola.name) {
         data = List.generate(
             501,
@@ -190,6 +203,7 @@ enum GenPlots {
   ramp("PLOT TEST RAMP"),
   randRamp("PLOT TEST RAND RAMP"),
   scalarRamp("PLOT TEST SCALAR RAMP"),
+  scalarRandRamp("PLOT TEST SCALAR RAND RAMP"),
   parabola("PLOT TEST PARABOLA"),
   parabola64k("PLOT TEST PARABOLA 64K"),
   sine("PLOT TEST SINE"),
