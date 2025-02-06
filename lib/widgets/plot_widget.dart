@@ -78,6 +78,8 @@ class PlotWidget extends StatefulWidget {
 
   final bool isShowLabels;
 
+  final bool isTimedScalarData;
+
   final Function(String channelName)? onInternalChannelSettingChange;
 
   final Function(PlotReply update)? onPlotUpdate;
@@ -96,6 +98,7 @@ class PlotWidget extends StatefulWidget {
       this.nAcquisitions = 0,
       this.triggerEvent,
       this.isShowLabels = true,
+      this.isTimedScalarData = false,
       this.onInternalChannelSettingChange,
       this.onPlotUpdate,
       this.implementation = PlotImplementation.flCharts});
@@ -325,11 +328,18 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _filterPoints() {
-    _adapter.filteredPoints.clear();
+    if (!widget.isTimedScalarData) {
+      _adapter.filteredPoints.clear();
+    }
     final plotChannels = _adapter.plotReply!.data;
     for (final plotChannel in plotChannels) {
       if (!_channelHasError(plotChannel)) {
-        _adapter.filteredPoints[plotChannel.name] = plotChannel.points;
+        if (widget.isTimedScalarData &&
+            _adapter.filteredPoints.containsKey(plotChannel.name)) {
+          _adapter.filteredPoints[plotChannel.name]!.addAll(plotChannel.points);
+        } else {
+          _adapter.filteredPoints[plotChannel.name] = plotChannel.points;
+        }
       }
     }
   }
