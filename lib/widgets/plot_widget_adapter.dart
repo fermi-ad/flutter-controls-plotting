@@ -19,7 +19,7 @@ abstract class PlotWidgetAdapter {
 
   double minY = 0, maxY = 1.0;
 
-  double minX = 0, maxX = 1.0;
+  double? minX = 0, maxX = 1.0;
 
   Map<String, List<PlotPoint>> filteredPoints = {};
 
