@@ -239,7 +239,13 @@ class PlotState extends State<PlotWidget> {
     ]);
   }
 
-  Widget _buildEmptyPlot() => _adapter.buildPlot();
+  Widget _buildEmptyPlot() {
+    _adapter.minX = 0;
+    _adapter.maxX = 3.0;
+    _adapter.minY = 0;
+    _adapter.maxY = 3.0;
+    return _adapter.buildPlot();
+  }
 
   void _handleDismissErrors() {
     setState(() => _errorsDismissed = true);
@@ -288,6 +294,15 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _receiveData(PlotReply plotReply) {
+    if (_adapter.filteredPoints.isEmpty) {
+      // Switching from empty plot to plot with channels.
+      // Ensure that min and max xy get adjusted appropriately.
+      _adapter.minX = null;
+      _adapter.maxX = null;
+      _adapter.minY = null;
+      _adapter.maxY = null;
+    }
+
     _adapter.plotReply = plotReply;
 
     _findLimits();
@@ -328,16 +343,11 @@ class PlotState extends State<PlotWidget> {
       }
     }
 
-    if (widget.isTimedScalarData) {
-      _adapter.minX = null;
-      _adapter.maxX = null;
-    } else {
-      if (widget.xMin != null) {
-        _adapter.minX = widget.xMin!;
-      }
-      if (widget.xMax != null) {
-        _adapter.maxX = widget.xMax!;
-      }
+    if (widget.xMin != null) {
+      _adapter.minX = widget.xMin!;
+    }
+    if (widget.xMax != null) {
+      _adapter.maxX = widget.xMax!;
     }
 
     if (widget.yMin != null) {
