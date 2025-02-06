@@ -123,9 +123,9 @@ class PlotState extends State<PlotWidget> {
           .toList()
       : [];
 
-  double get minY => _adapter.minY;
+  double? get minY => _adapter.minY;
 
-  double get maxY => _adapter.maxY;
+  double? get maxY => _adapter.maxY;
 
   double? get minX => _adapter.minX;
 
@@ -305,8 +305,16 @@ class PlotState extends State<PlotWidget> {
       }
       final points = plotChannel.points;
       for (final point in points) {
-        _adapter.minY = min(point.y, _adapter.minY);
-        _adapter.maxY = max(point.y, _adapter.maxY);
+        if (_adapter.minY == null) {
+          _adapter.minY = point.y;
+        } else {
+          _adapter.minY = min(point.y, _adapter.minY!);
+        }
+        if (_adapter.maxY == null) {
+          _adapter.maxY = point.y;
+        } else {
+          _adapter.maxY = max(point.y, _adapter.maxY!);
+        }
         if (_adapter.minX == null) {
           _adapter.minX = point.x;
         } else {

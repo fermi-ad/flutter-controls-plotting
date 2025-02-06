@@ -17,9 +17,9 @@ abstract class PlotWidgetAdapter {
 
   PlotReply? plotReply;
 
-  double minY = 0, maxY = 1.0;
+  double? minY, maxY;
 
-  double? minX = 0, maxX = 1.0;
+  double? minX, maxX;
 
   Map<String, List<PlotPoint>> filteredPoints = {};
 
