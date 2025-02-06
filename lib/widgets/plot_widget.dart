@@ -127,9 +127,9 @@ class PlotState extends State<PlotWidget> {
 
   double get maxY => _adapter.maxY;
 
-  double get minX => _adapter.minX;
+  double? get minX => _adapter.minX;
 
-  double get maxX => _adapter.maxX;
+  double? get maxX => _adapter.maxX;
 
   String get xAxisTitle =>
       _adapter.plotReply != null ? _adapter.plotReply!.xAxisUnits : "";
@@ -307,8 +307,28 @@ class PlotState extends State<PlotWidget> {
       for (final point in points) {
         _adapter.minY = min(point.y, _adapter.minY);
         _adapter.maxY = max(point.y, _adapter.maxY);
-        _adapter.minX = min(point.x, _adapter.minX);
-        _adapter.maxX = max(point.x, _adapter.maxX);
+        if (_adapter.minX == null) {
+          _adapter.minX = point.x;
+        } else {
+          _adapter.minX = min(point.x, _adapter.minX!);
+        }
+        if (_adapter.maxX == null) {
+          _adapter.maxX = point.x;
+        } else {
+          _adapter.maxX = max(point.x, _adapter.maxX!);
+        }
+      }
+    }
+
+    if (widget.isTimedScalarData) {
+      _adapter.minX = null;
+      _adapter.maxX = null;
+    } else {
+      if (widget.xMin != null) {
+        _adapter.minX = widget.xMin!;
+      }
+      if (widget.xMax != null) {
+        _adapter.maxX = widget.xMax!;
       }
     }
 
@@ -317,13 +337,6 @@ class PlotState extends State<PlotWidget> {
     }
     if (widget.yMax != null) {
       _adapter.maxY = widget.yMax!;
-    }
-
-    if (widget.xMin != null) {
-      _adapter.minX = widget.xMin!;
-    }
-    if (widget.xMax != null) {
-      _adapter.maxX = widget.xMax!;
     }
   }
 
