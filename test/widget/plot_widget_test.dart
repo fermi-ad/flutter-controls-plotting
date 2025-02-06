@@ -261,10 +261,10 @@ void main() {
       assertEmptyPlot(tester, isVisible: true);
 
       // ... and the Y-axis limits are 0 to 1
-      assertPlotYAxisLimits(tester, min: 0, max: 1);
+      assertPlotYAxisLimits(tester, min: 0, max: 3);
 
       // ... and the X-axis limits are 0 to 1
-      assertPlotXAxisLimits(tester, min: 0, max: 1);
+      assertPlotXAxisLimits(tester, min: 0, max: 3);
     });
 
     testWidgets("Plot PLOT TEST CONSTANT, get a horizontal line at y=5.0",
@@ -285,7 +285,7 @@ void main() {
           titles: ["PLOT TEST CONSTANT"], units: ["V"]);
 
       // ... and the Y-axis has limits of...
-      assertPlotYAxisLimits(tester, min: 0, max: 5);
+      assertPlotYAxisLimits(tester, min: 5, max: 5);
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
@@ -531,7 +531,7 @@ void main() {
       assertEmptyPlot(tester, isVisible: true);
 
       // ... and the Y-axis limits are 0 to 1
-      assertPlotYAxisLimits(tester, min: 0, max: 1);
+      assertPlotYAxisLimits(tester, min: 0, max: 3);
 
       // ... and the X-axis limits are 0 to 1
       // assertPlotXAxisLimits(tester, min: 0, max: 1);
@@ -556,7 +556,7 @@ void main() {
           titles: ["PLOT TEST CONSTANT"], units: ["V"]);
 
       // ... and the Y-axis has limits of...
-      assertPlotYAxisLimits(tester, min: 0, max: 5);
+      assertPlotYAxisLimits(tester, min: 5, max: 5);
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");

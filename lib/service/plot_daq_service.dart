@@ -98,7 +98,7 @@ class StandardPlotDAQ implements PlotDAQService {
       required _PlotArgs args,
       bool markChannelNameErrors = false}) {
     List<PlotChannelData> internalDaqData = [];
-    var xAxisUnits = 'index';
+    var xAxisUnits = 'Index';
 
     for (var forChannel in forChannels) {
       List<PlotPoint>? data;
