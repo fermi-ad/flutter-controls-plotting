@@ -35,7 +35,8 @@ class PlotDemoState extends State<PlotDemoWidget> {
                         children: [
                           _buildEmptyPlot(),
                           _buildWaveformPlot(),
-                          _buildMultipleWaveformPlot()
+                          _buildMultipleWaveformPlot(),
+                          _buildTimedScalarWaveformPlot()
                         ])))
       ]));
 
@@ -61,6 +62,17 @@ class PlotDemoState extends State<PlotDemoWidget> {
           plotChannels: {
             "PLOT TEST RAND RAMP": ChannelSetting(),
             "PLOT TEST NORMAL": ChannelSetting()
+          }));
+
+  Widget _buildTimedScalarWaveformPlot() => PlotCardWidget(
+      title: "Timed Scalar Plot",
+      plot: PlotWidget(
+          implementation: _implementation,
+          daqService: StandardPlotDAQ(),
+          isTimedScalarData: true,
+          updateDelay: 500,
+          plotChannels: {
+            "PLOT TEST SCALAR RAND RAMP": ChannelSetting(),
           }));
 
   void _handleImplementationSelected(String? implementation) {
