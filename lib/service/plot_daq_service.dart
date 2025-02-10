@@ -18,6 +18,10 @@ class StandardPlotDAQ implements PlotDAQService {
   double? lastScalarRampEpochTime;
   double? lastScalarRandRampEpochTime;
 
+  // Test variables
+  int scalarRampCount = 0;
+  int? scalarRampCountLimit;
+
   @override
   Stream<PlotReply> retrievePlot(BuildContext context,
       {required Set<String> forChannels,
@@ -85,10 +89,21 @@ class StandardPlotDAQ implements PlotDAQService {
       yield generatePlot;
     } else {
       // Refresh cycle only API provided.
-      while (true) {
+      bool validLoop = true;
+      while (validLoop) {
         await Future.delayed(Duration(milliseconds: updateDelay));
-        yield _generatePlot(
+        var plot = _generatePlot(
             forChannels: forChannels, args: args, markChannelNameErrors: true);
+
+        validLoop = false;
+        for (var channel in plot.data) {
+          if (channel.points.isNotEmpty) {
+            // Atleast one channel has points.
+            validLoop = true;
+          }
+        }
+
+        yield plot;
       }
     }
   }
@@ -122,11 +137,16 @@ class StandardPlotDAQ implements PlotDAQService {
         DateTime now = DateTime.now();
         var currentEpochTime = now.millisecondsSinceEpoch / 1000;
         lastScalarRampEpochTime ??= currentEpochTime;
+        if (scalarRampCountLimit != null &&
+            scalarRampCount >= scalarRampCountLimit!) {
+          data = [];
+        } else {
+          scalarRampCount += 1;
+          var difference = currentEpochTime - lastScalarRampEpochTime!;
+          xAxisUnits = 'Time';
 
-        var difference = currentEpochTime - lastScalarRampEpochTime!;
-        xAxisUnits = 'Time';
-
-        data = [PlotPoint(x: currentEpochTime, y: difference)];
+          data = [PlotPoint(x: currentEpochTime, y: difference)];
+        }
       } else if (forChannel == GenPlots.scalarRandRamp.name) {
         var rand = Random();
         DateTime now = DateTime.now();
