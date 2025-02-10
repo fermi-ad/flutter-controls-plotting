@@ -142,12 +142,7 @@ class PlotState extends State<PlotWidget> {
       .map((String channelName) => _adapter.markerIndexForChannel(channelName))
       .toList();
 
-  Map<String, List<PlotPoint>> get points => _adapter.plotReply != null
-      ? Map.fromEntries(_adapter.plotReply!.data
-          .map((PlotChannelData channelData) =>
-              MapEntry(channelData.name, channelData.points))
-          .toList())
-      : {};
+  Map<String, List<PlotPoint>> get points => _adapter.filteredPoints;
 
   @override
   void didChangeDependencies() {
