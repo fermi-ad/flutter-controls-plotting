@@ -512,6 +512,31 @@ void main() {
       // Verify that color is as expected.
       assertColorOfPlot(tester, expectedColor: PlotColor.blue.color);
     });
+
+    testWidgets(
+        "Verify plot scalar timed data for 10 points. Verify 10 appended points.",
+        (WidgetTester tester) async {
+      // Given a scalar ramp channel
+      var channelName = "PLOT TEST SCALAR RAMP";
+      final channelList = {
+        channelName: ChannelSetting(lineColor: PlotColor.blue.color)
+      };
+
+      // And daq service with scalar ramp point count limit of 10 points.
+      StandardPlotDAQ daqService = StandardPlotDAQ();
+      daqService.scalarRampCountLimit = 10;
+
+      // And a update fequency of 10hz with timedScalar option to append to plot.
+      await tester.pumpWidget(_buildPlotWidget(channelList,
+          updateDelay: 100, isTimedScalarData: true, daqService: daqService));
+
+      // Wait for points to load.
+      await waitForPlotDataToLoad(tester);
+      await tester.pumpAndSettle(const Duration(milliseconds: 300));
+
+      // Once done plotting verify that all 10 points were plotted.
+      assertPlotContainsNPoints(tester, 10, channelName: channelName);
+    });
   });
 
   group("PlotWidget (implementation = Graphic) widget tests", () {
@@ -788,19 +813,24 @@ void assertPlotImplementationIs(
 }
 
 Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
-        {PlotImplementation impl = PlotImplementation.flCharts,
-        int updateDelay = 0,
-        int nAcquisitions = 0,
-        ACSysServiceAPI? service,
-        Function(PlotReply reply)? onPlotUpdate}) =>
-    MaterialApp(
-        home: Scaffold(
-            body: ACSysProvider(
-                service: service ?? FakeACSysService(),
-                child: PlotWidget(
-                    plotChannels: channelList,
-                    implementation: impl,
-                    updateDelay: updateDelay,
-                    nAcquisitions: nAcquisitions,
-                    onPlotUpdate: onPlotUpdate,
-                    daqService: StandardPlotDAQ()))));
+    {PlotImplementation impl = PlotImplementation.flCharts,
+    int updateDelay = 0,
+    int nAcquisitions = 0,
+    bool isTimedScalarData = false,
+    ACSysServiceAPI? service,
+    StandardPlotDAQ? daqService,
+    Function(PlotReply reply)? onPlotUpdate}) {
+  daqService ??= StandardPlotDAQ();
+  return MaterialApp(
+      home: Scaffold(
+          body: ACSysProvider(
+              service: service ?? FakeACSysService(),
+              child: PlotWidget(
+                  plotChannels: channelList,
+                  implementation: impl,
+                  updateDelay: updateDelay,
+                  nAcquisitions: nAcquisitions,
+                  onPlotUpdate: onPlotUpdate,
+                  isTimedScalarData: isTimedScalarData,
+                  daqService: daqService))));
+}
