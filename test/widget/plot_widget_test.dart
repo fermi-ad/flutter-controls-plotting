@@ -250,6 +250,31 @@ void main() {
     });
   });
   group("PlotWidget (implementation = FlCharts) widget tests", () {
+    testWidgets(
+        "Verify plot scalar timed data for 10 points. Verify 10 appended points.",
+        (WidgetTester tester) async {
+      // Given a scalar ramp channel
+      var channelName = "PLOT TEST SCALAR RAMP";
+      final channelList = {
+        channelName: ChannelSetting(lineColor: PlotColor.blue.color)
+      };
+
+      // And daq service with scalar ramp point count limit of 10 points.
+      StandardPlotDAQ daqService = StandardPlotDAQ();
+      daqService.scalarRampCountLimit = 10;
+
+      // And a update fequency of 10hz with timedScalar option to append to plot.
+      await tester.pumpWidget(_buildPlotWidget(channelList,
+          updateDelay: 100, isTimedScalarData: true, daqService: daqService));
+
+      // Wait for points to load.
+      await waitForPlotDataToLoad(tester);
+      await tester.pumpAndSettle(const Duration(milliseconds: 300));
+
+      // Once done plotting verify that all 10 points were plotted.
+      assertPlotContainsNPoints(tester, 10, channelName: channelName);
+    });
+
     testWidgets("Plot channel list is empty, plot is empty",
         (WidgetTester tester) async {
       // Given nothing
@@ -511,31 +536,6 @@ void main() {
 
       // Verify that color is as expected.
       assertColorOfPlot(tester, expectedColor: PlotColor.blue.color);
-    });
-
-    testWidgets(
-        "Verify plot scalar timed data for 10 points. Verify 10 appended points.",
-        (WidgetTester tester) async {
-      // Given a scalar ramp channel
-      var channelName = "PLOT TEST SCALAR RAMP";
-      final channelList = {
-        channelName: ChannelSetting(lineColor: PlotColor.blue.color)
-      };
-
-      // And daq service with scalar ramp point count limit of 10 points.
-      StandardPlotDAQ daqService = StandardPlotDAQ();
-      daqService.scalarRampCountLimit = 10;
-
-      // And a update fequency of 10hz with timedScalar option to append to plot.
-      await tester.pumpWidget(_buildPlotWidget(channelList,
-          updateDelay: 100, isTimedScalarData: true, daqService: daqService));
-
-      // Wait for points to load.
-      await waitForPlotDataToLoad(tester);
-      await tester.pumpAndSettle(const Duration(milliseconds: 300));
-
-      // Once done plotting verify that all 10 points were plotted.
-      assertPlotContainsNPoints(tester, 10, channelName: channelName);
     });
   });
 
