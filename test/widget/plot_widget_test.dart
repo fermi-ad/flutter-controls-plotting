@@ -250,6 +250,31 @@ void main() {
     });
   });
   group("PlotWidget (implementation = FlCharts) widget tests", () {
+    testWidgets(
+        "Verify plot scalar timed data for 10 points. Verify 10 appended points.",
+        (WidgetTester tester) async {
+      // Given a scalar ramp channel
+      var channelName = "PLOT TEST SCALAR RAMP";
+      final channelList = {
+        channelName: ChannelSetting(lineColor: PlotColor.blue.color)
+      };
+
+      // And daq service with scalar ramp point count limit of 10 points.
+      StandardPlotDAQ daqService = StandardPlotDAQ();
+      daqService.scalarRampCountLimit = 10;
+
+      // And a update fequency of 10hz with timedScalar option to append to plot.
+      await tester.pumpWidget(_buildPlotWidget(channelList,
+          updateDelay: 100, isTimedScalarData: true, daqService: daqService));
+
+      // Wait for points to load.
+      await waitForPlotDataToLoad(tester);
+      await tester.pumpAndSettle(const Duration(milliseconds: 300));
+
+      // Once done plotting verify that all 10 points were plotted.
+      assertPlotContainsNPoints(tester, 10, channelName: channelName);
+    });
+
     testWidgets("Plot channel list is empty, plot is empty",
         (WidgetTester tester) async {
       // Given nothing
@@ -261,10 +286,10 @@ void main() {
       assertEmptyPlot(tester, isVisible: true);
 
       // ... and the Y-axis limits are 0 to 1
-      assertPlotYAxisLimits(tester, min: 0, max: 1);
+      assertPlotYAxisLimits(tester, min: 0, max: 3);
 
       // ... and the X-axis limits are 0 to 1
-      assertPlotXAxisLimits(tester, min: 0, max: 1);
+      assertPlotXAxisLimits(tester, min: 0, max: 3);
     });
 
     testWidgets("Plot PLOT TEST CONSTANT, get a horizontal line at y=5.0",
@@ -285,7 +310,7 @@ void main() {
           titles: ["PLOT TEST CONSTANT"], units: ["V"]);
 
       // ... and the Y-axis has limits of...
-      assertPlotYAxisLimits(tester, min: 0, max: 5);
+      assertPlotYAxisLimits(tester, min: 5, max: 5);
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
@@ -531,7 +556,7 @@ void main() {
       assertEmptyPlot(tester, isVisible: true);
 
       // ... and the Y-axis limits are 0 to 1
-      assertPlotYAxisLimits(tester, min: 0, max: 1);
+      assertPlotYAxisLimits(tester, min: 0, max: 3);
 
       // ... and the X-axis limits are 0 to 1
       // assertPlotXAxisLimits(tester, min: 0, max: 1);
@@ -556,7 +581,7 @@ void main() {
           titles: ["PLOT TEST CONSTANT"], units: ["V"]);
 
       // ... and the Y-axis has limits of...
-      assertPlotYAxisLimits(tester, min: 0, max: 5);
+      assertPlotYAxisLimits(tester, min: 5, max: 5);
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
@@ -788,19 +813,24 @@ void assertPlotImplementationIs(
 }
 
 Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
-        {PlotImplementation impl = PlotImplementation.flCharts,
-        int updateDelay = 0,
-        int nAcquisitions = 0,
-        ACSysServiceAPI? service,
-        Function(PlotReply reply)? onPlotUpdate}) =>
-    MaterialApp(
-        home: Scaffold(
-            body: ACSysProvider(
-                service: service ?? FakeACSysService(),
-                child: PlotWidget(
-                    plotChannels: channelList,
-                    implementation: impl,
-                    updateDelay: updateDelay,
-                    nAcquisitions: nAcquisitions,
-                    onPlotUpdate: onPlotUpdate,
-                    daqService: const StandardPlotDAQ()))));
+    {PlotImplementation impl = PlotImplementation.flCharts,
+    int updateDelay = 0,
+    int nAcquisitions = 0,
+    bool isTimedScalarData = false,
+    ACSysServiceAPI? service,
+    StandardPlotDAQ? daqService,
+    Function(PlotReply reply)? onPlotUpdate}) {
+  daqService ??= StandardPlotDAQ();
+  return MaterialApp(
+      home: Scaffold(
+          body: ACSysProvider(
+              service: service ?? FakeACSysService(),
+              child: PlotWidget(
+                  plotChannels: channelList,
+                  implementation: impl,
+                  updateDelay: updateDelay,
+                  nAcquisitions: nAcquisitions,
+                  onPlotUpdate: onPlotUpdate,
+                  isTimedScalarData: isTimedScalarData,
+                  daqService: daqService))));
+}

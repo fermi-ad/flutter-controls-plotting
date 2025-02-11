@@ -13,7 +13,14 @@ abstract class PlotDAQService {
 }
 
 class StandardPlotDAQ implements PlotDAQService {
-  const StandardPlotDAQ();
+  StandardPlotDAQ();
+
+  double? lastScalarRampEpochTime;
+  double? lastScalarRandRampEpochTime;
+
+  // Test variables
+  int scalarRampCount = 0;
+  int? scalarRampCountLimit;
 
   @override
   Stream<PlotReply> retrievePlot(BuildContext context,
@@ -82,10 +89,21 @@ class StandardPlotDAQ implements PlotDAQService {
       yield generatePlot;
     } else {
       // Refresh cycle only API provided.
-      while (true) {
+      bool validLoop = true;
+      while (validLoop) {
         await Future.delayed(Duration(milliseconds: updateDelay));
-        yield _generatePlot(
+        var plot = _generatePlot(
             forChannels: forChannels, args: args, markChannelNameErrors: true);
+
+        validLoop = false;
+        for (var channel in plot.data) {
+          if (channel.points.isNotEmpty) {
+            // Atleast one channel has points.
+            validLoop = true;
+          }
+        }
+
+        yield plot;
       }
     }
   }
@@ -95,6 +113,7 @@ class StandardPlotDAQ implements PlotDAQService {
       required _PlotArgs args,
       bool markChannelNameErrors = false}) {
     List<PlotChannelData> internalDaqData = [];
+    var xAxisUnits = 'Index';
 
     for (var forChannel in forChannels) {
       List<PlotPoint>? data;
@@ -114,6 +133,32 @@ class StandardPlotDAQ implements PlotDAQService {
             500,
             (i) => PlotPoint(
                 x: i.toDouble(), y: i.toDouble() + (rand.nextInt(50) - 25)));
+      } else if (forChannel == GenPlots.scalarRamp.name) {
+        DateTime now = DateTime.now();
+        var currentEpochTime = now.millisecondsSinceEpoch / 1000;
+        lastScalarRampEpochTime ??= currentEpochTime;
+        if (scalarRampCountLimit != null &&
+            scalarRampCount >= scalarRampCountLimit!) {
+          data = [];
+        } else {
+          scalarRampCount += 1;
+          var difference = currentEpochTime - lastScalarRampEpochTime!;
+          xAxisUnits = 'Time';
+
+          data = [PlotPoint(x: currentEpochTime, y: difference)];
+        }
+      } else if (forChannel == GenPlots.scalarRandRamp.name) {
+        var rand = Random();
+        DateTime now = DateTime.now();
+        var currentEpochTime = now.millisecondsSinceEpoch / 1000;
+        lastScalarRandRampEpochTime ??= currentEpochTime;
+
+        var value = currentEpochTime - lastScalarRandRampEpochTime!;
+        value = value + (rand.nextInt(50) - 25);
+
+        xAxisUnits = 'Time';
+
+        data = [PlotPoint(x: currentEpochTime, y: value)];
       } else if (forChannel == GenPlots.parabola.name) {
         data = List.generate(
             501,
@@ -153,7 +198,7 @@ class StandardPlotDAQ implements PlotDAQService {
 
     var generatedPlotReply = PlotReply(
         plotId: "Internal",
-        xAxisUnits: "Index",
+        xAxisUnits: xAxisUnits,
         xAxisMin: args.xMin + 0.0,
         xAxisMax: args.xMax + 0.0,
         windowSize: args.windowSize,
@@ -177,6 +222,8 @@ enum GenPlots {
   randConst("PLOT TEST RAND CONSTANT"),
   ramp("PLOT TEST RAMP"),
   randRamp("PLOT TEST RAND RAMP"),
+  scalarRamp("PLOT TEST SCALAR RAMP"),
+  scalarRandRamp("PLOT TEST SCALAR RAND RAMP"),
   parabola("PLOT TEST PARABOLA"),
   parabola64k("PLOT TEST PARABOLA 64K"),
   sine("PLOT TEST SINE"),

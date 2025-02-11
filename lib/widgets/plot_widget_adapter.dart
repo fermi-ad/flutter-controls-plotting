@@ -17,9 +17,9 @@ abstract class PlotWidgetAdapter {
 
   PlotReply? plotReply;
 
-  double minY = 0, maxY = 1.0;
+  double? minY, maxY;
 
-  double minX = 0, maxX = 1.0;
+  double? minX, maxX;
 
   Map<String, List<PlotPoint>> filteredPoints = {};
 
@@ -70,6 +70,19 @@ abstract class PlotWidgetAdapter {
   bool _channelHasError(PlotChannelData chData) {
     return chData.status < 0;
   }
+}
+
+String parseDaqTimeAsString(double value) {
+  var msSinceEpoch = value * 1000;
+  DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(msSinceEpoch.toInt());
+  var h = dateTime.hour;
+  var m = dateTime.minute;
+  var s = dateTime.second;
+  var hour = h.toString().padLeft(2, '0');
+  var minute = m.toString().padLeft(2, '0');
+  var second = s.toString().padLeft(2, '0');
+
+  return '$hour:$minute:$second';
 }
 
 class CustomDotPainter extends FlDotPainter {

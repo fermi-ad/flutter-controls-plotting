@@ -33,10 +33,8 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     );
-                    return LineTooltipItem(
-                      '${touchedSpot.x}, ${touchedSpot.y.toStringAsFixed(2)}',
-                      textStyle,
-                    );
+                    return _generateLineTooltipItem(
+                        touchedSpot.x, touchedSpot.y, textStyle);
                   }).toList();
                 },
               ),
@@ -123,11 +121,41 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
               style: const TextStyle(),
             ),
             sideTitles: SideTitles(
-              showTitles: isShowLabels, // zyuan true,
-              reservedSize: 40,
+              showTitles: isShowLabels,
+              reservedSize: widget.isTimedScalarData ? 80 : 40,
+              getTitlesWidget: (value, meta) {
+                return _bottomTitleWidgets(value, meta);
+              },
             )),
         topTitles: topTitles,
         rightTitles: emptyTitles);
+  }
+
+  Widget _bottomTitleWidgets(double value, TitleMeta meta) {
+    if (widget.isTimedScalarData) {
+      return SideTitleWidget(
+        axisSide: meta.axisSide,
+        angle: -1.57, // -90 * 3.14 / 180,
+        child: Text(parseDaqTimeAsString(value)),
+      );
+    }
+
+    return defaultGetTitle(value, meta);
+  }
+
+  LineTooltipItem _generateLineTooltipItem(
+      double x, double y, TextStyle textStyle) {
+    String xString;
+    if (widget.isTimedScalarData) {
+      xString = parseDaqTimeAsString(x);
+    } else {
+      xString = x.toString();
+    }
+
+    return LineTooltipItem(
+      '$xString, ${y.toStringAsFixed(2)}',
+      textStyle,
+    );
   }
 
   List<FlSpot> _toSpots(List<PlotPoint> points) => points
