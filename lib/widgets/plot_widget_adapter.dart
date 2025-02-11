@@ -17,12 +17,6 @@ abstract class PlotWidgetAdapter {
 
   PlotReply? plotReply;
 
-  double? minY, maxY;
-
-  double? minX, maxX;
-
-  Map<String, List<PlotPoint>> filteredPoints = {};
-
   PlotWidgetAdapter({required this.widget});
 
   Widget buildPlot();
