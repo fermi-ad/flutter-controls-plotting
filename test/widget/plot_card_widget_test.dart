@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/entities/plot_data.dart';
 import 'package:flutter_controls_plotting/service/fake_acsys_service.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 import 'package:flutter_controls_plotting/widgets/plot_card_widget.dart';
@@ -14,7 +15,9 @@ void main() {
       // When I build the PlotCard with no title parameter
       await tester.pumpWidget(_buildPlotCard(PlotCardWidget(
           plot: PlotWidget(
-              plotChannels: const {}, daqService: StandardPlotDAQ()))));
+              plotData: PlotData(),
+              plotChannels: const {},
+              daqService: StandardPlotDAQ()))));
 
       // Then the title is displayed inside the card
       expect(
@@ -37,7 +40,9 @@ void main() {
       await tester.pumpWidget(_buildPlotCard(PlotCardWidget(
           title: title,
           plot: PlotWidget(
-              plotChannels: const {}, daqService: StandardPlotDAQ()))));
+              plotData: PlotData(),
+              plotChannels: const {},
+              daqService: StandardPlotDAQ()))));
 
       // Then the title is displayed inside the card
       expect(

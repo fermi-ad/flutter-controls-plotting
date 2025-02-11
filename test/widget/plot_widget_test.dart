@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/entities/plot_data.dart';
 import 'package:flutter_controls_plotting/service/fake_acsys_service.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 import 'package:flutter_controls_plotting/test_harness/actions.dart';
@@ -828,6 +829,7 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
               child: PlotWidget(
                   plotChannels: channelList,
                   implementation: impl,
+                  plotData: PlotData(),
                   updateDelay: updateDelay,
                   nAcquisitions: nAcquisitions,
                   onPlotUpdate: onPlotUpdate,
