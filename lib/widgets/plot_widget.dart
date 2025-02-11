@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/entities/plot_data.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget_adapter.dart';
 
@@ -64,6 +65,7 @@ class PlotWidget extends StatefulWidget {
   final Map<String, ChannelSetting> plotChannels;
 
   final PlotDAQService daqService;
+  final PlotData plotData;
 
   final double? yMin;
   final double? yMax;
@@ -90,6 +92,7 @@ class PlotWidget extends StatefulWidget {
       {super.key,
       this.plotChannels = const <String, ChannelSetting>{},
       required this.daqService,
+      required this.plotData,
       this.yMin,
       this.yMax,
       this.xMin,
@@ -123,13 +126,13 @@ class PlotState extends State<PlotWidget> {
           .toList()
       : [];
 
-  double? get minY => _adapter.minY;
+  double? get minY => widget.plotData.minY;
 
-  double? get maxY => _adapter.maxY;
+  double? get maxY => widget.plotData.maxY;
 
-  double? get minX => _adapter.minX;
+  double? get minX => widget.plotData.minX;
 
-  double? get maxX => _adapter.maxX;
+  double? get maxX => widget.plotData.maxX;
 
   String get xAxisTitle =>
       _adapter.plotReply != null ? _adapter.plotReply!.xAxisUnits : "";
@@ -142,7 +145,7 @@ class PlotState extends State<PlotWidget> {
       .map((String channelName) => _adapter.markerIndexForChannel(channelName))
       .toList();
 
-  Map<String, List<PlotPoint>> get points => _adapter.filteredPoints;
+  Map<String, List<PlotPoint>> get points => widget.plotData.points;
 
   @override
   void didChangeDependencies() {
@@ -235,10 +238,6 @@ class PlotState extends State<PlotWidget> {
   }
 
   Widget _buildEmptyPlot() {
-    _adapter.minX = 0;
-    _adapter.maxX = 3.0;
-    _adapter.minY = 0;
-    _adapter.maxY = 3.0;
     return _adapter.buildPlot();
   }
 
@@ -289,82 +288,83 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _receiveData(PlotReply plotReply) {
-    if (_adapter.filteredPoints.isEmpty) {
+    bool ignoreCurrentLimits = false;
+    if (widget.plotData.points.isEmpty) {
       // Switching from empty plot to plot with channels.
       // Ensure that min and max xy get adjusted appropriately.
-      _adapter.minX = null;
-      _adapter.maxX = null;
-      _adapter.minY = null;
-      _adapter.maxY = null;
+      widget.plotData.resetMinMaxXY();
+      ignoreCurrentLimits = true;
     }
 
     _adapter.plotReply = plotReply;
 
-    _findLimits();
+    _findLimits(ignoreCurrentLimits: ignoreCurrentLimits);
 
     _filterPoints();
 
     widget.onPlotUpdate?.call(plotReply);
   }
 
-  void _findLimits() {
+  void _findLimits({required bool ignoreCurrentLimits}) {
     final plotChannels = _adapter.plotReply!.data;
+    double? minY, maxY, minX, maxX;
     for (var plotChannel in plotChannels) {
       if (_channelHasError(plotChannel)) {
         continue;
       }
       final points = plotChannel.points;
       for (final point in points) {
-        if (_adapter.minY == null) {
-          _adapter.minY = point.y;
+        if (ignoreCurrentLimits || widget.plotData.minY == null) {
+          minY = point.y;
         } else {
-          _adapter.minY = min(point.y, _adapter.minY!);
+          minY = min(point.y, widget.plotData.minY!);
         }
-        if (_adapter.maxY == null) {
-          _adapter.maxY = point.y;
+        if (ignoreCurrentLimits || widget.plotData.maxY == null) {
+          maxY = point.y;
         } else {
-          _adapter.maxY = max(point.y, _adapter.maxY!);
+          maxY = max(point.y, widget.plotData.maxY!);
         }
-        if (_adapter.minX == null) {
-          _adapter.minX = point.x;
+        if (ignoreCurrentLimits || widget.plotData.minX == null) {
+          minX = point.x;
         } else {
-          _adapter.minX = min(point.x, _adapter.minX!);
+          minX = min(point.x, widget.plotData.minX!);
         }
-        if (_adapter.maxX == null) {
-          _adapter.maxX = point.x;
+        if (ignoreCurrentLimits || widget.plotData.maxX == null) {
+          maxX = point.x;
         } else {
-          _adapter.maxX = max(point.x, _adapter.maxX!);
+          maxX = max(point.x, widget.plotData.maxX!);
         }
       }
     }
 
     if (widget.xMin != null) {
-      _adapter.minX = widget.xMin!;
+      minX = widget.xMin!;
     }
     if (widget.xMax != null) {
-      _adapter.maxX = widget.xMax!;
+      maxX = widget.xMax!;
     }
 
     if (widget.yMin != null) {
-      _adapter.minY = widget.yMin!;
+      minY = widget.yMin!;
     }
     if (widget.yMax != null) {
-      _adapter.maxY = widget.yMax!;
+      maxY = widget.yMax!;
     }
+    widget.plotData.setLimits(minX: minX, maxX: maxX, minY: minY, maxY: maxY);
   }
 
   void _filterPoints() {
     if (!widget.isTimedScalarData) {
-      _adapter.filteredPoints.clear();
+      widget.plotData.points.clear();
     }
     final plotChannels = _adapter.plotReply!.data;
     for (final plotChannel in plotChannels) {
       if (!_channelHasError(plotChannel)) {
         if (widget.isTimedScalarData &&
-            _adapter.filteredPoints.containsKey(plotChannel.name)) {
-          _adapter.filteredPoints[plotChannel.name]!.addAll(plotChannel.points);
+            widget.plotData.points.containsKey(plotChannel.name)) {
+          widget.plotData.points[plotChannel.name]!.addAll(plotChannel.points);
         } else {
-          _adapter.filteredPoints[plotChannel.name] = plotChannel.points;
+          widget.plotData.points[plotChannel.name] = plotChannel.points;
         }
       }
     }
