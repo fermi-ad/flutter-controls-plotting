@@ -308,31 +308,38 @@ class PlotState extends State<PlotWidget> {
   void _findLimits({required bool ignoreCurrentLimits}) {
     final plotChannels = _adapter.plotReply!.data;
     double? minY, maxY, minX, maxX;
+    if (!ignoreCurrentLimits) {
+      minY = widget.plotData.minY;
+      maxY = widget.plotData.maxY;
+      minX = widget.plotData.minX;
+      maxX = widget.plotData.maxX;
+    }
+
     for (var plotChannel in plotChannels) {
       if (channelHasError(plotChannel)) {
         continue;
       }
       final points = plotChannel.points;
       for (final point in points) {
-        if (ignoreCurrentLimits || widget.plotData.minY == null) {
+        if (minY == null) {
           minY = point.y;
         } else {
-          minY = min(point.y, widget.plotData.minY!);
+          minY = min(point.y, minY);
         }
-        if (ignoreCurrentLimits || widget.plotData.maxY == null) {
+        if (maxY == null) {
           maxY = point.y;
         } else {
-          maxY = max(point.y, widget.plotData.maxY!);
+          maxY = max(point.y, maxY);
         }
-        if (ignoreCurrentLimits || widget.plotData.minX == null) {
+        if (minX == null) {
           minX = point.x;
         } else {
-          minX = min(point.x, widget.plotData.minX!);
+          minX = min(point.x, minX);
         }
-        if (ignoreCurrentLimits || widget.plotData.maxX == null) {
+        if (maxX == null) {
           maxX = point.x;
         } else {
-          maxX = max(point.x, widget.plotData.maxX!);
+          maxX = max(point.x, maxX);
         }
       }
     }
