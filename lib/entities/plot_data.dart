@@ -1,4 +1,5 @@
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
 class PlotData {
   // min/max XY that is currently displayed on the plot.
@@ -35,6 +36,25 @@ class PlotData {
       return 3.0;
     }
     return _maxY;
+  }
+
+  void filterPoints(
+      {required bool isTimedScalarData,
+      required List<PlotChannelData> plotChannels}) {
+    if (!isTimedScalarData) {
+      points.clear();
+    }
+    for (final plotChannel in plotChannels) {
+      if (!channelHasError(plotChannel)) {
+        if (points.containsKey(plotChannel.name)) {
+          var pointsList = points[plotChannel.name]!;
+          var lastIndex = pointsList.length;
+          pointsList.insertAll(lastIndex, plotChannel.points);
+        } else {
+          points[plotChannel.name] = plotChannel.points;
+        }
+      }
+    }
   }
 
   void cleanUpPoints(Iterable<String> channelList) {

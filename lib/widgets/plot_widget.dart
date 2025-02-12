@@ -354,20 +354,10 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _filterPoints() {
-    if (!widget.isTimedScalarData) {
-      widget.plotData.points.clear();
-    }
     final plotChannels = _adapter.plotReply!.data;
-    for (final plotChannel in plotChannels) {
-      if (!_channelHasError(plotChannel)) {
-        if (widget.isTimedScalarData &&
-            widget.plotData.points.containsKey(plotChannel.name)) {
-          widget.plotData.points[plotChannel.name]!.addAll(plotChannel.points);
-        } else {
-          widget.plotData.points[plotChannel.name] = plotChannel.points;
-        }
-      }
-    }
+    widget.plotData.filterPoints(
+        isTimedScalarData: widget.isTimedScalarData,
+        plotChannels: plotChannels);
   }
 
   String? _plotReplyHasErrors() {
