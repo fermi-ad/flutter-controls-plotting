@@ -309,7 +309,7 @@ class PlotState extends State<PlotWidget> {
     final plotChannels = _adapter.plotReply!.data;
     double? minY, maxY, minX, maxX;
     for (var plotChannel in plotChannels) {
-      if (_channelHasError(plotChannel)) {
+      if (channelHasError(plotChannel)) {
         continue;
       }
       final points = plotChannel.points;
@@ -373,17 +373,13 @@ class PlotState extends State<PlotWidget> {
   String? _plotReplyHasErrors() {
     if (_adapter.plotReply != null) {
       for (PlotChannelData chData in _adapter.plotReply!.data as List) {
-        if (_channelHasError(chData)) {
+        if (channelHasError(chData)) {
           return chData.name;
         }
       }
     }
 
     return null;
-  }
-
-  bool _channelHasError(PlotChannelData chData) {
-    return chData.status < 0;
   }
 
   bool get _streamShouldReset => !((mapEquals(widget.plotChannels, _channels) &&
