@@ -59,6 +59,17 @@ class PlotData {
     }
   }
 
+  void findPointsLimits() {
+    double? minY, maxY, minX, maxX;
+
+    for (var pointList in points.values) {
+      (minY, maxY, minX, maxX) = _getLimitsPerPoints(
+          points: pointList, minY: minY, maxY: maxY, minX: minX, maxX: maxX);
+    }
+
+    setLimits(minX: minX, maxX: maxX, minY: minY, maxY: maxY);
+  }
+
   void findLimits({
     required List<PlotChannelData> plotChannels,
     required double? confMinY,
