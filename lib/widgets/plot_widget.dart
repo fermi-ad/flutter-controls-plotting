@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
@@ -288,7 +286,6 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _receiveData(PlotReply plotReply) {
-    bool ignoreCurrentLimits = false;
     if (widget.plotData.points.isEmpty) {
       // Switching from empty plot to plot with channels.
       // Ensure that min and max xy get adjusted appropriately.
