@@ -80,34 +80,34 @@ class FakeACSysService implements ACSysServiceAPI {
 
   @override
   Future<List<PlotConfigurationListing>> listPlotConfigurations() {
-    // TODO: implement listPlotConfigurations
+    // N/A for plotting lib
     throw UnimplementedError();
   }
 
   @override
   Future<void> removePlotConfiguration(
       {required PlotConfigId configurationId}) {
-    // TODO: implement removePlotConfiguration
+    // N/A for plotting lib
     throw UnimplementedError();
   }
 
   @override
   Future<PlotConfigurationSnapshot> retrieveLastUserConfiguration() {
-    // TODO: implement retrieveLastUserConfiguration
+    // N/A for plotting lib
     throw UnimplementedError();
   }
 
   @override
   Future<PlotConfigurationSnapshot> retrievePlotConfiguration(
       {required PlotConfigId configurationId}) {
-    // TODO: implement retrievePlotConfiguration
+    // N/A for plotting lib
     throw UnimplementedError();
   }
 
   @override
   Future<PlotConfigurationSnapshot> savePlotConfiguration(
       {required PlotConfigurationSnapshot snapshot}) {
-    // TODO: implement savePlotConfiguration
+    // N/A for plotting lib
     throw UnimplementedError();
   }
 }
