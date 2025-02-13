@@ -12,13 +12,14 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       builder: (BuildContext context, BoxConstraints constraints) =>
           LineChart(LineChartData(
             clipData: const FlClipData.all(),
-            minX: minX,
-            maxX: maxX,
-            minY: minY,
-            maxY: maxY,
+            minX: widget.plotData.minX,
+            maxX: widget.plotData.maxX,
+            minY: widget.plotData.minY,
+            maxY: widget.plotData.maxY,
             lineBarsData: plotReply == null
                 ? []
-                : _toLineChartBarDataList(plotReply!.data, filteredPoints),
+                : _toLineChartBarDataList(
+                    plotReply!.data, widget.plotData.points),
             lineTouchData: LineTouchData(
               touchTooltipData: LineTouchTooltipData(
                 maxContentWidth: 100,

@@ -232,3 +232,7 @@ enum GenPlots {
   const GenPlots(this.name);
   final String name;
 }
+
+bool channelHasError(PlotChannelData chData) {
+  return chData.status < 0;
+}

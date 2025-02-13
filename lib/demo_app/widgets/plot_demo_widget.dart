@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_controls_plotting/entities/plot_data.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 import 'package:flutter_controls_plotting/widgets/plot_card_widget.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
@@ -44,6 +45,7 @@ class PlotDemoState extends State<PlotDemoWidget> {
       title: "Empty Plot",
       plot: PlotWidget(
         implementation: _implementation,
+        plotData: PlotData(),
         daqService: StandardPlotDAQ(),
       ));
 
@@ -51,6 +53,7 @@ class PlotDemoState extends State<PlotDemoWidget> {
       title: "Single Waveform Plot",
       plot: PlotWidget(
           implementation: _implementation,
+          plotData: PlotData(),
           daqService: StandardPlotDAQ(),
           plotChannels: {"PLOT TEST PARABOLA": ChannelSetting()}));
 
@@ -58,6 +61,7 @@ class PlotDemoState extends State<PlotDemoWidget> {
       title: "Multiple Waveforms Plot",
       plot: PlotWidget(
           implementation: _implementation,
+          plotData: PlotData(),
           daqService: StandardPlotDAQ(),
           plotChannels: {
             "PLOT TEST RAND RAMP": ChannelSetting(),
@@ -68,6 +72,7 @@ class PlotDemoState extends State<PlotDemoWidget> {
       title: "Timed Scalar Plot",
       plot: PlotWidget(
           implementation: _implementation,
+          plotData: PlotData(),
           daqService: StandardPlotDAQ(),
           isTimedScalarData: true,
           updateDelay: 500,
