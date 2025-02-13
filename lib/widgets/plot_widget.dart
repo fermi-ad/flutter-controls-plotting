@@ -293,71 +293,26 @@ class PlotState extends State<PlotWidget> {
       // Switching from empty plot to plot with channels.
       // Ensure that min and max xy get adjusted appropriately.
       widget.plotData.resetMinMaxXY();
-      ignoreCurrentLimits = true;
     }
 
     _adapter.plotReply = plotReply;
 
-    _findLimits(ignoreCurrentLimits: ignoreCurrentLimits);
+    _findLimits();
 
     _filterPoints();
 
     widget.onPlotUpdate?.call(plotReply);
   }
 
-  void _findLimits({required bool ignoreCurrentLimits}) {
+  void _findLimits() {
     final plotChannels = _adapter.plotReply!.data;
-    double? minY, maxY, minX, maxX;
-    if (!ignoreCurrentLimits) {
-      minY = widget.plotData.minY;
-      maxY = widget.plotData.maxY;
-      minX = widget.plotData.minX;
-      maxX = widget.plotData.maxX;
-    }
 
-    for (var plotChannel in plotChannels) {
-      if (channelHasError(plotChannel)) {
-        continue;
-      }
-      final points = plotChannel.points;
-      for (final point in points) {
-        if (minY == null) {
-          minY = point.y;
-        } else {
-          minY = min(point.y, minY);
-        }
-        if (maxY == null) {
-          maxY = point.y;
-        } else {
-          maxY = max(point.y, maxY);
-        }
-        if (minX == null) {
-          minX = point.x;
-        } else {
-          minX = min(point.x, minX);
-        }
-        if (maxX == null) {
-          maxX = point.x;
-        } else {
-          maxX = max(point.x, maxX);
-        }
-      }
-    }
-
-    if (widget.xMin != null) {
-      minX = widget.xMin!;
-    }
-    if (widget.xMax != null) {
-      maxX = widget.xMax!;
-    }
-
-    if (widget.yMin != null) {
-      minY = widget.yMin!;
-    }
-    if (widget.yMax != null) {
-      maxY = widget.yMax!;
-    }
-    widget.plotData.setLimits(minX: minX, maxX: maxX, minY: minY, maxY: maxY);
+    widget.plotData.findLimits(
+        plotChannels: plotChannels,
+        confMaxX: widget.xMax,
+        confMinX: widget.xMin,
+        confMaxY: widget.yMax,
+        confMinY: widget.yMin);
   }
 
   void _filterPoints() {

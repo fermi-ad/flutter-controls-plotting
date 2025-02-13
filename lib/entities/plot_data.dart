@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
@@ -55,6 +57,78 @@ class PlotData {
         }
       }
     }
+  }
+
+  void findLimits({
+    required List<PlotChannelData> plotChannels,
+    required double? confMinY,
+    required double? confMaxY,
+    required double? confMinX,
+    required double? confMaxX,
+  }) {
+    double? minY = _minY;
+    double? maxY = _maxY;
+    double? minX = _minX;
+    double? maxX = _maxX;
+
+    for (var plotChannel in plotChannels) {
+      if (channelHasError(plotChannel)) {
+        continue;
+      }
+      final points = plotChannel.points;
+      (minY, maxY, minX, maxX) = _getLimitsPerPoints(
+          points: points, minY: minY, maxY: maxY, minX: minX, maxX: maxX);
+    }
+
+    // Override configuration
+    if (confMinX != null) {
+      minX = confMinX;
+    }
+    if (confMaxX != null) {
+      maxX = confMaxX;
+    }
+
+    if (confMinY != null) {
+      minY = confMinY;
+    }
+    if (confMaxY != null) {
+      maxY = confMaxY;
+    }
+
+    setLimits(minX: minX, maxX: maxX, minY: minY, maxY: maxY);
+  }
+
+  (double?, double?, double?, double?) _getLimitsPerPoints({
+    required List<PlotPoint> points,
+    required double? minY,
+    required double? maxY,
+    required double? minX,
+    required double? maxX,
+  }) {
+    for (final point in points) {
+      if (minY == null) {
+        minY = point.y;
+      } else {
+        minY = min(point.y, minY);
+      }
+      if (maxY == null) {
+        maxY = point.y;
+      } else {
+        maxY = max(point.y, maxY);
+      }
+      if (minX == null) {
+        minX = point.x;
+      } else {
+        minX = min(point.x, minX);
+      }
+      if (maxX == null) {
+        maxX = point.x;
+      } else {
+        maxX = max(point.x, maxX);
+      }
+    }
+
+    return (minY, maxY, minX, maxX);
   }
 
   void cleanUpPoints(Iterable<String> channelList) {
