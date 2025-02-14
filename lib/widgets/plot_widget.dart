@@ -324,8 +324,9 @@ class PlotState extends State<PlotWidget> {
     if (widget.isTimedScalarData &&
         widget.xMax != null &&
         widget.updateDelay > 0) {
-      pointLimit = (1000 / widget.updateDelay).ceil();
-      pointLimit = (pointLimit * widget.xMax!).ceil();
+      double pointLimitCalc = 1000 / widget.updateDelay;
+      pointLimitCalc = pointLimitCalc * widget.xMax!;
+      pointLimit = pointLimitCalc.ceil();
     }
 
     final plotChannels = _adapter.plotReply!.data;
