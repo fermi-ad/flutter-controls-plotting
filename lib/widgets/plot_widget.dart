@@ -304,19 +304,35 @@ class PlotState extends State<PlotWidget> {
   void _findLimits() {
     final plotChannels = _adapter.plotReply!.data;
 
+    double? confMinX, confMaxX;
+
+    if (!widget.isTimedScalarData) {
+      confMinX = widget.xMin;
+      confMaxX = widget.xMax;
+    }
+
     widget.plotData.findLimits(
         plotChannels: plotChannels,
-        confMaxX: widget.xMax,
-        confMinX: widget.xMin,
+        confMinY: widget.yMin,
         confMaxY: widget.yMax,
-        confMinY: widget.yMin);
+        confMinX: confMinX,
+        confMaxX: confMaxX);
   }
 
   void _filterPoints() {
+    int? pointLimit;
+    if (widget.isTimedScalarData &&
+        widget.xMax != null &&
+        widget.updateDelay > 0) {
+      pointLimit = (1000 / widget.updateDelay).ceil();
+      pointLimit = (pointLimit * widget.xMax!).ceil();
+    }
+
     final plotChannels = _adapter.plotReply!.data;
     widget.plotData.filterPoints(
         isTimedScalarData: widget.isTimedScalarData,
-        plotChannels: plotChannels);
+        plotChannels: plotChannels,
+        pointLimit: pointLimit);
   }
 
   String? _plotReplyHasErrors() {

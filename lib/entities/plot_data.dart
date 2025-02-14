@@ -42,7 +42,9 @@ class PlotData {
 
   void filterPoints(
       {required bool isTimedScalarData,
-      required List<PlotChannelData> plotChannels}) {
+      required List<PlotChannelData> plotChannels,
+      int? pointLimit}) {
+    bool reloadPointsLimits = false;
     if (!isTimedScalarData) {
       points.clear();
     }
@@ -52,10 +54,19 @@ class PlotData {
           var pointsList = points[plotChannel.name]!;
           var lastIndex = pointsList.length;
           pointsList.insertAll(lastIndex, plotChannel.points);
+          if (pointLimit != null && pointsList.length > pointLimit) {
+            var startInx = pointsList.length - pointLimit;
+            pointsList.removeRange(0, startInx);
+            reloadPointsLimits = true;
+          }
         } else {
           points[plotChannel.name] = plotChannel.points;
         }
       }
+    }
+
+    if (reloadPointsLimits) {
+      findPointsLimits();
     }
   }
 
