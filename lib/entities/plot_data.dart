@@ -59,24 +59,29 @@ class PlotData {
     }
   }
 
-  void findPointsLimits() {
+  void findPointsLimits({double? untilXMin}) {
     double? minY, maxY, minX, maxX;
 
     for (var pointList in points.values) {
       (minY, maxY, minX, maxX) = _getLimitsPerPoints(
-          points: pointList, minY: minY, maxY: maxY, minX: minX, maxX: maxX);
+          points: pointList,
+          minY: minY,
+          maxY: maxY,
+          minX: minX,
+          maxX: maxX,
+          untilXMin: untilXMin);
     }
 
     setLimits(minX: minX, maxX: maxX, minY: minY, maxY: maxY);
   }
 
-  void findLimits({
-    required List<PlotChannelData> plotChannels,
-    required double? confMinY,
-    required double? confMaxY,
-    required double? confMinX,
-    required double? confMaxX,
-  }) {
+  void findLimits(
+      {required List<PlotChannelData> plotChannels,
+      required double? confMinY,
+      required double? confMaxY,
+      required double? confMinX,
+      required double? confMaxX,
+      required bool isScalarData}) {
     double? minY = _minY;
     double? maxY = _maxY;
     double? minX = _minX;
@@ -91,14 +96,28 @@ class PlotData {
           points: points, minY: minY, maxY: maxY, minX: minX, maxX: maxX);
     }
 
-    // Override configuration
-    if (confMinX != null) {
-      minX = confMinX;
-    }
-    if (confMaxX != null) {
-      maxX = confMaxX;
+    if (!isScalarData) {
+      if (confMinX != null) {
+        minX = confMinX;
+      }
+      if (confMaxX != null) {
+        maxX = confMaxX;
+      }
+    } else {
+      // Find time offset
+      if (confMaxX != null) {
+        minX = maxX! - confMaxX;
+
+        // Calculate y based on points displayed.
+        if (confMinY == null && confMaxY == null) {
+          findPointsLimits(untilXMin: minX);
+          minY = _minY;
+          maxY = _maxY;
+        }
+      }
     }
 
+    // Override configuration
     if (confMinY != null) {
       minY = confMinY;
     }
@@ -115,8 +134,10 @@ class PlotData {
     required double? maxY,
     required double? minX,
     required double? maxX,
+    double? untilXMin,
   }) {
-    for (final point in points) {
+    for (int i = points.length - 1; i >= 0; i--) {
+      final point = points[i];
       if (minY == null) {
         minY = point.y;
       } else {
@@ -136,6 +157,12 @@ class PlotData {
         maxX = point.x;
       } else {
         maxX = max(point.x, maxX);
+      }
+
+      if (untilXMin != null) {
+        if (minX <= untilXMin) {
+          break;
+        }
       }
     }
 
