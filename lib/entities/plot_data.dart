@@ -42,9 +42,7 @@ class PlotData {
 
   void filterPoints(
       {required bool isTimedScalarData,
-      required List<PlotChannelData> plotChannels,
-      int? pointLimit}) {
-    bool reloadPointsLimits = false;
+      required List<PlotChannelData> plotChannels}) {
     if (!isTimedScalarData) {
       points.clear();
     }
@@ -54,23 +52,18 @@ class PlotData {
           var pointsList = points[plotChannel.name]!;
           var lastIndex = pointsList.length;
           pointsList.insertAll(lastIndex, plotChannel.points);
-          if (pointLimit != null && pointsList.length > pointLimit) {
-            var startInx = pointsList.length - pointLimit;
-            pointsList.removeRange(0, startInx);
-            reloadPointsLimits = true;
-          }
         } else {
           points[plotChannel.name] = plotChannel.points;
         }
       }
     }
-
-    if (reloadPointsLimits) {
-      findPointsLimits();
-    }
   }
 
-  void findPointsLimits() {
+  void findPointsLimits(
+      {double? overrideMinY,
+      double? overrideMaxY,
+      double? overrideMinX,
+      double? overrideMaxX}) {
     double? minY, maxY, minX, maxX;
 
     for (var pointList in points.values) {
@@ -78,16 +71,29 @@ class PlotData {
           points: pointList, minY: minY, maxY: maxY, minX: minX, maxX: maxX);
     }
 
+    if (overrideMinY != null) {
+      minY = overrideMinY;
+    }
+    if (overrideMaxY != null) {
+      maxY = overrideMaxY;
+    }
+    if (overrideMinX != null) {
+      minX = overrideMinX;
+    }
+    if (overrideMaxX != null) {
+      maxX = overrideMaxX;
+    }
+
     setLimits(minX: minX, maxX: maxX, minY: minY, maxY: maxY);
   }
 
-  void findLimits({
-    required List<PlotChannelData> plotChannels,
-    required double? confMinY,
-    required double? confMaxY,
-    required double? confMinX,
-    required double? confMaxX,
-  }) {
+  void findLimits(
+      {required List<PlotChannelData> plotChannels,
+      required double? confMinY,
+      required double? confMaxY,
+      required double? confMinX,
+      required double? confMaxX,
+      required bool isScalarData}) {
     double? minY = _minY;
     double? maxY = _maxY;
     double? minX = _minX;
@@ -103,18 +109,25 @@ class PlotData {
     }
 
     // Override configuration
-    if (confMinX != null) {
-      minX = confMinX;
-    }
-    if (confMaxX != null) {
-      maxX = confMaxX;
-    }
-
     if (confMinY != null) {
       minY = confMinY;
     }
     if (confMaxY != null) {
       maxY = confMaxY;
+    }
+
+    if (!isScalarData) {
+      if (confMinX != null) {
+        minX = confMinX;
+      }
+      if (confMaxX != null) {
+        maxX = confMaxX;
+      }
+    } else {
+      // Find time offset
+      if (confMaxX != null) {
+        minX = maxX! - confMaxX;
+      }
     }
 
     setLimits(minX: minX, maxX: maxX, minY: minY, maxY: maxY);
