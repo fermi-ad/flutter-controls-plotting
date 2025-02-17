@@ -59,6 +59,14 @@ class ChannelSetting {
   }
 }
 
+class ScalarDataOptions {
+  final bool isOneShot;
+  final double? timeframeDisplayed;
+
+  ScalarDataOptions(
+      {required this.isOneShot, required this.timeframeDisplayed});
+}
+
 class PlotWidget extends StatefulWidget {
   final Map<String, ChannelSetting> plotChannels;
 
@@ -78,7 +86,7 @@ class PlotWidget extends StatefulWidget {
 
   final bool isShowLabels;
 
-  final bool isTimedScalarData;
+  final ScalarDataOptions? scalarDataOptions;
 
   final Function(String channelName)? onInternalChannelSettingChange;
 
@@ -99,13 +107,15 @@ class PlotWidget extends StatefulWidget {
       this.nAcquisitions = 0,
       this.triggerEvent,
       this.isShowLabels = true,
-      this.isTimedScalarData = false,
+      this.scalarDataOptions,
       this.onInternalChannelSettingChange,
       this.onPlotUpdate,
       this.implementation = PlotImplementation.flCharts});
 
   @override
   State<StatefulWidget> createState() => PlotState();
+
+  bool get isTimedScalarData => scalarDataOptions != null;
 }
 
 class PlotState extends State<PlotWidget> {
