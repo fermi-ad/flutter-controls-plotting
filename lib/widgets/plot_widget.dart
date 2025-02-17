@@ -294,9 +294,9 @@ class PlotState extends State<PlotWidget> {
 
     _adapter.plotReply = plotReply;
 
-    _findLimits();
-
     _filterPoints();
+
+    _findLimits();
 
     widget.onPlotUpdate?.call(plotReply);
   }
