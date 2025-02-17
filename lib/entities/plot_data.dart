@@ -96,14 +96,6 @@ class PlotData {
           points: points, minY: minY, maxY: maxY, minX: minX, maxX: maxX);
     }
 
-    // Override configuration
-    if (confMinY != null) {
-      minY = confMinY;
-    }
-    if (confMaxY != null) {
-      maxY = confMaxY;
-    }
-
     if (!isScalarData) {
       if (confMinX != null) {
         minX = confMinX;
@@ -117,10 +109,20 @@ class PlotData {
         minX = maxX! - confMaxX;
 
         // Calculate y based on points displayed.
-        findPointsLimits(untilXMin: minX);
-        _minX = minX;
-        return;
+        if (confMinY == null && confMaxY == null) {
+          findPointsLimits(untilXMin: minX);
+          minY = _minY;
+          maxY = _maxY;
+        }
       }
+    }
+
+    // Override configuration
+    if (confMinY != null) {
+      minY = confMinY;
+    }
+    if (confMaxY != null) {
+      maxY = confMaxY;
     }
 
     setLimits(minX: minX, maxX: maxX, minY: minY, maxY: maxY);
