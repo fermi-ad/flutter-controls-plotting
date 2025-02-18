@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
+import 'package:flutter_controls_plotting/entities/scalar_data_options.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 import 'package:flutter_controls_plotting/widgets/plot_card_widget.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
