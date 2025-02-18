@@ -5,6 +5,7 @@ library plotadapter;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 import 'package:graphic/graphic.dart';
 
