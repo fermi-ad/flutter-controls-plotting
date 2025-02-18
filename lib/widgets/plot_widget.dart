@@ -61,10 +61,9 @@ class ChannelSetting {
 
 class ScalarDataOptions {
   final bool isOneShot;
-  final double? timeframeDisplayed;
+  final double? timeDelta;
 
-  ScalarDataOptions(
-      {required this.isOneShot, required this.timeframeDisplayed});
+  ScalarDataOptions({required this.isOneShot, required this.timeDelta});
 }
 
 class PlotWidget extends StatefulWidget {
@@ -320,7 +319,7 @@ class PlotState extends State<PlotWidget> {
         confMaxY: widget.yMax,
         confMinX: widget.xMin,
         confMaxX: widget.xMax,
-        isScalarData: widget.isTimedScalarData);
+        timeDelta: widget.scalarDataOptions?.timeDelta);
   }
 
   void _filterPoints() {
