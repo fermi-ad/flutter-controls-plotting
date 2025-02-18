@@ -221,19 +221,29 @@ class PlotState extends State<PlotWidget> {
     _triggerEvent = widget.triggerEvent;
     _nAcquisitions = widget.nAcquisitions;
 
-    _channels = Map.from(widget.plotChannels);
-    _updateDelay = widget.updateDelay;
-    _triggerEvent = widget.triggerEvent;
-    _nAcquisitions = widget.nAcquisitions;
+    // Widget is displaying scalar data in one-shot mode.
+    if (widget.scalarDataOptions != null &&
+        widget.scalarDataOptions!.isOneShot &&
+        widget.scalarDataOptions!.timeDelta != null &&
+        widget.updateDelay > 0) {
+      // Using calculated nAcquisitions
+      var timeDelta = widget.scalarDataOptions!.timeDelta;
+      // Number of points per second
+      double pointLimitCalc = 1000 / widget.updateDelay;
+      // Number of seconds
+      pointLimitCalc = pointLimitCalc * timeDelta!;
+      // Round up to ensure number of acquisitions include full timeframe.
+      _nAcquisitions = pointLimitCalc.ceil();
+    }
 
     if (widget.plotChannels.isNotEmpty) {
       _errorsDismissed = false;
 
       _plotStream = widget.daqService.retrievePlot(context,
-          forChannels: widget.plotChannels.keys.toSet(),
-          updateDelay: widget.updateDelay,
-          triggerEvent: widget.triggerEvent,
-          nAcquisitions: widget.nAcquisitions);
+          forChannels: _channels.keys.toSet(),
+          updateDelay: _updateDelay,
+          triggerEvent: _triggerEvent,
+          nAcquisitions: _nAcquisitions);
     }
   }
 
