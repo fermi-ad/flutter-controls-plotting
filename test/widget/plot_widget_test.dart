@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
+import 'package:flutter_controls_plotting/entities/scalar_data_options.dart';
 import 'package:flutter_controls_plotting/service/fake_acsys_service.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 import 'package:flutter_controls_plotting/test_harness/actions.dart';
@@ -266,7 +268,10 @@ void main() {
 
       // And a update fequency of 10hz with timedScalar option to append to plot.
       await tester.pumpWidget(_buildPlotWidget(channelList,
-          updateDelay: 100, isTimedScalarData: true, daqService: daqService));
+          updateDelay: 100,
+          scalarDataOptions:
+              ScalarDataOptions(isOneShot: false, timeDelta: null),
+          daqService: daqService));
 
       // Wait for points to load.
       await waitForPlotDataToLoad(tester);
@@ -817,7 +822,7 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
     {PlotImplementation impl = PlotImplementation.flCharts,
     int updateDelay = 0,
     int nAcquisitions = 0,
-    bool isTimedScalarData = false,
+    ScalarDataOptions? scalarDataOptions,
     ACSysServiceAPI? service,
     StandardPlotDAQ? daqService,
     Function(PlotReply reply)? onPlotUpdate}) {
@@ -833,6 +838,6 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
                   updateDelay: updateDelay,
                   nAcquisitions: nAcquisitions,
                   onPlotUpdate: onPlotUpdate,
-                  isTimedScalarData: isTimedScalarData,
+                  scalarDataOptions: scalarDataOptions,
                   daqService: daqService))));
 }

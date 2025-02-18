@@ -42,7 +42,8 @@ class StandardPlotDAQ implements PlotDAQService {
           forChannels: forChannels,
           args: plotArgs,
           updateDelay: updateDelay,
-          triggerEvent: triggerEvent);
+          triggerEvent: triggerEvent,
+          nAcquisitions: nAcquisitions == 0 ? null : nAcquisitions);
     } else {
       // API only
       return ACSys.api(context).startPlot(forChannels.toList(),
@@ -59,6 +60,7 @@ class StandardPlotDAQ implements PlotDAQService {
       {required Set<String> forChannels,
       required _PlotArgs args,
       int updateDelay = 0,
+      int? nAcquisitions,
       int? triggerEvent}) async* {
     if (updateDelay == 0) {
       // No refresh cycle, attempt to combine gen plots with api results
@@ -90,6 +92,7 @@ class StandardPlotDAQ implements PlotDAQService {
     } else {
       // Refresh cycle only API provided.
       bool validLoop = true;
+      int nAcquisitionsInLoop = 0;
       while (validLoop) {
         await Future.delayed(Duration(milliseconds: updateDelay));
         var plot = _generatePlot(
@@ -104,6 +107,11 @@ class StandardPlotDAQ implements PlotDAQService {
         }
 
         yield plot;
+
+        nAcquisitionsInLoop += 1;
+        if (nAcquisitions != null && nAcquisitionsInLoop == nAcquisitions) {
+          validLoop = false;
+        }
       }
     }
   }

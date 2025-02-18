@@ -81,7 +81,7 @@ class PlotData {
       required double? confMaxY,
       required double? confMinX,
       required double? confMaxX,
-      required bool isScalarData}) {
+      required double? timeDelta}) {
     double? minY = _minY;
     double? maxY = _maxY;
     double? minX = _minX;
@@ -96,7 +96,7 @@ class PlotData {
           points: points, minY: minY, maxY: maxY, minX: minX, maxX: maxX);
     }
 
-    if (!isScalarData) {
+    if (timeDelta == null) {
       if (confMinX != null) {
         minX = confMinX;
       }
@@ -105,15 +105,12 @@ class PlotData {
       }
     } else {
       // Find time offset
-      if (confMaxX != null) {
-        minX = maxX! - confMaxX;
-
-        // Calculate y based on points displayed.
-        if (confMinY == null && confMaxY == null) {
-          findPointsLimits(untilXMin: minX);
-          minY = _minY;
-          maxY = _maxY;
-        }
+      minX = maxX! - timeDelta;
+      // Calculate y based on points displayed.
+      if (confMinY == null && confMaxY == null) {
+        findPointsLimits(untilXMin: minX);
+        minY = _minY;
+        maxY = _maxY;
       }
     }
 

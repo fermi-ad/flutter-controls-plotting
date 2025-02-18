@@ -1,63 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
+import 'package:flutter_controls_plotting/entities/scalar_data_options.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget_adapter.dart';
 
 enum PlotImplementation { flCharts, graphic, fermi }
-
-// Defines a default set of colors for plots. It is possible to pass in any color as well.
-enum PlotColor {
-  red("Red", Colors.red),
-  green("Green", Colors.green),
-  blue("Blue", Colors.blue),
-  yellow("Yellow", Colors.yellow),
-  brown("Brown", Colors.brown),
-  gray("Gray", Colors.blueGrey),
-  purple("Purple", Colors.purple),
-  lime("Lime", Colors.lime),
-  cyan("Cyan", Colors.cyan),
-  orange("Orange", Colors.orange);
-
-  const PlotColor(this.name, this.color);
-  final String name;
-  final Color color;
-}
-
-enum PlotMarker {
-  line("Line", 0),
-  lineDots("Line Dot", 1),
-  dot("Dots", 2),
-  cirle("Circles", 3),
-  cross("Cross", 4),
-  square("Square", 5),
-  oooooo("OOOOOO", 6),
-  kkkkkk("KKKKKK", 7),
-  vvvvvv("VVVVVV", 8),
-  heart("Icon heart", 9),
-  arrow("Icon arrow", 10),
-  star("Icon star", 11),
-  triangle("Icon Triangle", 12);
-
-  const PlotMarker(this.name, this.markerIndex); // Ensure this line is correct
-  final String name;
-  final int markerIndex; // Ensure this line is correct
-}
-
-class ChannelSetting {
-  Color? lineColor;
-  PlotMarker plotMarker;
-
-  ChannelSetting({this.lineColor, this.plotMarker = PlotMarker.line});
-
-  // Clone functionality.
-  static ChannelSetting from(ChannelSetting setting) {
-    var newChannelSetting = ChannelSetting(
-        lineColor: setting.lineColor, plotMarker: setting.plotMarker);
-    return newChannelSetting;
-  }
-}
 
 class PlotWidget extends StatefulWidget {
   final Map<String, ChannelSetting> plotChannels;
@@ -78,7 +28,7 @@ class PlotWidget extends StatefulWidget {
 
   final bool isShowLabels;
 
-  final bool isTimedScalarData;
+  final ScalarDataOptions? scalarDataOptions;
 
   final Function(String channelName)? onInternalChannelSettingChange;
 
@@ -99,13 +49,15 @@ class PlotWidget extends StatefulWidget {
       this.nAcquisitions = 0,
       this.triggerEvent,
       this.isShowLabels = true,
-      this.isTimedScalarData = false,
+      this.scalarDataOptions,
       this.onInternalChannelSettingChange,
       this.onPlotUpdate,
       this.implementation = PlotImplementation.flCharts});
 
   @override
   State<StatefulWidget> createState() => PlotState();
+
+  bool get isTimedScalarData => scalarDataOptions != null;
 }
 
 class PlotState extends State<PlotWidget> {
@@ -269,19 +221,29 @@ class PlotState extends State<PlotWidget> {
     _triggerEvent = widget.triggerEvent;
     _nAcquisitions = widget.nAcquisitions;
 
-    _channels = Map.from(widget.plotChannels);
-    _updateDelay = widget.updateDelay;
-    _triggerEvent = widget.triggerEvent;
-    _nAcquisitions = widget.nAcquisitions;
+    // Widget is displaying scalar data in one-shot mode.
+    if (widget.scalarDataOptions != null &&
+        widget.scalarDataOptions!.isOneShot &&
+        widget.scalarDataOptions!.timeDelta != null &&
+        widget.updateDelay > 0) {
+      // Using calculated nAcquisitions
+      var timeDelta = widget.scalarDataOptions!.timeDelta;
+      // Number of points per second
+      double pointLimitCalc = 1000 / widget.updateDelay;
+      // Number of seconds
+      pointLimitCalc = pointLimitCalc * timeDelta!;
+      // Round up to ensure number of acquisitions include full timeframe.
+      _nAcquisitions = pointLimitCalc.ceil();
+    }
 
     if (widget.plotChannels.isNotEmpty) {
       _errorsDismissed = false;
 
       _plotStream = widget.daqService.retrievePlot(context,
-          forChannels: widget.plotChannels.keys.toSet(),
-          updateDelay: widget.updateDelay,
-          triggerEvent: widget.triggerEvent,
-          nAcquisitions: widget.nAcquisitions);
+          forChannels: _channels.keys.toSet(),
+          updateDelay: _updateDelay,
+          triggerEvent: _triggerEvent,
+          nAcquisitions: _nAcquisitions);
     }
   }
 
@@ -310,7 +272,7 @@ class PlotState extends State<PlotWidget> {
         confMaxY: widget.yMax,
         confMinX: widget.xMin,
         confMaxX: widget.xMax,
-        isScalarData: widget.isTimedScalarData);
+        timeDelta: widget.scalarDataOptions?.timeDelta);
   }
 
   void _filterPoints() {

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
+import 'package:flutter_controls_plotting/entities/scalar_data_options.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 import 'package:flutter_controls_plotting/widgets/plot_card_widget.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
@@ -74,7 +76,8 @@ class PlotDemoState extends State<PlotDemoWidget> {
           implementation: _implementation,
           plotData: PlotData(),
           daqService: StandardPlotDAQ(),
-          isTimedScalarData: true,
+          scalarDataOptions:
+              ScalarDataOptions(isOneShot: false, timeDelta: null),
           updateDelay: 500,
           plotChannels: {
             "PLOT TEST SCALAR RAND RAMP": ChannelSetting(),
