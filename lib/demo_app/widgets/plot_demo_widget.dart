@@ -74,7 +74,8 @@ class PlotDemoState extends State<PlotDemoWidget> {
           implementation: _implementation,
           plotData: PlotData(),
           daqService: StandardPlotDAQ(),
-          isTimedScalarData: true,
+          scalarDataOptions:
+              ScalarDataOptions(isOneShot: false, timeDelta: null),
           updateDelay: 500,
           plotChannels: {
             "PLOT TEST SCALAR RAND RAMP": ChannelSetting(),
