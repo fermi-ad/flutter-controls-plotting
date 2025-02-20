@@ -34,6 +34,9 @@ class PlotWidget extends StatefulWidget {
 
   final Function(PlotReply update)? onPlotUpdate;
 
+  final Function(ConnectionState streamConnectionState)?
+      onStreamConnectionStateChange;
+
   final PlotImplementation implementation;
 
   const PlotWidget(
@@ -52,6 +55,7 @@ class PlotWidget extends StatefulWidget {
       this.scalarDataOptions,
       this.onInternalChannelSettingChange,
       this.onPlotUpdate,
+      this.onStreamConnectionStateChange,
       this.implementation = PlotImplementation.flCharts});
 
   @override
@@ -115,14 +119,20 @@ class PlotState extends State<PlotWidget> {
   }
 
   @override
-  Widget build(BuildContext context) => widget.plotChannels.isEmpty
-      ? Padding(
+  Widget build(BuildContext context) {
+    if (widget.plotChannels.isEmpty) {
+      _updateStreamConnectionChanged(ConnectionState.none);
+      return Padding(
           padding: const EdgeInsets.fromLTRB(10, 10, 30, 10),
-          child: _buildEmptyPlot())
-      : StreamBuilder(stream: _plotStream, builder: _plotStreamBuilder);
+          child: _buildEmptyPlot());
+    }
+    return StreamBuilder(stream: _plotStream, builder: _plotStreamBuilder);
+  }
 
   Widget _plotStreamBuilder(
       BuildContext context, AsyncSnapshot<PlotReply> snapshot) {
+    _updateStreamConnectionChanged(snapshot.connectionState);
+
     if (snapshot.connectionState == ConnectionState.none ||
         snapshot.connectionState == ConnectionState.waiting) {
       _adapter.plotReply = null;
@@ -294,6 +304,17 @@ class PlotState extends State<PlotWidget> {
     return null;
   }
 
+  void _updateStreamConnectionChanged(ConnectionState state) {
+    if (widget.onStreamConnectionStateChange == null) {
+      return;
+    }
+
+    if (lastConnectionState == null || lastConnectionState != state) {
+      widget.onStreamConnectionStateChange?.call(state);
+      lastConnectionState = state;
+    }
+  }
+
   bool get _streamShouldReset => !((mapEquals(widget.plotChannels, _channels) &&
       _updateDelay == widget.updateDelay &&
       _nAcquisitions == widget.nAcquisitions &&
@@ -304,6 +325,8 @@ class PlotState extends State<PlotWidget> {
   Stream<PlotReply>? _plotStream;
 
   Map<String, ChannelSetting> _channels = {};
+
+  ConnectionState? lastConnectionState;
 
   int _updateDelay = 0;
 
