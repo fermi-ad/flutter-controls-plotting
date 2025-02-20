@@ -180,6 +180,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         color: lineColorForChannel(plotChannel.name),
         spots: spots,
         isCurved: true,
+        preventCurveOverShooting: true,
         isStrokeCapRound: true,
         belowBarData: BarAreaData(
           show: false,
