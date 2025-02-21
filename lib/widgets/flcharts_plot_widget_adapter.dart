@@ -179,9 +179,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       lineChartList.add(LineChartBarData(
         color: lineColorForChannel(plotChannel.name),
         spots: spots,
-        isCurved: true,
-        preventCurveOverShooting: true,
-        isStrokeCapRound: true,
+        isCurved: false,
         belowBarData: BarAreaData(
           show: false,
         ),
