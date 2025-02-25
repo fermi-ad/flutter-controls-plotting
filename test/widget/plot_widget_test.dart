@@ -213,7 +213,7 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // When I dismiss the error banner
-      expect(find.text(errorMessage), findsOne);
+      expect(find.text(errorMessage), findsOneWidget);
       await tester.tap(find.text("Dismiss"));
       await tester.pumpAndSettle();
 
@@ -225,7 +225,7 @@ void main() {
       await tester.pumpWidget(_buildPlotWidget(channelList));
       await waitForPlotDataToLoad(tester);
 
-      expect(find.text(errorMessage), findsOne);
+      expect(find.text(errorMessage), findsOneWidget);
     });
 
     testWidgets(
