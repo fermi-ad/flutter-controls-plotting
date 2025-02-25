@@ -239,7 +239,7 @@ class PlotState extends State<PlotWidget> {
       // Using calculated nAcquisitions
       var timeDelta = widget.scalarDataOptions!.timeDelta;
       // Number of points per second
-      double pointLimitCalc = 1000 / widget.updateDelay;
+      double pointLimitCalc = 1000000 / widget.updateDelay;
       // Number of seconds
       pointLimitCalc = pointLimitCalc * timeDelta!;
       // Round up to ensure number of acquisitions include full timeframe.

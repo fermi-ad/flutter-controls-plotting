@@ -94,7 +94,7 @@ class StandardPlotDAQ implements PlotDAQService {
       bool validLoop = true;
       int nAcquisitionsInLoop = 0;
       while (validLoop) {
-        await Future.delayed(Duration(milliseconds: updateDelay));
+        await Future.delayed(Duration(microseconds: updateDelay));
         var plot = _generatePlot(
             forChannels: forChannels, args: args, markChannelNameErrors: true);
 

@@ -268,7 +268,7 @@ void main() {
 
       // And a update fequency of 10hz with timedScalar option to append to plot.
       await tester.pumpWidget(_buildPlotWidget(channelList,
-          updateDelay: 100,
+          updateDelay: 100000,
           scalarDataOptions:
               ScalarDataOptions(isOneShot: false, timeDelta: null),
           daqService: daqService));
