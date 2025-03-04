@@ -10,6 +10,8 @@ class PlotData {
   // Map of channel name and points.
   Map<String, List<PlotPoint>> points = {};
 
+  bool isEventX = false;
+
   PlotData();
 
   double? get minX {
@@ -145,15 +147,23 @@ class PlotData {
       } else {
         maxY = max(point.y, maxY);
       }
-      if (minX == null) {
-        minX = point.x;
+
+      double xPoint;
+      if (isEventX && point.eventX != null) {
+        xPoint = point.eventX!;
       } else {
-        minX = min(point.x, minX);
+        xPoint = point.x;
+      }
+
+      if (minX == null) {
+        minX = xPoint;
+      } else {
+        minX = min(xPoint, minX);
       }
       if (maxX == null) {
-        maxX = point.x;
+        maxX = xPoint;
       } else {
-        maxX = max(point.x, maxX);
+        maxX = max(xPoint, maxX);
       }
 
       if (untilXMin != null) {
