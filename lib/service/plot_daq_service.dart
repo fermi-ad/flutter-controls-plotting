@@ -109,19 +109,23 @@ class StandardPlotDAQ implements PlotDAQService {
 
       while (validLoop) {
         await Future.delayed(Duration(microseconds: updateDelay));
-        var plot = _generatePlot(
-            forChannels: forChannels,
-            args: args,
-            markChannelNameErrors: true,
-            eventX: eventAcquisitionCount?.toDouble());
+        double? eventX;
 
         if (eventAcquisitionCount != null) {
+          eventX = (10 * eventAcquisitionCount!) / (eventAcquisitionLimit!);
+
           if (eventAcquisitionCount == eventAcquisitionLimit) {
             eventAcquisitionCount = 0;
           } else {
             eventAcquisitionCount = eventAcquisitionCount! + 1;
           }
         }
+
+        var plot = _generatePlot(
+            forChannels: forChannels,
+            args: args,
+            markChannelNameErrors: true,
+            eventX: eventX);
 
         validLoop = false;
         for (var channel in plot.data) {
