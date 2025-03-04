@@ -106,13 +106,20 @@ class PlotData {
         maxX = confMaxX;
       }
     } else {
-      // Find time offset
-      minX = maxX! - timeDelta;
-      // Calculate y based on points displayed.
-      if (confMinY == null && confMaxY == null) {
-        findPointsLimits(untilXMin: minX);
-        minY = _minY;
-        maxY = _maxY;
+      if (isUseEventX) {
+        // X axis is displayed as an time relevant to event.
+        minX = 0;
+        maxX = timeDelta;
+      } else {
+        // X axis is displayed as a linear timeline.
+        // Find time offset
+        minX = maxX! - timeDelta;
+        // Calculate y based on points displayed.
+        if (confMinY == null && confMaxY == null) {
+          findPointsLimits(untilXMin: minX);
+          minY = _minY;
+          maxY = _maxY;
+        }
       }
     }
 
