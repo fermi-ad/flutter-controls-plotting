@@ -160,7 +160,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   }
 
   List<FlSpot> _toSpots(List<PlotPoint> points) {
-    bool isEventX = widget.plotData.isEventX;
+    bool isEventX = widget.plotData.isUseEventX;
 
     return points.map<FlSpot>((PlotPoint point) {
       double x;

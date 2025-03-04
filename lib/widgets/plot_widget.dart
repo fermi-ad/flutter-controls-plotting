@@ -251,13 +251,10 @@ class PlotState extends State<PlotWidget> {
         // Round up to ensure number of acquisitions include full timeframe.
         _nAcquisitions = pointLimitCalc.ceil();
       }
-      // TODO Remove Temporary code for scalar without a frequency set.
-      if (_updateDelay == 0) {
-        _updateDelay = 1000000;
-      }
     }
 
-    widget.plotData.isEventX = widget.isTimedScalarData && !widget.isTimedXAxis;
+    widget.plotData.isUseEventX =
+        widget.isTimedScalarData && !widget.isTimedXAxis;
 
     if (widget.plotChannels.isNotEmpty) {
       _errorsDismissed = false;

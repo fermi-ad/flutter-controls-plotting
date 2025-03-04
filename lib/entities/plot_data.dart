@@ -10,7 +10,7 @@ class PlotData {
   // Map of channel name and points.
   Map<String, List<PlotPoint>> points = {};
 
-  bool isEventX = false;
+  bool isUseEventX = false;
 
   PlotData();
 
@@ -149,7 +149,7 @@ class PlotData {
       }
 
       double xPoint;
-      if (isEventX && point.eventX != null) {
+      if (isUseEventX && point.eventX != null) {
         xPoint = point.eventX!;
       } else {
         xPoint = point.x;
