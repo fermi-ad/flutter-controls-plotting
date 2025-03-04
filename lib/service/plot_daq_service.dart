@@ -18,6 +18,9 @@ class StandardPlotDAQ implements PlotDAQService {
   double? lastScalarRampEpochTime;
   double? lastScalarRandRampEpochTime;
 
+  int? eventAcquisitionCount;
+  int? eventAcquisitionLimit;
+
   // Test variables
   int scalarRampCount = 0;
   int? scalarRampCountLimit;
@@ -93,10 +96,32 @@ class StandardPlotDAQ implements PlotDAQService {
       // Refresh cycle only API provided.
       bool validLoop = true;
       int nAcquisitionsInLoop = 0;
+
+      // Calculate event if appliable
+      if (triggerEvent != null && triggerEvent == PLOT_EVENT) {
+        eventAcquisitionCount = 0;
+
+        double pointLimitCalc = 1000000 / updateDelay;
+        pointLimitCalc = pointLimitCalc * 10;
+
+        eventAcquisitionLimit = pointLimitCalc.floor();
+      }
+
       while (validLoop) {
         await Future.delayed(Duration(microseconds: updateDelay));
         var plot = _generatePlot(
-            forChannels: forChannels, args: args, markChannelNameErrors: true);
+            forChannels: forChannels,
+            args: args,
+            markChannelNameErrors: true,
+            eventX: eventAcquisitionCount?.toDouble());
+
+        if (eventAcquisitionCount != null) {
+          if (eventAcquisitionCount == eventAcquisitionLimit) {
+            eventAcquisitionCount = 0;
+          } else {
+            eventAcquisitionCount = eventAcquisitionCount! + 1;
+          }
+        }
 
         validLoop = false;
         for (var channel in plot.data) {
@@ -119,7 +144,8 @@ class StandardPlotDAQ implements PlotDAQService {
   PlotReply _generatePlot(
       {required Set<String> forChannels,
       required _PlotArgs args,
-      bool markChannelNameErrors = false}) {
+      bool markChannelNameErrors = false,
+      double? eventX}) {
     List<PlotChannelData> internalDaqData = [];
     var xAxisUnits = 'Index';
 
@@ -153,7 +179,9 @@ class StandardPlotDAQ implements PlotDAQService {
           var difference = currentEpochTime - lastScalarRampEpochTime!;
           xAxisUnits = 'Time';
 
-          data = [PlotPoint(x: currentEpochTime, y: difference)];
+          data = [
+            PlotPoint(x: currentEpochTime, y: difference, eventX: eventX)
+          ];
         }
       } else if (forChannel == GenPlots.scalarRandRamp.name) {
         var rand = Random();
@@ -166,7 +194,7 @@ class StandardPlotDAQ implements PlotDAQService {
 
         xAxisUnits = 'Time';
 
-        data = [PlotPoint(x: currentEpochTime, y: value)];
+        data = [PlotPoint(x: currentEpochTime, y: value, eventX: eventX)];
       } else if (forChannel == GenPlots.parabola.name) {
         data = List.generate(
             501,
@@ -240,6 +268,9 @@ enum GenPlots {
   const GenPlots(this.name);
   final String name;
 }
+
+// Event of '10' is used for gen plots with reset of 10s acquisitions for scalar plots.
+int PLOT_EVENT = 16;
 
 bool channelHasError(PlotChannelData chData) {
   return chData.status < 0;
