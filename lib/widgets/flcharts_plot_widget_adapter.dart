@@ -123,7 +123,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
             ),
             sideTitles: SideTitles(
               showTitles: isShowLabels,
-              reservedSize: widget.isTimedScalarData ? 80 : 40,
+              reservedSize: widget.isTimedXAxis ? 80 : 40,
               getTitlesWidget: (value, meta) {
                 return _bottomTitleWidgets(value, meta);
               },
@@ -133,7 +133,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   }
 
   Widget _bottomTitleWidgets(double value, TitleMeta meta) {
-    if (widget.isTimedScalarData) {
+    if (widget.isTimedXAxis) {
       return SideTitleWidget(
         axisSide: meta.axisSide,
         angle: -1.57, // -90 * 3.14 / 180,
@@ -147,7 +147,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   LineTooltipItem _generateLineTooltipItem(
       double x, double y, TextStyle textStyle) {
     String xString;
-    if (widget.isTimedScalarData) {
+    if (widget.isTimedXAxis) {
       xString = parseDaqTimeAsString(x);
     } else {
       xString = x.toString();
@@ -159,9 +159,19 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     );
   }
 
-  List<FlSpot> _toSpots(List<PlotPoint> points) => points
-      .map<FlSpot>((PlotPoint point) => FlSpot(point.x, point.y))
-      .toList();
+  List<FlSpot> _toSpots(List<PlotPoint> points) {
+    bool isEventX = widget.plotData.isEventX;
+
+    return points.map<FlSpot>((PlotPoint point) {
+      double x;
+      if (isEventX && point.eventX != null) {
+        x = point.eventX!;
+      } else {
+        x = point.x;
+      }
+      return FlSpot(x, point.y);
+    }).toList();
+  }
 
   List<LineChartBarData> _toLineChartBarDataList(
       List<PlotChannelData> plotChannels,
