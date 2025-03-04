@@ -149,34 +149,26 @@ packages:
     dependency: transitive
     description:
       name: ferry
-      sha256: "712f94fb2a4b996e05db2afd4d26f0eb2c7c1f6b40af43dc49f5e418b34916a5"
+      sha256: "84928943cc7786c1a1c875a1dba876a2c396d4397e55fba75671d9dc7d4dec88"
       url: "https://pub.dev"
     source: hosted
-    version: "0.14.2+1"
+    version: "0.16.0+1"
   ferry_cache:
     dependency: transitive
     description:
       name: ferry_cache
-      sha256: "6d0afa3d2451d1c57c7894254c60cb683c8a8be5598a2ba97c48837f1deb3254"
+      sha256: dc0e47dd37e0cb355f36c8d88bb2ebfccd78afeb3567597378073881bdac3280
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.1+2"
+    version: "0.9.0+1"
   ferry_exec:
     dependency: transitive
     description:
       name: ferry_exec
-      sha256: "2da33c4b4396d9874af5af37cc72692dbcd2194310871c77381f08b5327cec9d"
+      sha256: "40eaf60a06ba0df21e54bc9ce22a97f89b10449b929ea77d5b5ab28c3781ee65"
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.1"
-  ferry_flutter:
-    dependency: transitive
-    description:
-      name: ferry_flutter
-      sha256: "57c0f441bda868107dfdd7c18491286bbb3b3e5cf6c668f175bde7379b62a537"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.8.1"
+    version: "0.6.1"
   ferry_store:
     dependency: transitive
     description:
@@ -218,11 +210,11 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "v0.2.x"
-      resolved-ref: "0778aaf9d39f8cd92c4a2b08eda9bfd26f7bf9d3"
+      ref: event-X
+      resolved-ref: "0d38dc2cd2f88df5042c175c54f07dc58634960a"
       url: "https://github.com/fermi-ad/flutter-controls-core.git"
     source: git
-    version: "0.2.9"
+    version: "0.2.11"
   flutter_driver:
     dependency: transitive
     description: flutter
@@ -279,10 +271,18 @@ packages:
     dependency: transitive
     description:
       name: gql_code_builder
-      sha256: "673324fdb3241dcac63f02c78c9b883fd363604c26154420836a2b243ef776d0"
+      sha256: ce60e637b7b5250bebd6a136e5fd784bc94b860ecdcb745163ce27201023816e
       url: "https://pub.dev"
     source: hosted
-    version: "0.8.0"
+    version: "0.13.1"
+  gql_code_builder_serializers:
+    dependency: transitive
+    description:
+      name: gql_code_builder_serializers
+      sha256: "5344091f97afb44b15840e32889cacc18116e095105d07671ba762e897c465d4"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.0"
   gql_exec:
     dependency: transitive
     description:
@@ -307,6 +307,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0+1"
+  gql_tristate_value:
+    dependency: transitive
+    description:
+      name: gql_tristate_value
+      sha256: ae045e7e272fbfd030084315140c683c9b032a9861a37165f68c2ecd8a759664
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   gql_websocket_link:
     dependency: transitive
     description:
@@ -436,10 +444,10 @@ packages:
     dependency: transitive
     description:
       name: normalize
-      sha256: "8a60e37de5b608eeaf9b839273370c71ebba445e9f73b08eee7725e0d92dbc43"
+      sha256: f78bf0552b9640c76369253f0b8fdabad4f3fbfc06bdae9359e71bee9a5b071b
       url: "https://pub.dev"
     source: hosted
-    version: "0.8.2+1"
+    version: "0.9.1"
   openid_client:
     dependency: transitive
     description:
