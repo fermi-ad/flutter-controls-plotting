@@ -183,7 +183,8 @@ class PlotData {
     return (minY, maxY, minX, maxX);
   }
 
-  void cleanUpPoints({Iterable<String> keepChannelList = []}) {
+  void cleanUpPoints(
+      {Iterable<String> keepChannelList = const Iterable.empty()}) {
     List<String> garbageChannels = [];
     for (var channelName in points.keys) {
       if (!keepChannelList.contains(channelName)) {
