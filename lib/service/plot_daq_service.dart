@@ -111,7 +111,7 @@ class StandardPlotDAQ implements PlotDAQService {
         await Future.delayed(Duration(microseconds: updateDelay));
         double? eventX;
 
-        if (eventAcquisitionCount != null) {
+        if (triggerEvent != null && eventAcquisitionCount != null) {
           eventX = (10 * eventAcquisitionCount!) / (eventAcquisitionLimit!);
 
           if (eventAcquisitionCount == eventAcquisitionLimit) {
