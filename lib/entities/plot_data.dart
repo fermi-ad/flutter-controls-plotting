@@ -144,23 +144,20 @@ class PlotData {
   }) {
     for (int i = points.length - 1; i >= 0; i--) {
       final point = points[i];
+      double yPoint = point.y;
+
       if (minY == null) {
-        minY = point.y;
+        minY = yPoint;
       } else {
-        minY = min(point.y, minY);
+        minY = min(yPoint, minY);
       }
       if (maxY == null) {
-        maxY = point.y;
+        maxY = yPoint;
       } else {
-        maxY = max(point.y, maxY);
+        maxY = max(yPoint, maxY);
       }
 
-      double xPoint;
-      if (isUseEventX && point.eventX != null) {
-        xPoint = point.eventX!;
-      } else {
-        xPoint = point.x;
-      }
+      double xPoint = point.x;
 
       if (minX == null) {
         minX = xPoint;

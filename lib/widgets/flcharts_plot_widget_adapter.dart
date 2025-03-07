@@ -160,17 +160,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   }
 
   List<FlSpot> _toSpots(List<PlotPoint> points) {
-    bool isEventX = widget.plotData.isUseEventX;
-
-    return points.map<FlSpot>((PlotPoint point) {
-      double x;
-      if (isEventX && point.eventX != null) {
-        x = point.eventX!;
-      } else {
-        x = point.x;
-      }
-      return FlSpot(x, point.y);
-    }).toList();
+    return points
+        .map<FlSpot>((PlotPoint point) => FlSpot(point.x, point.y))
+        .toList();
   }
 
   List<LineChartBarData> _toLineChartBarDataList(
