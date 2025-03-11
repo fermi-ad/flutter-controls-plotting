@@ -140,17 +140,14 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   }
 
   double touchPointDistanceCalculate(
-      {required Offset touchPoint,
-      required Offset spotPixelCoordinates,
-      required bool nearestPointXY}) {
-    if (nearestPointXY) {
-      // Determine distance nearest to the cursor.
-      return (touchPoint - spotPixelCoordinates).distance;
-    }
-
-    // Determine distance for all points on x axis.
-    return (touchPoint.dx - spotPixelCoordinates.dx).abs();
-  }
+          {required Offset touchPoint,
+          required Offset spotPixelCoordinates,
+          required bool nearestPointXY}) =>
+      nearestPointXY
+          // Determine distance nearest to the cursor.
+          ? (touchPoint - spotPixelCoordinates).distance
+          // Determine distance for all points on x axis.
+          : (touchPoint.dx - spotPixelCoordinates.dx).abs();
 
   List<LineTooltipItem> _generateLineTooltipItem(
       {required List<LineBarSpot> touchedSpots}) {
