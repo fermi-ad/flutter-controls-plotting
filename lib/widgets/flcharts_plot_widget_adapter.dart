@@ -20,6 +20,12 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
                 ? []
                 : _toLineChartBarDataList(plotReply!.data, widget.plotData),
             lineTouchData: LineTouchData(
+              distanceCalculator:
+                  (Offset touchPoint, Offset spotPixelCoordinates) =>
+                      touchPointDistanceCalculate(
+                          touchPoint: touchPoint,
+                          spotPixelCoordinates: spotPixelCoordinates,
+                          nearestPointXY: widget.plotData.scalarEventMode),
               touchTooltipData: LineTouchTooltipData(
                 maxContentWidth: 100,
                 fitInsideHorizontally: true,
@@ -133,7 +139,18 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     return defaultGetTitle(value, meta);
   }
 
+  double touchPointDistanceCalculate(
+      {required Offset touchPoint,
+      required Offset spotPixelCoordinates,
+      required bool nearestPointXY}) {
+    if (nearestPointXY) {
+      // Determine distance nearest to the cursor.
+      return (touchPoint - spotPixelCoordinates).distance;
     }
+
+    // Determine distance for all points on x axis.
+    return (touchPoint.dx - spotPixelCoordinates.dx).abs();
+  }
 
   List<LineTooltipItem> _generateLineTooltipItem(
       {required List<LineBarSpot> touchedSpots}) {
