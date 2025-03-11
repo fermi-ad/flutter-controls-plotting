@@ -25,18 +25,8 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
                 fitInsideHorizontally: true,
                 fitInsideVertically: true,
                 getTooltipColor: (touchedSpot) => Colors.black,
-                getTooltipItems: (touchedSpots) {
-                  return touchedSpots.map((LineBarSpot touchedSpot) {
-                    final textStyle = TextStyle(
-                      color: touchedSpot.bar.gradient?.colors[0] ??
-                          touchedSpot.bar.color,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    );
-                    return _generateLineTooltipItem(
-                        touchedSpot.x, touchedSpot.y, textStyle);
-                  }).toList();
-                },
+                getTooltipItems: (touchedSpots) =>
+                    _generateLineTooltipItem(touchedSpots: touchedSpots),
               ),
               handleBuiltInTouches: true,
               getTouchLineStart: (data, index) => 0,
@@ -143,19 +133,36 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     return defaultGetTitle(value, meta);
   }
 
-  LineTooltipItem _generateLineTooltipItem(
-      double x, double y, TextStyle textStyle) {
-    String xString;
-    if (widget.isTimedXAxis) {
-      xString = parseDaqTimeAsString(x);
-    } else {
-      xString = x.toString();
     }
 
-    return LineTooltipItem(
-      '$xString, ${y.toStringAsFixed(2)}',
-      textStyle,
-    );
+  List<LineTooltipItem> _generateLineTooltipItem(
+      {required List<LineBarSpot> touchedSpots}) {
+    List<LineTooltipItem> tooltips = [];
+
+    for (var touchedSpot in touchedSpots) {
+      final x = touchedSpot.x;
+      final y = touchedSpot.y;
+
+      final textStyle = TextStyle(
+        color: touchedSpot.bar.gradient?.colors[0] ?? touchedSpot.bar.color,
+        fontWeight: FontWeight.bold,
+        fontSize: 14,
+      );
+
+      String xString;
+      if (widget.isTimedXAxis) {
+        xString = parseDaqTimeAsString(x);
+      } else {
+        xString = x.toString();
+      }
+
+      tooltips.add(LineTooltipItem(
+        '$xString, ${y.toStringAsFixed(2)}',
+        textStyle,
+      ));
+    }
+
+    return tooltips;
   }
 
   List<FlSpot> _toSpots(List<PlotPoint> points) {
