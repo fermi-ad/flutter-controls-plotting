@@ -27,7 +27,7 @@ class PlotWidget extends StatefulWidget {
   final int nAcquisitions;
 
   final bool isShowLabels;
-
+  final bool isPaused;
   final ScalarDataOptions? scalarDataOptions;
 
   final Function(String channelName)? onInternalChannelSettingChange;
@@ -52,6 +52,7 @@ class PlotWidget extends StatefulWidget {
       this.nAcquisitions = 0,
       this.triggerEvent,
       this.isShowLabels = true,
+      this.isPaused = false,
       this.scalarDataOptions,
       this.onInternalChannelSettingChange,
       this.onPlotUpdate,
@@ -258,6 +259,11 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _receiveData(PlotReply plotReply) {
+    print("PlotWidget._receiveData ${widget.isPaused}");
+    if (widget.isPaused) {
+      return;
+    }
+
     if (widget.plotData.points.isEmpty) {
       // Switching from empty plot to plot with channels.
       // Ensure that min and max xy get adjusted appropriately.

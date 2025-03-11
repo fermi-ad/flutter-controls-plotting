@@ -211,12 +211,21 @@ FlDotData _selectFlDotData(int plotMarker, Color channelColor) {
         ),
       );
     case 3: // circles
+      //return FlDotData(
+      //show: true, // Show dots
+      //getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
+      //radius: 4, // Set the size of the dots
+      //color: channelColor, // Set the color of the dots
+      //strokeWidth: 2,
+      //),
+      //);
       return FlDotData(
-        show: true, // Show dots
-        getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
-          radius: 4, // Set the size of the dots
-          color: channelColor, // Set the color of the dots
-          strokeWidth: 2,
+        show: true, // Show icon circle
+        getDotPainter: (spot, percent, bar, index) => CustomDotPainter(
+          size: 10, // Set the size of the character
+          color: channelColor, // Set the color of the character
+          character: 'o', // Set the character to be used as the marker
+          icon: Icons.radio_button_unchecked,
         ),
       );
     case 4:
