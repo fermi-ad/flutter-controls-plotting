@@ -105,7 +105,7 @@ class PlotState extends State<PlotWidget> {
       .map((String channelName) => _adapter.markerIndexForChannel(channelName))
       .toList();
 
-  Map<String, List<PlotPoint>> get points => widget.plotData.points;
+  Map<String, List<List<PlotPoint>>> get points => widget.plotData.points;
 
   @override
   void didChangeDependencies() {
@@ -253,7 +253,7 @@ class PlotState extends State<PlotWidget> {
       }
     }
 
-    widget.plotData.isUseEventX =
+    widget.plotData.scalarEventMode =
         widget.isTimedScalarData && !widget.isTimedXAxis;
 
     if (widget.plotChannels.isNotEmpty) {
