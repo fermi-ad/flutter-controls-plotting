@@ -7,10 +7,10 @@ class PlotData {
   // min/max XY that is currently displayed on the plot.
   double? _minY, _maxY, _minX, _maxX;
 
-  // Map of channel name and points.
-  Map<String, List<PlotPoint>> points = {};
+  // Map of channel name and points split into segments.
+  Map<String, List<List<PlotPoint>>> points = {};
 
-  bool isUseEventX = false;
+  bool scalarEventMode = false;
 
   PlotData();
 
@@ -51,11 +51,27 @@ class PlotData {
     for (final plotChannel in plotChannels) {
       if (!channelHasError(plotChannel)) {
         if (points.containsKey(plotChannel.name)) {
-          var pointsList = points[plotChannel.name]!;
+          var segments = points[plotChannel.name]!;
+          var pointsList = segments.last;
+
+          if (scalarEventMode) {
+            // Check if a new event should be started.
+            var lastX = pointsList.last.x;
+            var newX = plotChannel.points.last.x;
+
+            if (newX < lastX) {
+              // New event
+              segments.add([]);
+              // Reload pointsList
+              pointsList = segments.last;
+            }
+          }
+
           var lastIndex = pointsList.length;
           pointsList.insertAll(lastIndex, plotChannel.points);
         } else {
-          points[plotChannel.name] = plotChannel.points;
+          points[plotChannel.name] = [];
+          points[plotChannel.name]!.add(List.from(plotChannel.points));
         }
       }
     }
@@ -64,14 +80,16 @@ class PlotData {
   void findPointsLimits({double? untilXMin}) {
     double? minY, maxY, minX, maxX;
 
-    for (var pointList in points.values) {
-      (minY, maxY, minX, maxX) = _getLimitsPerPoints(
-          points: pointList,
-          minY: minY,
-          maxY: maxY,
-          minX: minX,
-          maxX: maxX,
-          untilXMin: untilXMin);
+    for (var segments in points.values) {
+      for (var pointList in segments) {
+        (minY, maxY, minX, maxX) = _getLimitsPerPoints(
+            points: pointList,
+            minY: minY,
+            maxY: maxY,
+            minX: minX,
+            maxX: maxX,
+            untilXMin: untilXMin);
+      }
     }
 
     setLimits(minX: minX, maxX: maxX, minY: minY, maxY: maxY);
@@ -106,7 +124,7 @@ class PlotData {
         maxX = confMaxX;
       }
     } else {
-      if (isUseEventX) {
+      if (scalarEventMode) {
         // X axis is displayed as an time relevant to event.
         minX = 0;
         maxX = timeDelta;
