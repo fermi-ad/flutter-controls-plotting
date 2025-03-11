@@ -186,5 +186,5 @@ List<PlotPoint> _getPlotPoints(WidgetTester tester,
     {required String channelName}) {
   final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
 
-  return plotState.points[channelName] ?? [];
+  return plotState.points[channelName]?[0] ?? [];
 }
