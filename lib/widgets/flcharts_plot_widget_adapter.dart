@@ -18,8 +18,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
             maxY: widget.plotData.maxY,
             lineBarsData: plotReply == null
                 ? []
-                : _toLineChartBarDataList(
-                    plotReply!.data, widget.plotData.points),
+                : _toLineChartBarDataList(plotReply!.data, widget.plotData),
             lineTouchData: LineTouchData(
               touchTooltipData: LineTouchTooltipData(
                 maxContentWidth: 100,
@@ -166,33 +165,36 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   }
 
   List<LineChartBarData> _toLineChartBarDataList(
-      List<PlotChannelData> plotChannels,
-      Map<String, List<PlotPoint>> filteredChannelPoints) {
+      List<PlotChannelData> plotChannels, PlotData plotData) {
     List<LineChartBarData> lineChartList = [];
+
+    var points = plotData.points;
 
     plotChannels.asMap().forEach((index, plotChannel) {
       if (_channelHasError(plotChannel) ||
-          !filteredChannelPoints.containsKey(plotChannel.name)) {
+          !points.containsKey(plotChannel.name)) {
         return;
       }
 
-      var spots = _toSpots(filteredChannelPoints[plotChannel.name]!);
+      for (var pointSegment in points[plotChannel.name]!) {
+        var spots = _toSpots(pointSegment);
 
-      lineChartList.add(LineChartBarData(
-        color: lineColorForChannel(plotChannel.name),
-        spots: spots,
-        isCurved: false,
-        belowBarData: BarAreaData(
-          show: false,
-        ),
-        barWidth: markerIndexForChannel(plotChannel.name) == 0 ||
-                markerIndexForChannel(plotChannel.name) == 1
-            ? 3
-            : 0,
-        //dotData: _selectFlDotData(int.parse(widget.plotMarker.markerIndex)  , lineColorForChannel(plotChannel.name)),
-        dotData: _selectFlDotData(markerIndexForChannel(plotChannel.name),
-            lineColorForChannel(plotChannel.name)),
-      ));
+        lineChartList.add(LineChartBarData(
+          color: lineColorForChannel(plotChannel.name),
+          spots: spots,
+          isCurved: false,
+          belowBarData: BarAreaData(
+            show: false,
+          ),
+          barWidth: markerIndexForChannel(plotChannel.name) == 0 ||
+                  markerIndexForChannel(plotChannel.name) == 1
+              ? 3
+              : 0,
+          //dotData: _selectFlDotData(int.parse(widget.plotMarker.markerIndex)  , lineColorForChannel(plotChannel.name)),
+          dotData: _selectFlDotData(markerIndexForChannel(plotChannel.name),
+              lineColorForChannel(plotChannel.name)),
+        ));
+      }
     });
 
     return lineChartList;
