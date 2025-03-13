@@ -20,10 +20,10 @@ class StandardPlotDAQ implements PlotDAQService {
 
   int? eventAcquisitionCount;
   int? eventAcquisitionLimit;
-  int eventDuration = 10;
 
   // Test variables
   int scalarRampCount = 0;
+  int scalarRampEventDuration = 10;
   int? scalarRampCountLimit;
 
   @override
@@ -105,7 +105,7 @@ class StandardPlotDAQ implements PlotDAQService {
         // Points per second.
         double pointLimitCalc = 1000000 / updateDelay;
         // Total points for event duration
-        pointLimitCalc = pointLimitCalc * eventDuration;
+        pointLimitCalc = pointLimitCalc * scalarRampEventDuration;
 
         eventAcquisitionLimit = pointLimitCalc.floor();
       }
@@ -115,7 +115,7 @@ class StandardPlotDAQ implements PlotDAQService {
         double? eventX;
 
         if (triggerEvent != null && eventAcquisitionCount != null) {
-          eventX = (eventDuration * eventAcquisitionCount!) /
+          eventX = (scalarRampEventDuration * eventAcquisitionCount!) /
               (eventAcquisitionLimit!);
 
           if (eventAcquisitionCount == eventAcquisitionLimit) {
@@ -298,4 +298,8 @@ int PLOT_EVENT = 16;
 
 bool channelHasError(PlotChannelData chData) {
   return chData.status < 0;
+}
+
+bool channelHasErrorOrNoPoints(PlotChannelData chData) {
+  return channelHasError(chData) || chData.points.isEmpty;
 }
