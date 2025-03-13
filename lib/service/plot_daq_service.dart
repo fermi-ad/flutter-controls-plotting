@@ -99,7 +99,7 @@ class StandardPlotDAQ implements PlotDAQService {
       int nAcquisitionsInLoop = 0;
 
       // Calculate event if appliable
-      if (triggerEvent != null && triggerEvent == PLOT_EVENT) {
+      if (triggerEvent != null && triggerEvent == plotEvent) {
         eventAcquisitionCount = 0;
 
         // Points per second.
@@ -294,7 +294,7 @@ enum GenPlots {
 }
 
 // Event of '10' is used for gen plots with reset of 10s acquisitions for scalar plots.
-int PLOT_EVENT = 16;
+const int plotEvent = 16;
 
 bool channelHasError(PlotChannelData chData) {
   return chData.status < 0;
