@@ -172,10 +172,19 @@ void assertPlotContainsNormalDistribution(WidgetTester tester,
 }
 
 void assertPlotContainsNPoints(WidgetTester tester, int numberOfPoints,
-    {required String channelName}) {
-  final plotPoints = _getPlotPoints(tester, channelName: channelName);
+    {required String channelName, int segment = 0}) {
+  final plotPoints =
+      _getPlotPoints(tester, channelName: channelName, segment: segment);
 
   expect(plotPoints.length, numberOfPoints);
+}
+
+void assertPlotContainsNSegments(WidgetTester tester, int numberOfSegments,
+    {required String channelName}) {
+  final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
+  final pointSegments = plotState.points[channelName] ?? [];
+
+  expect(pointSegments.length, numberOfSegments);
 }
 
 void assertPlotLoadingIndicator({required bool isVisible}) => expect(
@@ -183,8 +192,8 @@ void assertPlotLoadingIndicator({required bool isVisible}) => expect(
     isVisible ? findsOneWidget : findsNothing);
 
 List<PlotPoint> _getPlotPoints(WidgetTester tester,
-    {required String channelName}) {
+    {required String channelName, int segment = 0}) {
   final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
 
-  return plotState.points[channelName]?[0] ?? [];
+  return plotState.points[channelName]?[segment] ?? [];
 }
