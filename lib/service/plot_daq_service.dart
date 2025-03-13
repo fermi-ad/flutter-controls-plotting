@@ -20,6 +20,7 @@ class StandardPlotDAQ implements PlotDAQService {
 
   int? eventAcquisitionCount;
   int? eventAcquisitionLimit;
+  int eventDuration = 10;
 
   // Test variables
   int scalarRampCount = 0;
@@ -101,8 +102,10 @@ class StandardPlotDAQ implements PlotDAQService {
       if (triggerEvent != null && triggerEvent == PLOT_EVENT) {
         eventAcquisitionCount = 0;
 
+        // Points per second.
         double pointLimitCalc = 1000000 / updateDelay;
-        pointLimitCalc = pointLimitCalc * 10;
+        // Total points for event duration
+        pointLimitCalc = pointLimitCalc * eventDuration;
 
         eventAcquisitionLimit = pointLimitCalc.floor();
       }
@@ -112,7 +115,8 @@ class StandardPlotDAQ implements PlotDAQService {
         double? eventX;
 
         if (triggerEvent != null && eventAcquisitionCount != null) {
-          eventX = (10 * eventAcquisitionCount!) / (eventAcquisitionLimit!);
+          eventX = (eventDuration * eventAcquisitionCount!) /
+              (eventAcquisitionLimit!);
 
           if (eventAcquisitionCount == eventAcquisitionLimit) {
             eventAcquisitionCount = 0;
