@@ -116,4 +116,10 @@ class FakeACSysService implements ACSysServiceAPI {
       {required PlotConfigurationSnapshot snapshot}) {
     throw UnimplementedError();
   }
+
+  @override
+  Future<List<Reading>> readDevices(List<String> devices) {
+    // TODO: implement readDevices
+    throw UnimplementedError();
+  }
 }
