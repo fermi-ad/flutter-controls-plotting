@@ -49,7 +49,7 @@ class PlotData {
       points.clear();
     }
     for (final plotChannel in plotChannels) {
-      if (!channelHasError(plotChannel)) {
+      if (!channelHasErrorOrNoPoints(plotChannel)) {
         if (points.containsKey(plotChannel.name)) {
           var segments = points[plotChannel.name]!;
           var pointsList = segments.last;
@@ -108,7 +108,7 @@ class PlotData {
     double? maxX = _maxX;
 
     for (var plotChannel in plotChannels) {
-      if (channelHasError(plotChannel)) {
+      if (channelHasErrorOrNoPoints(plotChannel)) {
         continue;
       }
       final points = plotChannel.points;
