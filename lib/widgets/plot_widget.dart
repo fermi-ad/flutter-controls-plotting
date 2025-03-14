@@ -258,11 +258,22 @@ class PlotState extends State<PlotWidget> {
     }
   }
 
+  PlotReply? lastReply;
   void _receiveData(PlotReply plotReply) {
-    print("PlotWidget._receiveData ${widget.isPaused}");
     if (widget.isPaused) {
+      if (lastReply != null) {
+        _adapter.plotReply = lastReply;
+
+        _filterPoints();
+
+        _findLimits();
+
+        widget.onPlotUpdate?.call(lastReply!); // Use null check here
+      }
       return;
     }
+
+    lastReply = plotReply;
 
     if (widget.plotData.points.isEmpty) {
       // Switching from empty plot to plot with channels.
