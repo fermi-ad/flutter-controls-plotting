@@ -210,8 +210,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "v0.2.x"
-      resolved-ref: "79779c66b310fcd1dfab8f7b323a216c2adc5b87"
+      ref: plotReply-requestTime
+      resolved-ref: "9985920f82c87c3f5ee0be776aee0fc12feaa63b"
       url: "https://github.com/fermi-ad/flutter-controls-core.git"
     source: git
     version: "0.2.13"
