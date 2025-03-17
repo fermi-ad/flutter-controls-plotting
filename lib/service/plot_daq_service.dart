@@ -66,9 +66,11 @@ class StandardPlotDAQ implements PlotDAQService {
       int updateDelay = 0,
       int? nAcquisitions,
       int? triggerEvent}) async* {
+    var requestTime = _getCurrentEpochTime();
     if (updateDelay == 0) {
       // No refresh cycle, attempt to combine gen plots with api results
-      var generatePlot = _generatePlot(forChannels: forChannels, args: args);
+      var generatePlot = _generatePlot(
+          forChannels: forChannels, args: args, requestTime: requestTime);
 
       // Verify if any apiChannels provided
       List<String> apiChannels = [];
@@ -109,8 +111,6 @@ class StandardPlotDAQ implements PlotDAQService {
 
         eventAcquisitionLimit = pointLimitCalc.floor();
       }
-
-      var requestTime = _getCurrentEpochTime();
 
       while (validLoop) {
         await Future.delayed(Duration(microseconds: updateDelay));
