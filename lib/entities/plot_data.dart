@@ -10,6 +10,9 @@ class PlotData {
   // Map of channel name and points split into segments.
   Map<String, List<List<PlotPoint>>> points = {};
 
+  double? lastestRequestEpochTime;
+  double? latestDataEpochTime;
+
   bool scalarEventMode = false;
 
   PlotData();
@@ -42,6 +45,16 @@ class PlotData {
     return _maxY;
   }
 
+  void processPlotReplyMetadata({required PlotReply plotReply}) {
+    // Remove data assumption when it becomes required part of API
+    double requestTime = plotReply.requestTime!;
+    if (latestDataEpochTime != null && latestDataEpochTime! >= requestTime) {
+      return;
+    }
+
+    lastestRequestEpochTime = requestTime;
+  }
+
   void filterPoints(
       {required bool isTimedScalarData,
       required List<PlotChannelData> plotChannels}) {
@@ -69,6 +82,13 @@ class PlotData {
 
           var lastIndex = pointsList.length;
           pointsList.insertAll(lastIndex, plotChannel.points);
+
+          // Update last response time.
+          double t = plotChannel.points.last.t!;
+
+          if (latestDataEpochTime == null || latestDataEpochTime! < t) {
+            latestDataEpochTime = t;
+          }
         } else {
           points[plotChannel.name] = [];
           points[plotChannel.name]!.add(List.from(plotChannel.points));

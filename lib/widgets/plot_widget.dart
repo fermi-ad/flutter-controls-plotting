@@ -274,6 +274,7 @@ class PlotState extends State<PlotWidget> {
       widget.plotData.resetMinMaxXY();
     }
 
+    widget.plotData.processPlotReplyMetadata(plotReply: plotReply);
     _adapter.plotReply = plotReply;
 
     _filterPoints();
