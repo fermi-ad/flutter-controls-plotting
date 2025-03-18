@@ -252,6 +252,7 @@ void main() {
           findsOneWidget);
     });
   });
+
   group("PlotWidget (implementation = FlCharts) widget tests", () {
     testWidgets(
         "Verify plot scalar timed data for 10 points. Verify 10 appended points.",
@@ -279,6 +280,45 @@ void main() {
 
       // Once done plotting verify that all 10 points were plotted.
       assertPlotContainsNPoints(tester, 10, channelName: channelName);
+    });
+
+    testWidgets("Verify support of the panning plot behaviour",
+        (WidgetTester tester) async {
+
+      // Given a mockAdjustXAxisLimits function
+      double? lastDeltaX;
+      void mockAdjustXAxisLimits(double deltaX) {
+        lastDeltaX = deltaX;
+      }
+
+      // And a channel list containing "PLOT TEST SCALAR RAMP".
+      String channelName = "PLOT TEST SCALAR RAMP";
+      final channelList = {
+        channelName: ChannelSetting(lineColor: PlotColor.blue.color)
+      };
+
+      // And daq service with scalar ramp point count limit of 10 points.
+      StandardPlotDAQ daqService = StandardPlotDAQ();
+      daqService.scalarRampCountLimit = 10;
+
+      // And a update fequency of 10hz with timedScalar option to append to plot.
+      await tester.pumpWidget(_buildPlotWidget(channelList,
+          updateDelay: 100000,
+          adjustXAxisLimits: mockAdjustXAxisLimits,
+          scalarDataOptions:
+              ScalarDataOptions(isOneShot: false, timeDelta: null),
+          daqService: daqService));
+
+      // Wait for points to load.
+      await waitForPlotDataToLoad(tester);
+      await tester.pumpAndSettle(const Duration(milliseconds: 300));
+
+      // Simulate a horizontal drag to the left by 5 logical pixels.
+      await tester.drag(find.byType(PlotWidget), const Offset(-5.0, 0.0));
+      await tester.pumpAndSettle();
+
+      // Verify that the adjustXAxisLimits function was called with the correct delta.
+      expect(lastDeltaX, -5.0);
     });
 
     testWidgets("Plot channel list is empty, plot is empty",
@@ -807,6 +847,7 @@ void main() {
       // Verify that color is as expected.
       assertColorOfPlot(tester, expectedColor: PlotColor.blue.color);
     });
+
   });
 
   group("PlotWidget (implementation = Fermi) widget tests", () {});
@@ -825,6 +866,7 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
     ScalarDataOptions? scalarDataOptions,
     ACSysServiceAPI? service,
     StandardPlotDAQ? daqService,
+    Function(double deltaX)? adjustXAxisLimits,
     Function(PlotReply reply)? onPlotUpdate}) {
   daqService ??= StandardPlotDAQ();
   return MaterialApp(
@@ -839,5 +881,6 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
                   nAcquisitions: nAcquisitions,
                   onPlotUpdate: onPlotUpdate,
                   scalarDataOptions: scalarDataOptions,
+                  adjustXAxisLimits: adjustXAxisLimits,
                   daqService: daqService))));
 }
