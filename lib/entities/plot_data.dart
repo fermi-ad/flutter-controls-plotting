@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/entities/plot_metadata.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
 class PlotData {
@@ -10,8 +11,7 @@ class PlotData {
   // Map of channel name and points split into segments.
   Map<String, List<List<PlotPoint>>> points = {};
 
-  double? lastestRequestEpochTime;
-  double? latestDataEpochTime;
+  PlotMetadata plotMetadata = PlotMetadata();
 
   bool scalarEventMode = false;
 
@@ -48,11 +48,12 @@ class PlotData {
   void processPlotReplyMetadata({required PlotReply plotReply}) {
     // Remove data assumption when it becomes required part of API
     double? requestTime = plotReply.requestTime;
-    if (latestDataEpochTime != null && latestDataEpochTime! >= requestTime!) {
+    if (plotMetadata.latestDataEpochTime != null &&
+        plotMetadata.latestDataEpochTime! >= requestTime!) {
       return;
     }
 
-    lastestRequestEpochTime = requestTime;
+    plotMetadata.lastestRequestEpochTime = requestTime;
   }
 
   void filterPoints(
@@ -86,8 +87,9 @@ class PlotData {
           // Update last response time.
           double t = plotChannel.points.last.t!;
 
-          if (latestDataEpochTime == null || latestDataEpochTime! < t) {
-            latestDataEpochTime = t;
+          if (plotMetadata.latestDataEpochTime == null ||
+              plotMetadata.latestDataEpochTime! < t) {
+            plotMetadata.latestDataEpochTime = t;
           }
         } else {
           points[plotChannel.name] = [];
@@ -230,6 +232,8 @@ class PlotData {
     for (var garbageChannel in garbageChannels) {
       points.remove(garbageChannel);
     }
+
+    plotMetadata.cleanUp();
   }
 
   void resetMinMaxXY() {
