@@ -47,8 +47,8 @@ class PlotData {
 
   void processPlotReplyMetadata({required PlotReply plotReply}) {
     // Remove data assumption when it becomes required part of API
-    double requestTime = plotReply.requestTime!;
-    if (latestDataEpochTime != null && latestDataEpochTime! >= requestTime) {
+    double? requestTime = plotReply.requestTime;
+    if (latestDataEpochTime != null && latestDataEpochTime! >= requestTime!) {
       return;
     }
 
