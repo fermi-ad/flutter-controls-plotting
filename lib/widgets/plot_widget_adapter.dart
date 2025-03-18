@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
+import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 import 'package:graphic/graphic.dart';
 
@@ -66,19 +67,6 @@ abstract class PlotWidgetAdapter {
   bool _channelHasError(PlotChannelData chData) {
     return chData.status < 0;
   }
-}
-
-String parseDaqTimeAsString(double value) {
-  var msSinceEpoch = value * 1000;
-  DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(msSinceEpoch.toInt());
-  var h = dateTime.hour;
-  var m = dateTime.minute;
-  var s = dateTime.second;
-  var hour = h.toString().padLeft(2, '0');
-  var minute = m.toString().padLeft(2, '0');
-  var second = s.toString().padLeft(2, '0');
-
-  return '$hour:$minute:$second';
 }
 
 class CustomDotPainter extends FlDotPainter {
