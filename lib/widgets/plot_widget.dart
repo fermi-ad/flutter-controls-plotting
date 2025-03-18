@@ -27,7 +27,7 @@ class PlotWidget extends StatefulWidget {
   final int nAcquisitions;
 
   final bool isShowLabels;
-
+  final bool isPaused;
   final ScalarDataOptions? scalarDataOptions;
 
   final Function(String channelName)? onInternalChannelSettingChange;
@@ -38,6 +38,8 @@ class PlotWidget extends StatefulWidget {
       onStreamConnectionStateChange;
 
   final PlotImplementation implementation;
+
+  final Function(double deltaX)? adjustXAxisLimits;
 
   const PlotWidget(
       {super.key,
@@ -52,10 +54,12 @@ class PlotWidget extends StatefulWidget {
       this.nAcquisitions = 0,
       this.triggerEvent,
       this.isShowLabels = true,
+      this.isPaused = false,
       this.scalarDataOptions,
       this.onInternalChannelSettingChange,
       this.onPlotUpdate,
       this.onStreamConnectionStateChange,
+      this.adjustXAxisLimits,
       this.implementation = PlotImplementation.flCharts});
 
   @override
@@ -132,7 +136,15 @@ class PlotState extends State<PlotWidget> {
           padding: const EdgeInsets.fromLTRB(10, 10, 30, 10),
           child: _buildEmptyPlot());
     }
-    return StreamBuilder(stream: _plotStream, builder: _plotStreamBuilder);
+    return Listener(
+      onPointerMove: (event) {
+        widget.adjustXAxisLimits!(event.delta.dx);
+      },
+      child: StreamBuilder(
+        stream: _plotStream,
+        builder: _plotStreamBuilder,
+      ),
+    );
   }
 
   Widget _plotStreamBuilder(
@@ -267,7 +279,23 @@ class PlotState extends State<PlotWidget> {
     }
   }
 
+  PlotReply? lastReply;
   void _receiveData(PlotReply plotReply) {
+    if (widget.isPaused) {
+      if (lastReply != null) {
+        _adapter.plotReply = lastReply;
+
+        _filterPoints();
+
+        _findLimits();
+
+        widget.onPlotUpdate?.call(lastReply!); // Use null check here
+      }
+      return;
+    }
+
+    lastReply = plotReply;
+
     if (widget.plotData.points.isEmpty) {
       // Switching from empty plot to plot with channels.
       // Ensure that min and max xy get adjusted appropriately.
