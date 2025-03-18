@@ -39,6 +39,8 @@ class PlotWidget extends StatefulWidget {
 
   final PlotImplementation implementation;
 
+  final Function(double deltaX)? adjustXAxisLimits;
+
   const PlotWidget(
       {super.key,
       this.plotChannels = const <String, ChannelSetting>{},
@@ -56,6 +58,7 @@ class PlotWidget extends StatefulWidget {
       this.onInternalChannelSettingChange,
       this.onPlotUpdate,
       this.onStreamConnectionStateChange,
+      this.adjustXAxisLimits,
       this.implementation = PlotImplementation.flCharts});
 
   @override
@@ -132,7 +135,15 @@ class PlotState extends State<PlotWidget> {
           padding: const EdgeInsets.fromLTRB(10, 10, 30, 10),
           child: _buildEmptyPlot());
     }
-    return StreamBuilder(stream: _plotStream, builder: _plotStreamBuilder);
+    return Listener(
+      onPointerMove: (event) {
+        widget.adjustXAxisLimits!(event.delta.dx);
+      },
+      child: StreamBuilder(
+        stream: _plotStream,
+        builder: _plotStreamBuilder,
+      ),
+    );
   }
 
   Widget _plotStreamBuilder(

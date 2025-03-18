@@ -22,6 +22,18 @@ jobs:
           channel: "stable"
           cache: true
 
+      - name: Generate a token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.ACTION_SETTINGS_APP_ID }}
+          private-key: ${{ secrets.ACTION_SETTINGS_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Configure Git for private repo access
+        run: |
+          git config --global url."https://${{ secrets.FLUTTER_PLOTTING_SECRET }}@github.com/".insteadOf "https://github.com/"
+
       - name: Configure Git for private repo access
         run: |
           git config --global url."https://${{ secrets.FLUTTER_CORE_SECRET }}@github.com/".insteadOf "https://github.com/"
@@ -71,7 +83,7 @@ jobs:
 
       - name: Configure Git for private repo access
         run: |
-          git config --global url."https://${{ secrets.FLUTTER_CORE_SECRET }}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://${{ secrets.FLUTTER_PLOTTING_SECRET }}@github.com/".insteadOf "https://github.com/"
 
       - name: Starting chromedriver and executing acceptance tests
         run: |
