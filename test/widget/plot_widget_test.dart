@@ -284,7 +284,6 @@ void main() {
 
     testWidgets("Verify support of the panning plot behaviour",
         (WidgetTester tester) async {
-
       // Given a mockAdjustXAxisLimits function
       double? lastDeltaX;
       void mockAdjustXAxisLimits(double deltaX) {
@@ -319,6 +318,40 @@ void main() {
 
       // Verify that the adjustXAxisLimits function was called with the correct delta.
       expect(lastDeltaX, -5.0);
+    });
+
+    testWidgets(
+        "Verify plot scalar on-event 42 points 21 per event. Verify point segments and points.",
+        (WidgetTester tester) async {
+      // Given a scalar ramp channel
+      var channelName = "PLOT TEST SCALAR RAMP";
+      final channelList = {
+        channelName: ChannelSetting(lineColor: PlotColor.blue.color)
+      };
+
+      // And daq service with scalar ramp point count limit of 10 points.
+      StandardPlotDAQ daqService = StandardPlotDAQ();
+      daqService.scalarRampCountLimit = 42;
+      daqService.scalarRampEventDuration = 2;
+
+      // And a update fequency of 10hz with timedScalar option to append to plot.
+      await tester.pumpWidget(_buildPlotWidget(channelList,
+          updateDelay: 100000,
+          triggerEvent: 16,
+          scalarDataOptions: ScalarDataOptions(isOneShot: false, timeDelta: 4),
+          daqService: daqService));
+
+      // Wait for points to load.
+      await waitForPlotDataToLoad(tester);
+      await tester.pumpAndSettle(const Duration(milliseconds: 300));
+
+      // Once done plotting verify that all 41 points were plotted.
+      assertPlotContainsNPoints(tester, 21,
+          channelName: channelName, segment: 0);
+      assertPlotContainsNPoints(tester, 21,
+          channelName: channelName, segment: 1);
+
+      assertPlotContainsNSegments(tester, 2, channelName: channelName);
     });
 
     testWidgets("Plot channel list is empty, plot is empty",
@@ -847,7 +880,6 @@ void main() {
       // Verify that color is as expected.
       assertColorOfPlot(tester, expectedColor: PlotColor.blue.color);
     });
-
   });
 
   group("PlotWidget (implementation = Fermi) widget tests", () {});
@@ -863,6 +895,7 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
     {PlotImplementation impl = PlotImplementation.flCharts,
     int updateDelay = 0,
     int nAcquisitions = 0,
+    int? triggerEvent,
     ScalarDataOptions? scalarDataOptions,
     ACSysServiceAPI? service,
     StandardPlotDAQ? daqService,
@@ -878,6 +911,7 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
                   implementation: impl,
                   plotData: PlotData(),
                   updateDelay: updateDelay,
+                  triggerEvent: triggerEvent,
                   nAcquisitions: nAcquisitions,
                   onPlotUpdate: onPlotUpdate,
                   scalarDataOptions: scalarDataOptions,

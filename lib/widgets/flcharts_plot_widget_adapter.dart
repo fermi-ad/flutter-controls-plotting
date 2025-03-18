@@ -18,26 +18,21 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
             maxY: widget.plotData.maxY,
             lineBarsData: plotReply == null
                 ? []
-                : _toLineChartBarDataList(
-                    plotReply!.data, widget.plotData.points),
+                : _toLineChartBarDataList(plotReply!.data, widget.plotData),
             lineTouchData: LineTouchData(
+              distanceCalculator:
+                  (Offset touchPoint, Offset spotPixelCoordinates) =>
+                      touchPointDistanceCalculate(
+                          touchPoint: touchPoint,
+                          spotPixelCoordinates: spotPixelCoordinates,
+                          nearestPointXY: widget.plotData.scalarEventMode),
               touchTooltipData: LineTouchTooltipData(
                 maxContentWidth: 100,
                 fitInsideHorizontally: true,
                 fitInsideVertically: true,
                 getTooltipColor: (touchedSpot) => Colors.black,
-                getTooltipItems: (touchedSpots) {
-                  return touchedSpots.map((LineBarSpot touchedSpot) {
-                    final textStyle = TextStyle(
-                      color: touchedSpot.bar.gradient?.colors[0] ??
-                          touchedSpot.bar.color,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    );
-                    return _generateLineTooltipItem(
-                        touchedSpot.x, touchedSpot.y, textStyle);
-                  }).toList();
-                },
+                getTooltipItems: (touchedSpots) =>
+                    _generateLineTooltipItem(touchedSpots: touchedSpots),
               ),
               handleBuiltInTouches: true,
               getTouchLineStart: (data, index) => 0,
@@ -123,7 +118,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
             ),
             sideTitles: SideTitles(
               showTitles: isShowLabels,
-              reservedSize: widget.isTimedScalarData ? 80 : 40,
+              reservedSize: widget.isTimedXAxis ? 80 : 40,
               getTitlesWidget: (value, meta) {
                 return _bottomTitleWidgets(value, meta);
               },
@@ -133,7 +128,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   }
 
   Widget _bottomTitleWidgets(double value, TitleMeta meta) {
-    if (widget.isTimedScalarData) {
+    if (widget.isTimedXAxis) {
       return SideTitleWidget(
         axisSide: meta.axisSide,
         angle: -1.57, // -90 * 3.14 / 180,
@@ -144,53 +139,83 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     return defaultGetTitle(value, meta);
   }
 
-  LineTooltipItem _generateLineTooltipItem(
-      double x, double y, TextStyle textStyle) {
-    String xString;
-    if (widget.isTimedScalarData) {
-      xString = parseDaqTimeAsString(x);
-    } else {
-      xString = x.toString();
+  double touchPointDistanceCalculate(
+          {required Offset touchPoint,
+          required Offset spotPixelCoordinates,
+          required bool nearestPointXY}) =>
+      nearestPointXY
+          // Determine distance nearest to the cursor.
+          ? (touchPoint - spotPixelCoordinates).distance
+          // Determine distance for all points on x axis.
+          : (touchPoint.dx - spotPixelCoordinates.dx).abs();
+
+  List<LineTooltipItem> _generateLineTooltipItem(
+      {required List<LineBarSpot> touchedSpots}) {
+    List<LineTooltipItem> tooltips = [];
+
+    for (var touchedSpot in touchedSpots) {
+      final x = touchedSpot.x;
+      final y = touchedSpot.y;
+
+      final textStyle = TextStyle(
+        color: touchedSpot.bar.gradient?.colors[0] ?? touchedSpot.bar.color,
+        fontWeight: FontWeight.bold,
+        fontSize: 14,
+      );
+
+      String xString;
+      if (widget.isTimedXAxis) {
+        xString = parseDaqTimeAsString(x);
+      } else {
+        xString = x.toString();
+      }
+
+      tooltips.add(LineTooltipItem(
+        '$xString, ${y.toStringAsFixed(2)}',
+        textStyle,
+      ));
     }
 
-    return LineTooltipItem(
-      '$xString, ${y.toStringAsFixed(2)}',
-      textStyle,
-    );
+    return tooltips;
   }
 
-  List<FlSpot> _toSpots(List<PlotPoint> points) => points
-      .map<FlSpot>((PlotPoint point) => FlSpot(point.x, point.y))
-      .toList();
+  List<FlSpot> _toSpots(List<PlotPoint> points) {
+    return points
+        .map<FlSpot>((PlotPoint point) => FlSpot(point.x, point.y))
+        .toList();
+  }
 
   List<LineChartBarData> _toLineChartBarDataList(
-      List<PlotChannelData> plotChannels,
-      Map<String, List<PlotPoint>> filteredChannelPoints) {
+      List<PlotChannelData> plotChannels, PlotData plotData) {
     List<LineChartBarData> lineChartList = [];
+
+    var points = plotData.points;
 
     plotChannels.asMap().forEach((index, plotChannel) {
       if (_channelHasError(plotChannel) ||
-          !filteredChannelPoints.containsKey(plotChannel.name)) {
+          !points.containsKey(plotChannel.name)) {
         return;
       }
 
-      var spots = _toSpots(filteredChannelPoints[plotChannel.name]!);
+      for (var pointSegment in points[plotChannel.name]!) {
+        var spots = _toSpots(pointSegment);
 
-      lineChartList.add(LineChartBarData(
-        color: lineColorForChannel(plotChannel.name),
-        spots: spots,
-        isCurved: false,
-        belowBarData: BarAreaData(
-          show: false,
-        ),
-        barWidth: markerIndexForChannel(plotChannel.name) == 0 ||
-                markerIndexForChannel(plotChannel.name) == 1
-            ? 3
-            : 0,
-        //dotData: _selectFlDotData(int.parse(widget.plotMarker.markerIndex)  , lineColorForChannel(plotChannel.name)),
-        dotData: _selectFlDotData(markerIndexForChannel(plotChannel.name),
-            lineColorForChannel(plotChannel.name)),
-      ));
+        lineChartList.add(LineChartBarData(
+          color: lineColorForChannel(plotChannel.name),
+          spots: spots,
+          isCurved: false,
+          belowBarData: BarAreaData(
+            show: false,
+          ),
+          barWidth: markerIndexForChannel(plotChannel.name) == 0 ||
+                  markerIndexForChannel(plotChannel.name) == 1
+              ? 3
+              : 0,
+          //dotData: _selectFlDotData(int.parse(widget.plotMarker.markerIndex)  , lineColorForChannel(plotChannel.name)),
+          dotData: _selectFlDotData(markerIndexForChannel(plotChannel.name),
+              lineColorForChannel(plotChannel.name)),
+        ));
+      }
     });
 
     return lineChartList;

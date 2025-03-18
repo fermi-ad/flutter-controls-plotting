@@ -66,6 +66,12 @@ class PlotWidget extends StatefulWidget {
   State<StatefulWidget> createState() => PlotState();
 
   bool get isTimedScalarData => scalarDataOptions != null;
+  bool get isTimedXAxis {
+    if (isTimedScalarData) {
+      return triggerEvent == null;
+    }
+    return false;
+  }
 }
 
 class PlotState extends State<PlotWidget> {
@@ -103,7 +109,7 @@ class PlotState extends State<PlotWidget> {
       .map((String channelName) => _adapter.markerIndexForChannel(channelName))
       .toList();
 
-  Map<String, List<PlotPoint>> get points => widget.plotData.points;
+  Map<String, List<List<PlotPoint>>> get points => widget.plotData.points;
 
   @override
   void didChangeDependencies() {
@@ -244,19 +250,23 @@ class PlotState extends State<PlotWidget> {
     _nAcquisitions = widget.nAcquisitions;
 
     // Widget is displaying scalar data in one-shot mode.
-    if (widget.scalarDataOptions != null &&
-        widget.scalarDataOptions!.isOneShot &&
-        widget.scalarDataOptions!.timeDelta != null &&
-        widget.updateDelay > 0) {
-      // Using calculated nAcquisitions
-      var timeDelta = widget.scalarDataOptions!.timeDelta;
-      // Number of points per second
-      double pointLimitCalc = 1000000 / widget.updateDelay;
-      // Number of seconds
-      pointLimitCalc = pointLimitCalc * timeDelta!;
-      // Round up to ensure number of acquisitions include full timeframe.
-      _nAcquisitions = pointLimitCalc.ceil();
+    if (widget.scalarDataOptions != null) {
+      if (widget.scalarDataOptions!.isOneShot &&
+          widget.scalarDataOptions!.timeDelta != null &&
+          widget.updateDelay > 0) {
+        // Using calculated nAcquisitions
+        var timeDelta = widget.scalarDataOptions!.timeDelta;
+        // Number of points per second
+        double pointLimitCalc = 1000000 / widget.updateDelay;
+        // Number of seconds
+        pointLimitCalc = pointLimitCalc * timeDelta!;
+        // Round up to ensure number of acquisitions include full timeframe.
+        _nAcquisitions = pointLimitCalc.ceil();
+      }
     }
+
+    widget.plotData.scalarEventMode =
+        widget.isTimedScalarData && !widget.isTimedXAxis;
 
     if (widget.plotChannels.isNotEmpty) {
       _errorsDismissed = false;

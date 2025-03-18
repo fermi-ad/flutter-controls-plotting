@@ -110,4 +110,16 @@ class FakeACSysService implements ACSysServiceAPI {
     // N/A for plotting lib
     throw UnimplementedError();
   }
+
+  @override
+  Future<void> saveUserConfiguration(
+      {required PlotConfigurationSnapshot snapshot}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<Reading>> readDevices(List<String> devices) {
+    // TODO: implement readDevices
+    throw UnimplementedError();
+  }
 }
