@@ -83,17 +83,17 @@ class PlotData {
 
           var lastIndex = pointsList.length;
           pointsList.insertAll(lastIndex, plotChannel.points);
-
-          // Update last response time.
-          double t = plotChannel.points.last.t!;
-
-          if (plotMetadata.latestDataEpochTime == null ||
-              plotMetadata.latestDataEpochTime! < t) {
-            plotMetadata.latestDataEpochTime = t;
-          }
         } else {
           points[plotChannel.name] = [];
           points[plotChannel.name]!.add(List.from(plotChannel.points));
+        }
+        // Update last response time.
+        double? t = plotChannel.points.last.t;
+
+        if (t != null &&
+            (plotMetadata.latestDataEpochTime == null ||
+                plotMetadata.latestDataEpochTime! < t)) {
+          plotMetadata.latestDataEpochTime = t;
         }
       }
     }
