@@ -179,6 +179,22 @@ void assertPlotContainsNPoints(WidgetTester tester, int numberOfPoints,
   expect(plotPoints.length, numberOfPoints);
 }
 
+Future<void> assertPlotIsPaused(WidgetTester tester) async {
+  final beforePlotWidget =
+      find.byType(PlotWidget).evaluate().first.widget as PlotWidget;
+  final beforeXMax = beforePlotWidget.plotData.maxX!;
+
+  for (var i = 0; i < 3; i++) {
+    await tester.pump(const Duration(milliseconds: 500));
+  }
+
+  final afterPlotWidget =
+      find.byType(PlotWidget).evaluate().first.widget as PlotWidget;
+  final afterXMax = afterPlotWidget.plotData.maxX!;
+
+  expect(afterXMax - beforeXMax, 0);
+}
+
 void assertPlotContainsNSegments(WidgetTester tester, int numberOfSegments,
     {required String channelName}) {
   final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
