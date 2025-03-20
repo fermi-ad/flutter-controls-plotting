@@ -2,7 +2,6 @@ part of plotadapter;
 
 class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   final bool isShowLabels;
-  //final PlotMarker theMarker;
 
   FlchartsPlotWidgetAdapter(
       {required super.widget, required this.isShowLabels}); // Update this line
