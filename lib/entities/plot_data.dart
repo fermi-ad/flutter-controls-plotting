@@ -233,7 +233,10 @@ class PlotData {
       points.remove(garbageChannel);
     }
 
-    plotMetadata.cleanUp();
+    if (garbageChannels.isNotEmpty) {
+      // Displayed channels changed.
+      plotMetadata.cleanUp();
+    }
   }
 
   void resetMinMaxXY() {
