@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
+import 'package:flutter_controls_plotting/entities/plot_metadata.dart';
 import 'package:flutter_controls_plotting/entities/scalar_data_options.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget_adapter.dart';
@@ -110,6 +111,7 @@ class PlotState extends State<PlotWidget> {
       .toList();
 
   Map<String, List<List<PlotPoint>>> get points => widget.plotData.points;
+  PlotMetadata get plotMetadata => widget.plotData.plotMetadata;
 
   @override
   void didChangeDependencies() {
@@ -302,6 +304,7 @@ class PlotState extends State<PlotWidget> {
       widget.plotData.resetMinMaxXY();
     }
 
+    widget.plotData.processPlotReplyMetadata(plotReply: plotReply);
     _adapter.plotReply = plotReply;
 
     _filterPoints();

@@ -66,9 +66,11 @@ class StandardPlotDAQ implements PlotDAQService {
       int updateDelay = 0,
       int? nAcquisitions,
       int? triggerEvent}) async* {
+    var requestTime = _getCurrentEpochTime();
     if (updateDelay == 0) {
       // No refresh cycle, attempt to combine gen plots with api results
-      var generatePlot = _generatePlot(forChannels: forChannels, args: args);
+      var generatePlot = _generatePlot(
+          forChannels: forChannels, args: args, requestTime: requestTime);
 
       // Verify if any apiChannels provided
       List<String> apiChannels = [];
@@ -127,6 +129,7 @@ class StandardPlotDAQ implements PlotDAQService {
 
         var plot = _generatePlot(
             forChannels: forChannels,
+            requestTime: requestTime,
             args: args,
             markChannelNameErrors: true,
             eventX: eventX);
@@ -152,13 +155,13 @@ class StandardPlotDAQ implements PlotDAQService {
   PlotReply _generatePlot(
       {required Set<String> forChannels,
       required _PlotArgs args,
+      required double requestTime,
       bool markChannelNameErrors = false,
       double? eventX}) {
     List<PlotChannelData> internalDaqData = [];
     var xAxisUnits = 'Index';
 
-    DateTime now = DateTime.now();
-    var currentEpochTime = now.millisecondsSinceEpoch / 1000;
+    var currentEpochTime = _getCurrentEpochTime();
 
     for (var forChannel in forChannels) {
       List<PlotPoint>? data;
@@ -201,8 +204,7 @@ class StandardPlotDAQ implements PlotDAQService {
         }
       } else if (forChannel == GenPlots.scalarRandRamp.name) {
         var rand = Random();
-        DateTime now = DateTime.now();
-        var currentEpochTime = now.millisecondsSinceEpoch / 1000;
+        var currentEpochTime = _getCurrentEpochTime();
         lastScalarRandRampEpochTime ??= currentEpochTime;
 
         var value = currentEpochTime - lastScalarRandRampEpochTime!;
@@ -258,6 +260,7 @@ class StandardPlotDAQ implements PlotDAQService {
 
     var generatedPlotReply = PlotReply(
         plotId: "Internal",
+        requestTime: requestTime,
         xAxisUnits: xAxisUnits,
         xAxisMin: args.xMin + 0.0,
         xAxisMax: args.xMax + 0.0,
@@ -266,6 +269,11 @@ class StandardPlotDAQ implements PlotDAQService {
 
     return generatedPlotReply;
   }
+}
+
+double _getCurrentEpochTime() {
+  DateTime now = DateTime.now();
+  return now.millisecondsSinceEpoch / 1000;
 }
 
 // Facilitates passing plot arguments by reference for generation of plot from API and local.
@@ -302,4 +310,17 @@ bool channelHasError(PlotChannelData chData) {
 
 bool channelHasErrorOrNoPoints(PlotChannelData chData) {
   return channelHasError(chData) || chData.points.isEmpty;
+}
+
+String parseDaqTimeAsString(double value) {
+  var msSinceEpoch = value * 1000;
+  DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(msSinceEpoch.toInt());
+  var h = dateTime.hour;
+  var m = dateTime.minute;
+  var s = dateTime.second;
+  var hour = h.toString().padLeft(2, '0');
+  var minute = m.toString().padLeft(2, '0');
+  var second = s.toString().padLeft(2, '0');
+
+  return '$hour:$minute:$second';
 }

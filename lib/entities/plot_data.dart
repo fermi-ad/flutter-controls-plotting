@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/entities/plot_metadata.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
 class PlotData {
@@ -9,6 +10,8 @@ class PlotData {
 
   // Map of channel name and points split into segments.
   Map<String, List<List<PlotPoint>>> points = {};
+
+  PlotMetadata plotMetadata = PlotMetadata();
 
   bool scalarEventMode = false;
 
@@ -42,6 +45,17 @@ class PlotData {
     return _maxY;
   }
 
+  void processPlotReplyMetadata({required PlotReply plotReply}) {
+    // Remove data assumption when it becomes required part of API
+    double? requestTime = plotReply.requestTime;
+    if (plotMetadata.latestDataEpochTime != null &&
+        plotMetadata.latestDataEpochTime! >= requestTime!) {
+      return;
+    }
+
+    plotMetadata.lastestRequestEpochTime = requestTime;
+  }
+
   void filterPoints(
       {required bool isTimedScalarData,
       required List<PlotChannelData> plotChannels}) {
@@ -72,6 +86,14 @@ class PlotData {
         } else {
           points[plotChannel.name] = [];
           points[plotChannel.name]!.add(List.from(plotChannel.points));
+        }
+        // Update last response time.
+        double? t = plotChannel.points.last.t;
+
+        if (t != null &&
+            (plotMetadata.latestDataEpochTime == null ||
+                plotMetadata.latestDataEpochTime! < t)) {
+          plotMetadata.latestDataEpochTime = t;
         }
       }
     }
@@ -209,6 +231,11 @@ class PlotData {
 
     for (var garbageChannel in garbageChannels) {
       points.remove(garbageChannel);
+    }
+
+    if (garbageChannels.isNotEmpty) {
+      // Displayed channels changed.
+      plotMetadata.cleanUp();
     }
   }
 
