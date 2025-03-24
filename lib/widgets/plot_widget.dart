@@ -282,6 +282,7 @@ class PlotState extends State<PlotWidget> {
   }
 
   PlotReply? lastReply;
+  List<PlotReply> plotReplyList = [];
   void _receiveData(PlotReply plotReply) {
     if (widget.isPaused) {
       if (lastReply != null) {
@@ -293,7 +294,23 @@ class PlotState extends State<PlotWidget> {
 
         widget.onPlotUpdate?.call(lastReply!); // Use null check here
       }
+
+      plotReplyList.add(plotReply);
+      if (plotReplyList.length > 1000000) {
+        plotReplyList.removeAt(0);
+      }
       return;
+    } else {
+      plotReplyList.forEach((element) {
+        _adapter.plotReply = element;
+
+        _filterPoints();
+
+        _findLimits();
+
+        widget.onPlotUpdate?.call(element); // Use null check here
+      });
+      plotReplyList.clear();
     }
 
     lastReply = plotReply;
