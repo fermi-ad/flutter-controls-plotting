@@ -281,8 +281,6 @@ class PlotState extends State<PlotWidget> {
     }
   }
 
-  PlotReply? lastReply;
-  List<PlotReply> plotReplyList = [];
   void _receiveData(PlotReply plotReply) {
     if (widget.isPaused) {
       if (lastReply != null) {
@@ -393,4 +391,8 @@ class PlotState extends State<PlotWidget> {
   int _nAcquisitions = 0;
 
   bool _errorsDismissed = false;
+
+  PlotReply? lastReply;
+
+  List<PlotReply> plotReplyList = [];
 }
