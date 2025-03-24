@@ -281,7 +281,6 @@ class PlotState extends State<PlotWidget> {
     }
   }
 
-  PlotReply? lastReply;
   void _receiveData(PlotReply plotReply) {
     if (widget.isPaused) {
       if (lastReply != null) {
@@ -291,7 +290,7 @@ class PlotState extends State<PlotWidget> {
 
         _findLimits();
 
-        widget.onPlotUpdate?.call(lastReply!); // Use null check here
+        widget.onPlotUpdate?.call(lastReply!);
       }
       return;
     }
@@ -315,6 +314,10 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _findLimits() {
+    if (_adapter.plotReply == null) {
+      return;
+    }
+
     final plotChannels = _adapter.plotReply!.data;
 
     widget.plotData.findLimits(
@@ -327,6 +330,10 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _filterPoints() {
+    if (_adapter.plotReply == null) {
+      return;
+    }
+
     final plotChannels = _adapter.plotReply!.data;
     widget.plotData.filterPoints(
         isTimedScalarData: widget.isTimedScalarData,
@@ -376,4 +383,6 @@ class PlotState extends State<PlotWidget> {
   int _nAcquisitions = 0;
 
   bool _errorsDismissed = false;
+
+  PlotReply? lastReply;
 }
