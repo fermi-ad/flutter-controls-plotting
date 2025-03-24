@@ -299,7 +299,7 @@ class PlotState extends State<PlotWidget> {
       }
       return;
     } else {
-      plotReplyList.forEach((element) {
+      for (final element in plotReplyList) {
         _adapter.plotReply = element;
 
         _filterPoints();
@@ -307,7 +307,7 @@ class PlotState extends State<PlotWidget> {
         _findLimits();
 
         widget.onPlotUpdate?.call(element); // Use null check here
-      });
+      }
       plotReplyList.clear();
     }
 
@@ -402,7 +402,5 @@ class PlotState extends State<PlotWidget> {
 
   PlotReply? lastReply;
 
-
   List<PlotReply> plotReplyList = [];
-
 }
