@@ -904,8 +904,7 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
   daqService ??= StandardPlotDAQ();
   return MaterialApp(
       home: Scaffold(
-          body: ACSysProvider(
-              service: service ?? FakeACSysService(),
+          body: ACSysProvider.factory(service: service ?? FakeACSysService())(
               child: PlotWidget(
                   plotChannels: channelList,
                   implementation: impl,

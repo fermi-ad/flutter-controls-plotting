@@ -56,4 +56,4 @@ void main() {
 
 Widget _buildPlotCard(PlotCardWidget card) => MaterialApp(
     home: Scaffold(
-        body: ACSysProvider(service: FakeACSysService(), child: card)));
+        body: ACSysProvider.factory(service: FakeACSysService())(child: card)));

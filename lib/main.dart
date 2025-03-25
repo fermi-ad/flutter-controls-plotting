@@ -12,9 +12,8 @@ class App extends StatelessWidget {
   static const _title = 'Plotting Widgets Demo';
 
   @override
-  Widget build(BuildContext context) => ACSysProvider(
-      child: StandardApp(
-          title: _title,
-          appBar: AppBar(title: const Text(_title)),
-          body: const PlotDemoWidget()));
+  Widget build(BuildContext context) => StandardApp(
+      title: _title,
+      appBar: AppBar(title: const Text(_title)),
+      body: const PlotDemoWidget());
 }
