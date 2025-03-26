@@ -227,6 +227,23 @@ class PlotData {
     return (minY, maxY, minX, maxX);
   }
 
+  void persistenceCleanUp({
+    required bool isTimedScalarData,
+    required bool isPersistent,
+  }) {
+    if (isTimedScalarData) {
+      // Scalar Reading Mode
+      if (!isPersistent) {
+        for (var entry in points.entries) {
+          List<List<PlotPoint>> segments = entry.value;
+          if (segments.isNotEmpty) {
+            segments.removeRange(0, segments.length - 1);
+          }
+        }
+      }
+    }
+  }
+
   void cleanUpPoints(
       {Iterable<String> keepChannelList = const Iterable.empty()}) {
     List<String> garbageChannels = [];
