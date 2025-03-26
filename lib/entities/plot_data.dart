@@ -60,7 +60,7 @@ class PlotData {
       {required bool isTimedScalarData,
       required bool isPersistent,
       required List<PlotChannelData> plotChannels}) {
-    if (!isTimedScalarData || (!isTimedScalarData && !isPersistent)) {
+    if (!isTimedScalarData && !isPersistent) {
       points.clear();
     }
     for (final plotChannel in plotChannels) {
@@ -240,6 +240,8 @@ class PlotData {
             segments.removeRange(0, segments.length - 1);
           }
         }
+        // Potential clean up for scalar data. Recaluclate limits for all points.
+        findPointsLimits();
       }
     }
   }
