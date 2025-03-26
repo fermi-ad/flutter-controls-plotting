@@ -53,7 +53,7 @@ class PlotData {
       return;
     }
 
-    plotMetadata.lastestRequestEpochTime = requestTime;
+    plotMetadata.latestRequestEpochTime = requestTime;
   }
 
   void filterPoints(
