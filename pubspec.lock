@@ -29,10 +29,10 @@ packages:
     dependency: transitive
     description:
       name: asn1lib
-      sha256: "1c296cd268f486cabcc3930e9b93a8133169305f18d722916e675959a88f6d2c"
+      sha256: e02d018628c870ef2d7f03e33f9ad179d89ff6ec52ca6c56bcb80bcef979867f
       url: "https://pub.dev"
     source: hosted
-    version: "1.5.9"
+    version: "1.6.2"
   async:
     dependency: transitive
     description:
@@ -211,7 +211,7 @@ packages:
     description:
       path: "."
       ref: plotReply-requestTime
-      resolved-ref: f85e824a8689337eebb88039ab9e59d21fb27c8d
+      resolved-ref: "9a095b4e0e9070b0535baa8e7b112a668b2fc1e1"
       url: "https://github.com/fermi-ad/flutter-controls-core.git"
     source: git
     version: "0.2.17"
@@ -372,10 +372,10 @@ packages:
     dependency: transitive
     description:
       name: js
-      sha256: c1b2e9b5ea78c45e1a0788d29606ba27dc5f71f019f32ca5140f61ef071838cf
+      sha256: "53385261521cc4a0c4658fd0ad07a7d14591cf8fc33abbceae306ddb974888dc"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.1"
+    version: "0.7.2"
   leak_tracker:
     dependency: transitive
     description:
