@@ -58,8 +58,9 @@ class PlotData {
 
   void filterPoints(
       {required bool isTimedScalarData,
+      required bool isPersistent,
       required List<PlotChannelData> plotChannels}) {
-    if (!isTimedScalarData) {
+    if (!isTimedScalarData || (!isTimedScalarData && !isPersistent)) {
       points.clear();
     }
     for (final plotChannel in plotChannels) {
@@ -74,6 +75,12 @@ class PlotData {
             var newX = plotChannel.points.last.x;
 
             if (newX < lastX) {
+              if (!isPersistent) {
+                // Clear all events.
+                segments.clear();
+              }
+              // Reset point limits based on the current data since data is being removed.
+              findPointsLimits();
               // New event
               segments.add([]);
               // Reload pointsList
