@@ -338,6 +338,7 @@ void main() {
       await tester.pumpWidget(_buildPlotWidget(channelList,
           updateDelay: 100000,
           triggerEvent: 16,
+          isPersistent: true,
           scalarDataOptions: ScalarDataOptions(isOneShot: false, timeDelta: 4),
           daqService: daqService));
 
@@ -897,6 +898,7 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
     int nAcquisitions = 0,
     int? triggerEvent,
     ScalarDataOptions? scalarDataOptions,
+    bool isPersistent = false,
     ACSysServiceAPI? service,
     StandardPlotDAQ? daqService,
     Function(double deltaX)? adjustXAxisLimits,
@@ -913,6 +915,7 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
                   triggerEvent: triggerEvent,
                   nAcquisitions: nAcquisitions,
                   onPlotUpdate: onPlotUpdate,
+                  isPersistent: isPersistent,
                   scalarDataOptions: scalarDataOptions,
                   adjustXAxisLimits: adjustXAxisLimits,
                   daqService: daqService))));
