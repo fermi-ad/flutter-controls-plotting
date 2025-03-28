@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
 class PlotMetadata with ChangeNotifier {
-  double? _lastestRequestEpochTime;
+  double? _latestRequestEpochTime;
   double? _latestDataEpochTime;
 
   PlotMetadata();
 
-  String get lastestRequestEpochTimeText {
+  String get latestRequestEpochTimeText {
     if (lastestRequestEpochTime != null) {
       return parseDaqTimeAsString(lastestRequestEpochTime!);
     }
@@ -23,11 +23,11 @@ class PlotMetadata with ChangeNotifier {
     return "Unknown";
   }
 
-  double? get lastestRequestEpochTime => _lastestRequestEpochTime;
+  double? get lastestRequestEpochTime => _latestRequestEpochTime;
   double? get latestDataEpochTime => _latestDataEpochTime;
 
-  set lastestRequestEpochTime(double? lastestRequestEpochTime) {
-    _lastestRequestEpochTime = lastestRequestEpochTime;
+  set latestRequestEpochTime(double? lastestRequestEpochTime) {
+    _latestRequestEpochTime = lastestRequestEpochTime;
     Future.delayed(Duration.zero, () => notifyListeners());
   }
 
@@ -38,6 +38,6 @@ class PlotMetadata with ChangeNotifier {
 
   void cleanUp() {
     _latestDataEpochTime = null;
-    _lastestRequestEpochTime = null;
+    _latestRequestEpochTime = null;
   }
 }
