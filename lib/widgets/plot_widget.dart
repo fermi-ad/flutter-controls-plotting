@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
@@ -41,7 +43,11 @@ class PlotWidget extends StatefulWidget {
 
   final PlotImplementation implementation;
 
+  final Function(double scaleFactor, Offset focalPoint)? onZoom;
+
   final Function(double deltaX)? adjustXAxisLimits;
+
+  final Function(double deltaY)? adjustYAxisLimits;
 
   const PlotWidget(
       {super.key,
@@ -62,7 +68,9 @@ class PlotWidget extends StatefulWidget {
       this.onInternalChannelSettingChange,
       this.onPlotUpdate,
       this.onStreamConnectionStateChange,
+      this.onZoom,
       this.adjustXAxisLimits,
+      this.adjustYAxisLimits,
       this.implementation = PlotImplementation.flCharts});
 
   @override
@@ -78,6 +86,25 @@ class PlotWidget extends StatefulWidget {
 }
 
 class PlotState extends State<PlotWidget> {
+
+  final FocusNode _focusNode = FocusNode();
+  
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+      print('Focus requested: ${_focusNode.hasFocus}');
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+
   List<PlotChannelData> get channelData =>
       _adapter.plotReply != null ? _adapter.plotReply!.data : [];
 
@@ -132,21 +159,58 @@ class PlotState extends State<PlotWidget> {
     super.didUpdateWidget(oldWidget);
   }
 
-  @override
+@override
   Widget build(BuildContext context) {
     if (widget.plotChannels.isEmpty) {
       _updateStreamConnectionChanged(ConnectionState.none);
       return Padding(
-          padding: const EdgeInsets.fromLTRB(10, 10, 30, 10),
-          child: _buildEmptyPlot());
+        padding: const EdgeInsets.fromLTRB(10, 10, 30, 10),
+        child: _buildEmptyPlot(),
+      );
     }
-    return Listener(
-      onPointerMove: (event) {
-        widget.adjustXAxisLimits!(event.delta.dx);
-      },
-      child: StreamBuilder(
-        stream: _plotStream,
-        builder: _plotStreamBuilder,
+
+    return KeyboardListener(
+      focusNode: _focusNode,
+    onKeyEvent: (event) {
+      if (event is KeyDownEvent) {
+        // "+" is the shifted version of "=" for some keyboard layouts.
+        if (event.logicalKey == LogicalKeyboardKey.equal || event.logicalKey == LogicalKeyboardKey.add) {
+          widget.onZoom!(1.1, Offset.zero); // Zoom in centered
+        } else if (event.logicalKey == LogicalKeyboardKey.minus) {
+          widget.onZoom!(0.9, Offset.zero); // Zoom out centered
+        } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+          widget.adjustYAxisLimits!(-10.0); // Pan up
+        } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+          widget.adjustYAxisLimits!(10.0); // Pan down
+        } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+          widget.adjustXAxisLimits!(10.0); // Pan left
+        } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+          widget.adjustXAxisLimits!(-10.0); // Pan right
+        }
+      }
+    },
+      child: Listener(
+        onPointerSignal: (event) {
+          if (event is PointerScrollEvent) {
+            if (event.scrollDelta.dy > 0) {
+              widget.onZoom!(0.9, event.position); // Zoom out
+            } else {
+              widget.onZoom!(1.1, event.position); // Zoom in
+            }
+          }
+        },
+        onPointerMove: (event) {
+          widget.adjustXAxisLimits!(event.delta.dx);
+        },
+        child: GestureDetector(
+          onScaleUpdate: (details) {
+            widget.onZoom!(details.scale, details.focalPoint);
+          },
+          child: StreamBuilder(
+            stream: _plotStream,
+            builder: _plotStreamBuilder,
+          ),
+        ),
       ),
     );
   }
