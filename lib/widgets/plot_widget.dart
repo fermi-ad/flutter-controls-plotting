@@ -86,15 +86,13 @@ class PlotWidget extends StatefulWidget {
 }
 
 class PlotState extends State<PlotWidget> {
-
   final FocusNode _focusNode = FocusNode();
-  
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
-      print('Focus requested: ${_focusNode.hasFocus}');
     });
   }
 
@@ -103,7 +101,6 @@ class PlotState extends State<PlotWidget> {
     _focusNode.dispose();
     super.dispose();
   }
-
 
   List<PlotChannelData> get channelData =>
       _adapter.plotReply != null ? _adapter.plotReply!.data : [];
@@ -159,7 +156,7 @@ class PlotState extends State<PlotWidget> {
     super.didUpdateWidget(oldWidget);
   }
 
-@override
+  @override
   Widget build(BuildContext context) {
     if (widget.plotChannels.isEmpty) {
       _updateStreamConnectionChanged(ConnectionState.none);
@@ -171,40 +168,46 @@ class PlotState extends State<PlotWidget> {
 
     return KeyboardListener(
       focusNode: _focusNode,
-    onKeyEvent: (event) {
-      if (event is KeyDownEvent) {
-        // "+" is the shifted version of "=" for some keyboard layouts.
-        if (event.logicalKey == LogicalKeyboardKey.equal || event.logicalKey == LogicalKeyboardKey.add) {
-          widget.onZoom!(1.1, Offset.zero); // Zoom in centered
-        } else if (event.logicalKey == LogicalKeyboardKey.minus) {
-          widget.onZoom!(0.9, Offset.zero); // Zoom out centered
-        } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-          widget.adjustYAxisLimits!(-10.0); // Pan up
-        } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-          widget.adjustYAxisLimits!(10.0); // Pan down
-        } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-          widget.adjustXAxisLimits!(10.0); // Pan left
-        } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-          widget.adjustXAxisLimits!(-10.0); // Pan right
-        }
-      }
-    },
-      child: Listener(
-        onPointerSignal: (event) {
-          if (event is PointerScrollEvent) {
-            if (event.scrollDelta.dy > 0) {
-              widget.onZoom!(0.9, event.position); // Zoom out
-            } else {
-              widget.onZoom!(1.1, event.position); // Zoom in
-            }
+      onKeyEvent: (event) {
+        if (event is KeyDownEvent) {
+          // "+" is the shifted version of "=" for some keyboard layouts.
+          if (event.logicalKey == LogicalKeyboardKey.equal ||
+              event.logicalKey == LogicalKeyboardKey.add) {
+            widget.onZoom!(1.1, Offset.zero); // Zoom in centered
+          } else if (event.logicalKey == LogicalKeyboardKey.minus) {
+            widget.onZoom!(0.9, Offset.zero); // Zoom out centered
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+            widget.adjustYAxisLimits!(-10.0); // Pan up
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+            widget.adjustYAxisLimits!(10.0); // Pan down
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+            widget.adjustXAxisLimits!(10.0); // Pan left
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+            widget.adjustXAxisLimits!(-10.0); // Pan right
           }
-        },
-        onPointerMove: (event) {
-          widget.adjustXAxisLimits!(event.delta.dx);
-        },
-        child: GestureDetector(
-          onScaleUpdate: (details) {
-            widget.onZoom!(details.scale, details.focalPoint);
+        }
+      },
+      child: GestureDetector(
+        // onScaleUpdate: (details) {
+        //   print("Pinch detected");
+        //   widget.onZoom!(details.scale, details.focalPoint);
+        // },
+        onScaleStart: (details) => print('onScaleStart $details'),
+        onScaleUpdate: (details) => print('onScaleUpdate $details'),
+        onScaleEnd: (details) => print('onScaleEnd  $details'),
+        child: Listener(
+          onPointerSignal: (event) {
+            if (event is PointerScrollEvent) {
+              if (event.scrollDelta.dy > 0) {
+                widget.onZoom!(0.9, event.position); // Zoom out
+              } else {
+                widget.onZoom!(1.1, event.position); // Zoom in
+              }
+            }
+          },
+          onPointerMove: (event) {
+            print("pan detected");
+            widget.adjustXAxisLimits!(event.delta.dx);
           },
           child: StreamBuilder(
             stream: _plotStream,
