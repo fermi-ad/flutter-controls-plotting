@@ -29,6 +29,7 @@ class PlotWidget extends StatefulWidget {
 
   final bool isShowLabels;
   final bool isPaused;
+  final bool isPersistent;
   final ScalarDataOptions? scalarDataOptions;
 
   final Function(String channelName)? onInternalChannelSettingChange;
@@ -56,6 +57,7 @@ class PlotWidget extends StatefulWidget {
       this.triggerEvent,
       this.isShowLabels = true,
       this.isPaused = false,
+      this.isPersistent = false,
       this.scalarDataOptions,
       this.onInternalChannelSettingChange,
       this.onPlotUpdate,
@@ -353,6 +355,7 @@ class PlotState extends State<PlotWidget> {
     final plotChannels = _adapter.plotReply!.data;
     widget.plotData.filterPoints(
         isTimedScalarData: widget.isTimedScalarData,
+        isPersistent: widget.isPersistent,
         plotChannels: plotChannels);
   }
 
