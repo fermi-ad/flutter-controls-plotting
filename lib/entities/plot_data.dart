@@ -49,7 +49,7 @@ class PlotData {
     // Remove data assumption when it becomes required part of API
     double? requestTime = plotReply.requestTime;
     if (plotMetadata.latestDataEpochTime != null &&
-        plotMetadata.latestDataEpochTime! >= requestTime) {
+        plotMetadata.latestDataEpochTime! >= requestTime!) {
       return;
     }
 
@@ -62,9 +62,12 @@ class PlotData {
       required List<PlotChannelData> plotChannels}) {
     if (!isTimedScalarData && !isPersistent) {
       points.clear();
+      plotMetadata.plotDataBytes = 0;
     }
     for (final plotChannel in plotChannels) {
       if (!channelHasErrorOrNoPoints(plotChannel)) {
+        var newPoints = plotChannel.points;
+
         if (points.containsKey(plotChannel.name)) {
           var segments = points[plotChannel.name]!;
           var pointsList = segments.last;
@@ -89,11 +92,15 @@ class PlotData {
           }
 
           var lastIndex = pointsList.length;
-          pointsList.insertAll(lastIndex, plotChannel.points);
+          pointsList.insertAll(lastIndex, newPoints);
         } else {
           points[plotChannel.name] = [];
-          points[plotChannel.name]!.add(List.from(plotChannel.points));
+          points[plotChannel.name]!.add(List.from(newPoints));
         }
+        // Add bytes from the points added.
+        // Each double is 8 bytes, and PlotPoint consists of 3 doubles.
+        plotMetadata.plotDataBytes += newPoints.length * (3 * 8);
+
         // Update last response time.
         double? t = plotChannel.points.last.t;
 

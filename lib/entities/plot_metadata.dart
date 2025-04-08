@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
+const int _kb = 1024;
+const int _mb = _kb * 1024;
+const int _gb = _mb * 1024;
+
 class PlotMetadata with ChangeNotifier {
   double? _latestRequestEpochTime;
   double? _latestDataEpochTime;
+
+  double plotDataBytes = 0;
 
   PlotMetadata();
 
@@ -21,6 +27,18 @@ class PlotMetadata with ChangeNotifier {
     }
 
     return "Unknown";
+  }
+
+  String get plotDataBytesText {
+    if (plotDataBytes < _kb) {
+      return '${plotDataBytes}B';
+    } else if (plotDataBytes < _mb) {
+      return '${(plotDataBytes / _kb).floor()}KB';
+    } else if (plotDataBytes < _gb) {
+      return '${(plotDataBytes / _mb).floor()}MB';
+    } else {
+      return '${(plotDataBytes / _gb).floor()}GB';
+    }
   }
 
   double? get lastestRequestEpochTime => _latestRequestEpochTime;
