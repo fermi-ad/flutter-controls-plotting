@@ -50,6 +50,7 @@ class FakeACSysService implements ACSysServiceAPI {
             xAxisMin: 0,
             xAxisMax: 499,
             windowSize: 500,
+            requestTime: 0.0,
             data: [
               PlotChannelData(
                   name: drfs.first,
@@ -66,6 +67,7 @@ class FakeACSysService implements ACSysServiceAPI {
             xAxisMin: xMin != null ? xMin.toDouble() : 0,
             xAxisMax: xMax != null ? xMax.toDouble() : 0,
             windowSize: windowSize != null ? 0 : 100,
+            requestTime: 0.0,
             data: [
               PlotChannelData(
                   name: drfs.first, units: "", status: -1, points: [])

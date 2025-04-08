@@ -49,7 +49,7 @@ class PlotData {
     // Remove data assumption when it becomes required part of API
     double? requestTime = plotReply.requestTime;
     if (plotMetadata.latestDataEpochTime != null &&
-        plotMetadata.latestDataEpochTime! >= requestTime!) {
+        plotMetadata.latestDataEpochTime! >= requestTime) {
       return;
     }
 
