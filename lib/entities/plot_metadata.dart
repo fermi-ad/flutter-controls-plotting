@@ -35,9 +35,9 @@ class PlotMetadata with ChangeNotifier {
     } else if (plotDataBytes < _mb) {
       return '${(plotDataBytes / _kb).floor()}KB';
     } else if (plotDataBytes < _gb) {
-      return '${(plotDataBytes / _mb).floor()}MB';
+      return '${(plotDataBytes / _mb).toStringAsFixed(1)}MB';
     } else {
-      return '${(plotDataBytes / _gb).floor()}GB';
+      return '${(plotDataBytes / _gb).toStringAsFixed(2)}GB';
     }
   }
 
