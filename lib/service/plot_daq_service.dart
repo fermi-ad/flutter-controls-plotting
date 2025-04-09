@@ -66,7 +66,7 @@ class StandardPlotDAQ implements PlotDAQService {
       int updateDelay = 0,
       int? nAcquisitions,
       int? triggerEvent}) async* {
-    var requestTime = _getCurrentEpochTime();
+    var requestTime = getCurrentAcsysEpochTime();
     if (updateDelay == 0) {
       // No refresh cycle, attempt to combine gen plots with api results
       var generatePlot = _generatePlot(
@@ -161,7 +161,7 @@ class StandardPlotDAQ implements PlotDAQService {
     List<PlotChannelData> internalDaqData = [];
     var xAxisUnits = 'Index';
 
-    var currentEpochTime = _getCurrentEpochTime();
+    var currentEpochTime = getCurrentAcsysEpochTime();
 
     for (var forChannel in forChannels) {
       List<PlotPoint>? data;
@@ -204,7 +204,7 @@ class StandardPlotDAQ implements PlotDAQService {
         }
       } else if (forChannel == GenPlots.scalarRandRamp.name) {
         var rand = Random();
-        var currentEpochTime = _getCurrentEpochTime();
+        var currentEpochTime = getCurrentAcsysEpochTime();
         lastScalarRandRampEpochTime ??= currentEpochTime;
 
         var value = currentEpochTime - lastScalarRandRampEpochTime!;
@@ -271,7 +271,7 @@ class StandardPlotDAQ implements PlotDAQService {
   }
 }
 
-double _getCurrentEpochTime() {
+double getCurrentAcsysEpochTime() {
   DateTime now = DateTime.now();
   return now.millisecondsSinceEpoch / 1000;
 }
