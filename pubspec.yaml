@@ -41,8 +41,7 @@ dependencies:
     # path: ../flutter-controls-core
     git:
        url: https://github.com/fermi-ad/flutter-controls-core.git
-      #  ref: v0.2.x       
-       ref: plotReply-requestTime
+       ref: v0.2.x       
 
   fl_chart: ^0.69.0
 
