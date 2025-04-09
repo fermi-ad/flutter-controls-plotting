@@ -9,7 +9,7 @@ class PlotMetadata with ChangeNotifier {
   double? _latestRequestEpochTime;
   double? _latestDataEpochTime;
 
-  double plotDataBytes = 0;
+  int plotDataBytes = 0;
 
   PlotMetadata();
 
