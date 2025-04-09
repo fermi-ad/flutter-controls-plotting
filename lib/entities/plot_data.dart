@@ -4,6 +4,9 @@ import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/entities/plot_metadata.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
+// PlotPoint consists of 3 doubles each are 8 bytes.
+const int _plotPointsByteSize = 3 * 8;
+
 class PlotData {
   // min/max XY that is currently displayed on the plot.
   double? _minY, _maxY, _minX, _maxX;
@@ -80,7 +83,7 @@ class PlotData {
             if (newX < lastX) {
               if (!isPersistent) {
                 // Clear all events.
-                segments.clear();
+                _clearSegments(segments);
               }
               // Reset point limits based on the current data since data is being removed.
               findPointsLimits();
@@ -98,8 +101,7 @@ class PlotData {
           points[plotChannel.name]!.add(List.from(newPoints));
         }
         // Add bytes from the points added.
-        // Each double is 8 bytes, and PlotPoint consists of 3 doubles.
-        plotMetadata.plotDataBytes += newPoints.length * (3 * 8);
+        _appendPointsCalculation(newPoints);
 
         // Update last response time.
         double? t = plotChannel.points.last.t;
@@ -109,6 +111,31 @@ class PlotData {
                 plotMetadata.latestDataEpochTime! < t)) {
           plotMetadata.latestDataEpochTime = t;
         }
+      }
+    }
+  }
+
+  void _appendPointsCalculation(List<PlotPoint> points) {
+    plotMetadata.plotDataBytes += points.length * _plotPointsByteSize;
+  }
+
+  void _removePointsCalculation(List<PlotPoint> points) {
+    plotMetadata.plotDataBytes -= points.length * _plotPointsByteSize;
+  }
+
+  void _clearSegments(List<List<PlotPoint>> segments) {
+    for (var pointsList in segments) {
+      _removePointsCalculation(pointsList);
+    }
+    segments.clear();
+  }
+
+  void _recalculateAllPoints() {
+    plotMetadata.plotDataBytes = 0;
+
+    for (var segments in points.values) {
+      for (var pointList in segments) {
+        _appendPointsCalculation(pointList);
       }
     }
   }
@@ -249,6 +276,7 @@ class PlotData {
         }
         // Potential clean up for scalar data. Recaluclate limits for all points.
         findPointsLimits();
+        _recalculateAllPoints();
       }
     }
   }
@@ -269,6 +297,7 @@ class PlotData {
     if (garbageChannels.isNotEmpty) {
       // Displayed channels changed.
       plotMetadata.cleanUp();
+      _recalculateAllPoints();
     }
   }
 
