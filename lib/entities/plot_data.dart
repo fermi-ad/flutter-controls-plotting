@@ -4,6 +4,11 @@ import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/entities/plot_metadata.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
+// PlotPoint consists of 3 doubles each are 8 bytes.
+const int _plotPointsByteSize = 3 * 8;
+// Purge size of 5MB
+const int _purgeDataSize = 5 * 1024 * 1024;
+
 class PlotData {
   // min/max XY that is currently displayed on the plot.
   double? _minY, _maxY, _minX, _maxX;
@@ -15,7 +20,9 @@ class PlotData {
 
   bool scalarEventMode = false;
 
-  PlotData();
+  int? _maxDataBytes;
+
+  PlotData({int? maxDataBytes}) : _maxDataBytes = maxDataBytes;
 
   double? get minX {
     if (points.isEmpty) {
@@ -45,6 +52,13 @@ class PlotData {
     return _maxY;
   }
 
+  int? get maxDataBytes => _maxDataBytes;
+
+  set maxDataBytes(int? maxBytes) {
+    _maxDataBytes = maxBytes;
+    _purgePointsOverData();
+  }
+
   void processPlotReplyMetadata({required PlotReply plotReply}) {
     // Remove data assumption when it becomes required part of API
     double? requestTime = plotReply.requestTime;
@@ -62,9 +76,12 @@ class PlotData {
       required List<PlotChannelData> plotChannels}) {
     if (!isTimedScalarData && !isPersistent) {
       points.clear();
+      plotMetadata.plotDataBytes = 0;
     }
     for (final plotChannel in plotChannels) {
       if (!channelHasErrorOrNoPoints(plotChannel)) {
+        var newPoints = plotChannel.points;
+
         if (points.containsKey(plotChannel.name)) {
           var segments = points[plotChannel.name]!;
           var pointsList = segments.last;
@@ -77,7 +94,7 @@ class PlotData {
             if (newX < lastX) {
               if (!isPersistent) {
                 // Clear all events.
-                segments.clear();
+                _clearSegments(segments);
               }
               // Reset point limits based on the current data since data is being removed.
               findPointsLimits();
@@ -89,11 +106,15 @@ class PlotData {
           }
 
           var lastIndex = pointsList.length;
-          pointsList.insertAll(lastIndex, plotChannel.points);
+          pointsList.insertAll(lastIndex, newPoints);
         } else {
           points[plotChannel.name] = [];
-          points[plotChannel.name]!.add(List.from(plotChannel.points));
+          points[plotChannel.name]!.add(List.from(newPoints));
         }
+        // Add bytes from the points added.
+        _appendPointsCalculation(newPoints);
+        _purgePointsOverData();
+
         // Update last response time.
         double? t = plotChannel.points.last.t;
 
@@ -104,6 +125,81 @@ class PlotData {
         }
       }
     }
+  }
+
+  void _appendPointsCalculation(List<PlotPoint> points) {
+    plotMetadata.plotDataBytes += points.length * _plotPointsByteSize;
+  }
+
+  void _removePointsCalculation(List<PlotPoint> points) {
+    plotMetadata.plotDataBytes -= points.length * _plotPointsByteSize;
+  }
+
+  void _clearSegments(List<List<PlotPoint>> segments) {
+    for (var pointsList in segments) {
+      _removePointsCalculation(pointsList);
+    }
+    segments.clear();
+  }
+
+  int _calculateSizeOfAllSegments(List<List<PlotPoint>> segments) {
+    int dataSize = 0;
+
+    for (var pointList in segments) {
+      dataSize += pointList.length * _plotPointsByteSize;
+    }
+
+    return dataSize;
+  }
+
+  void _recalculateDataForAllPoints() {
+    plotMetadata.plotDataBytes = 0;
+
+    for (var segments in points.values) {
+      for (var pointList in segments) {
+        _appendPointsCalculation(pointList);
+      }
+    }
+  }
+
+  void _purgePointsOverData() {
+    if (maxDataBytes == null) {
+      //Nothing to do.
+      return;
+    }
+    if (plotMetadata.plotDataBytes < maxDataBytes!) {
+      // Not enough data to purge.
+      return;
+    }
+
+    // Calculate number of points to purge.
+    var plotDataBytes = plotMetadata.plotDataBytes;
+    var bytesOverage = plotDataBytes - maxDataBytes!;
+    var bytesToPurge = bytesOverage + _purgeDataSize;
+
+    int pointsToPurge = (bytesToPurge / _plotPointsByteSize).ceil();
+
+    for (var segments in points.values) {
+      double percentage = _calculateSizeOfAllSegments(segments) / plotDataBytes;
+      int pointsToPurgePerCh = (pointsToPurge * percentage).ceil();
+      int segmentsToRemove = 0;
+      for (var segment in segments) {
+        if (segment.length > pointsToPurgePerCh) {
+          // Remove all necessary points from this segemnt.
+          segment.removeRange(0, pointsToPurgePerCh);
+          break;
+        } else {
+          // Add segment for removal
+          segmentsToRemove += 1;
+          pointsToPurgePerCh -= segment.length;
+        }
+        if (segmentsToRemove > 0) {
+          segments.removeRange(0, segmentsToRemove);
+        }
+      }
+    }
+
+    _recalculateDataForAllPoints();
   }
 
   void findPointsLimits({double? untilXMin}) {
@@ -242,6 +338,7 @@ class PlotData {
         }
         // Potential clean up for scalar data. Recaluclate limits for all points.
         findPointsLimits();
+        _recalculateDataForAllPoints();
       }
     }
   }
@@ -262,6 +359,7 @@ class PlotData {
     if (garbageChannels.isNotEmpty) {
       // Displayed channels changed.
       plotMetadata.cleanUp();
+      _recalculateDataForAllPoints();
     }
   }
 
