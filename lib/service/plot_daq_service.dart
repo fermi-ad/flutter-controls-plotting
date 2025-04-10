@@ -312,15 +312,17 @@ bool channelHasErrorOrNoPoints(PlotChannelData chData) {
   return channelHasError(chData) || chData.points.isEmpty;
 }
 
-String parseDaqTimeAsString(double value) {
+String parseDaqTimeAsString(double value, {bool showMillis = false}) {
   var msSinceEpoch = value * 1000;
   DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(msSinceEpoch.toInt());
   var h = dateTime.hour;
   var m = dateTime.minute;
   var s = dateTime.second;
+  var ms = dateTime.millisecond;
   var hour = h.toString().padLeft(2, '0');
   var minute = m.toString().padLeft(2, '0');
   var second = s.toString().padLeft(2, '0');
+  var millis = ms.toString().padLeft(3, '0');
 
-  return '$hour:$minute:$second';
+  return showMillis ? '$hour:$minute:$second.$millis' : '$hour:$minute:$second';
 }
