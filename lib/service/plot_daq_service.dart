@@ -318,9 +318,11 @@ String parseDaqTimeAsString(double value) {
   var h = dateTime.hour;
   var m = dateTime.minute;
   var s = dateTime.second;
+  var ms = dateTime.millisecond;
   var hour = h.toString().padLeft(2, '0');
   var minute = m.toString().padLeft(2, '0');
   var second = s.toString().padLeft(2, '0');
+  var millis = ms.toString().padLeft(3, '0');
 
-  return '$hour:$minute:$second';
+  return '$hour:$minute:$second.$millis';
 }
