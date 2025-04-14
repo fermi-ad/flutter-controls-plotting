@@ -7,7 +7,7 @@ import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 // PlotPoint consists of 3 doubles each are 8 bytes.
 const int _plotPointsByteSize = 3 * 8;
 // Purge size of 5MB
-const int _purgeDataSize = 5 * 1024 * 1024;
+const int _defaultPurgeDataSize = 5 * 1024 * 1024;
 
 class PlotData {
   // min/max XY that is currently displayed on the plot.
@@ -22,7 +22,15 @@ class PlotData {
 
   int? _maxDataBytes;
 
-  PlotData({int? maxDataBytes}) : _maxDataBytes = maxDataBytes;
+  late int purgeDataSize;
+
+  PlotData({int? maxDataBytes, int? purgeSize}) : _maxDataBytes = maxDataBytes {
+    if (purgeSize == null) {
+      purgeDataSize = _defaultPurgeDataSize;
+    } else {
+      purgeDataSize = purgeSize;
+    }
+  }
 
   double? get minX {
     if (points.isEmpty) {
@@ -175,7 +183,7 @@ class PlotData {
     // Calculate number of points to purge.
     var plotDataBytes = plotMetadata.plotDataBytes;
     var bytesOverage = plotDataBytes - maxDataBytes!;
-    var bytesToPurge = bytesOverage + _purgeDataSize;
+    var bytesToPurge = bytesOverage + purgeDataSize;
 
     int pointsToPurge = (bytesToPurge / _plotPointsByteSize).ceil();
 
