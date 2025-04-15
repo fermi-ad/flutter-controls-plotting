@@ -115,13 +115,12 @@ class StandardPlotDAQ implements PlotDAQService {
       }
 
       // Set up fake acquisition with max delay.
-      var itterationDelay = max(updateDelay, maxUpdateDelay);
       var itterationPointCount = 1;
       var apiDelay = 0;
 
       // Update delay is smaller than max stream update delay.
-      if (itterationDelay != updateDelay) {
-        itterationPointCount = (itterationDelay / updateDelay).floor();
+      if (maxUpdateDelay > updateDelay) {
+        itterationPointCount = (maxUpdateDelay / updateDelay).floor();
         apiDelay = updateDelay;
       }
 
@@ -138,6 +137,8 @@ class StandardPlotDAQ implements PlotDAQService {
           } else {
             eventAcquisitionCount = eventAcquisitionCount! + 1;
           }
+        if (apiDelay == 0) {
+          await Future.delayed(Duration(microseconds: maxUpdateDelay));
         }
 
         var pointCount = itterationPointCount;
