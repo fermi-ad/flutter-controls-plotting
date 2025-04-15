@@ -125,18 +125,6 @@ class StandardPlotDAQ implements PlotDAQService {
       }
 
       while (validLoop) {
-        await Future.delayed(Duration(microseconds: itterationDelay));
-        double? eventX;
-
-        if (triggerEvent != null && eventAcquisitionCount != null) {
-          eventX = (scalarRampEventDuration * eventAcquisitionCount!) /
-              (eventAcquisitionLimit!);
-
-          if (eventAcquisitionCount == eventAcquisitionLimit) {
-            eventAcquisitionCount = 0;
-          } else {
-            eventAcquisitionCount = eventAcquisitionCount! + 1;
-          }
         if (apiDelay == 0) {
           await Future.delayed(Duration(microseconds: maxUpdateDelay));
         }
@@ -150,6 +138,22 @@ class StandardPlotDAQ implements PlotDAQService {
           }
         }
 
+        List<double>? eventXList;
+
+        for (var i = 0; i < pointCount; i++) {
+          if (triggerEvent != null && eventAcquisitionCount != null) {
+            eventXList ??= [];
+            eventXList.add((scalarRampEventDuration * eventAcquisitionCount!) /
+                (eventAcquisitionLimit!));
+
+            if (eventAcquisitionCount == eventAcquisitionLimit) {
+              eventAcquisitionCount = 0;
+            } else {
+              eventAcquisitionCount = eventAcquisitionCount! + 1;
+            }
+          }
+        }
+
         var plot = await _generatePlot(
             forChannels: forChannels,
             requestTime: requestTime,
@@ -157,7 +161,7 @@ class StandardPlotDAQ implements PlotDAQService {
             pointCount: pointCount,
             args: args,
             markChannelNameErrors: true,
-            eventX: eventX);
+            eventXList: eventXList);
 
         validLoop = false;
         for (var channel in plot.data) {
@@ -184,7 +188,7 @@ class StandardPlotDAQ implements PlotDAQService {
     int apiDelay = 0,
     int pointCount = 1,
     bool markChannelNameErrors = false,
-    double? eventX,
+    List<double>? eventXList,
   }) async {
     List<PlotChannelData> internalDaqData = [];
     var xAxisUnits = 'Index';
@@ -197,7 +201,7 @@ class StandardPlotDAQ implements PlotDAQService {
             forChannel: forChannel,
             currentEpochTime: currentEpochTime,
             xAxisUnits: xAxisUnits,
-            eventX: eventX);
+            eventX: eventXList?[i]);
 
         // Verify if plotChannelData already exists
         bool newChannelAdded = false;
