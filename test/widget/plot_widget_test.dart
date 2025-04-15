@@ -267,16 +267,23 @@ void main() {
       StandardPlotDAQ daqService = StandardPlotDAQ();
       daqService.scalarRampCountLimit = 10;
 
+      ConnectionState connectionState = ConnectionState.none;
+
       // And a update fequency of 10hz with timedScalar option to append to plot.
       await tester.pumpWidget(_buildPlotWidget(channelList,
           updateDelay: 100000,
           scalarDataOptions:
               ScalarDataOptions(isOneShot: false, timeDelta: null),
-          daqService: daqService));
+          daqService: daqService,
+          onStreamConnectionStateChange: (streamConnectionState) =>
+              connectionState = streamConnectionState));
 
       // Wait for points to load.
       await waitForPlotDataToLoad(tester);
-      await tester.pumpAndSettle(const Duration(milliseconds: 300));
+      // Wait until connection is done.
+      while (connectionState != ConnectionState.done) {
+        await tester.pump(const Duration(milliseconds: 10));
+      }
 
       // Once done plotting verify that all 10 points were plotted.
       assertPlotContainsNPoints(tester, 10, channelName: channelName);
@@ -310,7 +317,7 @@ void main() {
 
       // Wait for points to load.
       await waitForPlotDataToLoad(tester);
-      await tester.pumpAndSettle(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle(const Duration(milliseconds: 600));
 
       // Simulate a horizontal drag to the left by 5 logical pixels.
       await tester.drag(find.byType(PlotWidget), const Offset(-5.0, 0.0));
@@ -334,17 +341,26 @@ void main() {
       daqService.scalarRampCountLimit = 42;
       daqService.scalarRampEventDuration = 2;
 
+      ConnectionState connectionState = ConnectionState.none;
+
       // And a update fequency of 10hz with timedScalar option to append to plot.
       await tester.pumpWidget(_buildPlotWidget(channelList,
           updateDelay: 100000,
           triggerEvent: 16,
           isPersistent: true,
           scalarDataOptions: ScalarDataOptions(isOneShot: false, timeDelta: 4),
-          daqService: daqService));
+          daqService: daqService,
+          onStreamConnectionStateChange: (streamConnectionState) =>
+              connectionState = streamConnectionState));
 
       // Wait for points to load.
       await waitForPlotDataToLoad(tester);
-      await tester.pumpAndSettle(const Duration(milliseconds: 300));
+      // Wait until connection is done.
+      while (connectionState != ConnectionState.done) {
+        await tester.pump(const Duration(milliseconds: 10));
+      }
+
+      // await tester.pumpAndSettle(const Duration(milliseconds: 1600));
 
       // Once done plotting verify that all 41 points were plotted.
       assertPlotContainsNPoints(tester, 21,
@@ -902,7 +918,9 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
     ACSysServiceAPI? service,
     StandardPlotDAQ? daqService,
     Function(double deltaX)? adjustXAxisLimits,
-    Function(PlotReply reply)? onPlotUpdate}) {
+    Function(PlotReply reply)? onPlotUpdate,
+    Function(ConnectionState streamConnectionState)?
+        onStreamConnectionStateChange}) {
   daqService ??= StandardPlotDAQ();
   return MaterialApp(
       home: Scaffold(
@@ -912,6 +930,7 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
                   implementation: impl,
                   plotData: PlotData(),
                   updateDelay: updateDelay,
+                  onStreamConnectionStateChange: onStreamConnectionStateChange,
                   triggerEvent: triggerEvent,
                   nAcquisitions: nAcquisitions,
                   onPlotUpdate: onPlotUpdate,

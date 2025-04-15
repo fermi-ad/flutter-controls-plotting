@@ -95,26 +95,30 @@ class PlotData {
           var pointsList = segments.last;
 
           if (scalarEventMode) {
-            // Check if a new event should be started.
-            var lastX = pointsList.last.x;
-            var newX = plotChannel.points.last.x;
+            for (var point in newPoints) {
+              // Check if a new event should be started.
+              var lastX = pointsList.last.x;
+              var newX = point.x;
 
-            if (newX < lastX) {
-              if (!isPersistent) {
-                // Clear all events.
-                _clearSegments(segments);
+              if (newX < lastX) {
+                if (!isPersistent) {
+                  // Clear all events.
+                  _clearSegments(segments);
+                }
+                // Reset point limits based on the current data since data is being removed.
+                findPointsLimits();
+                // New event
+                segments.add([]);
+                // Reload pointsList
+                pointsList = segments.last;
               }
-              // Reset point limits based on the current data since data is being removed.
-              findPointsLimits();
-              // New event
-              segments.add([]);
-              // Reload pointsList
-              pointsList = segments.last;
+              var lastIndex = pointsList.length;
+              pointsList.insert(lastIndex, point);
             }
+          } else {
+            var lastIndex = pointsList.length;
+            pointsList.insertAll(lastIndex, newPoints);
           }
-
-          var lastIndex = pointsList.length;
-          pointsList.insertAll(lastIndex, newPoints);
         } else {
           points[plotChannel.name] = [];
           points[plotChannel.name]!.add(List.from(newPoints));
