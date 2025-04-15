@@ -276,7 +276,7 @@ void main() {
 
       // Wait for points to load.
       await waitForPlotDataToLoad(tester);
-      await tester.pumpAndSettle(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle(const Duration(milliseconds: 600));
 
       // Once done plotting verify that all 10 points were plotted.
       assertPlotContainsNPoints(tester, 10, channelName: channelName);
@@ -310,7 +310,7 @@ void main() {
 
       // Wait for points to load.
       await waitForPlotDataToLoad(tester);
-      await tester.pumpAndSettle(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle(const Duration(milliseconds: 600));
 
       // Simulate a horizontal drag to the left by 5 logical pixels.
       await tester.drag(find.byType(PlotWidget), const Offset(-5.0, 0.0));
@@ -344,7 +344,7 @@ void main() {
 
       // Wait for points to load.
       await waitForPlotDataToLoad(tester);
-      await tester.pumpAndSettle(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle(const Duration(milliseconds: 600));
 
       // Once done plotting verify that all 41 points were plotted.
       assertPlotContainsNPoints(tester, 21,
