@@ -71,7 +71,7 @@ class StandardPlotDAQ implements PlotDAQService {
     var requestTime = getCurrentAcsysEpochTime();
     if (updateDelay == 0) {
       // No refresh cycle, attempt to combine gen plots with api results
-      var generatePlot = await _generatePlot(
+      var generatePlotFuture = _generatePlot(
           forChannels: forChannels, args: args, requestTime: requestTime);
 
       // Verify if any apiChannels provided
@@ -88,15 +88,17 @@ class StandardPlotDAQ implements PlotDAQService {
         var apiStream = ACSys.api(context).startPlot(apiChannels,
             xMin: args.xMin, xMax: args.xMax, windowSize: args.windowSize);
 
+        var generatePlot = await generatePlotFuture;
+
         var apiResponse = apiStream.first;
         apiResponse.then((PlotReply value) {
           generatePlot.data.addAll(value.data);
         });
 
         yield generatePlot;
+      } else {
+        yield await generatePlotFuture;
       }
-
-      yield generatePlot;
     } else {
       // Refresh cycle only API provided.
       bool validLoop = true;
