@@ -128,7 +128,7 @@ class StandardPlotDAQ implements PlotDAQService {
 
       while (validLoop) {
         if (apiDelay == 0) {
-          await Future.delayed(Duration(microseconds: maxUpdateDelay));
+          await Future.delayed(Duration(microseconds: updateDelay));
         }
 
         var pointCount = itterationPointCount;
