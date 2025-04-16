@@ -43,7 +43,7 @@ class PlotWidget extends StatefulWidget {
 
   final PlotImplementation implementation;
 
-  final Function(double scaleFactor, Offset focalPoint)? onZoom;
+  final Function(double scaleFactor, Offset focalPoint, bool centered)? onZoom;
 
   final Function(double deltaX)? adjustXAxisLimits;
 
@@ -173,9 +173,9 @@ class PlotState extends State<PlotWidget> {
           // "+" is the shifted version of "=" for some keyboard layouts.
           if (event.logicalKey == LogicalKeyboardKey.equal ||
               event.logicalKey == LogicalKeyboardKey.add) {
-            widget.onZoom!(1.1, Offset.zero); // Zoom in centered
+            widget.onZoom!(1.1, Offset.zero, true); // Zoom in centered
           } else if (event.logicalKey == LogicalKeyboardKey.minus) {
-            widget.onZoom!(0.9, Offset.zero); // Zoom out centered
+            widget.onZoom!(0.9, Offset.zero, true); // Zoom out centered
           } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
             widget.adjustYAxisLimits!(-10.0); // Pan up
           } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
@@ -199,14 +199,14 @@ class PlotState extends State<PlotWidget> {
           onPointerSignal: (event) {
             if (event is PointerScrollEvent) {
               if (event.scrollDelta.dy > 0) {
-                widget.onZoom!(0.9, event.position); // Zoom out
+                widget.onZoom!(0.9, event.position, false); // Zoom out
               } else {
-                widget.onZoom!(1.1, event.position); // Zoom in
+                widget.onZoom!(1.1, event.position, false); // Zoom in
               }
             }
           },
           onPointerMove: (event) {
-            print("pan detected");
+            // print("pan detected");
             widget.adjustXAxisLimits!(event.delta.dx);
           },
           child: StreamBuilder(

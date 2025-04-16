@@ -19,26 +19,34 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
                 ? []
                 : _toLineChartBarDataList(plotReply!.data, widget.plotData),
             lineTouchData: LineTouchData(
-              distanceCalculator:
-                  (Offset touchPoint, Offset spotPixelCoordinates) =>
-                      touchPointDistanceCalculate(
-                          touchPoint: touchPoint,
-                          spotPixelCoordinates: spotPixelCoordinates,
-                          nearestPointXY: widget.plotData.scalarEventMode),
-              touchTooltipData: LineTouchTooltipData(
-                maxContentWidth: 100,
-                fitInsideHorizontally: true,
-                fitInsideVertically: true,
-                getTooltipColor: (touchedSpot) => Colors.black,
-                getTooltipItems: (touchedSpots) =>
-                    _generateLineTooltipItem(touchedSpots: touchedSpots),
-              ),
-              handleBuiltInTouches: true,
-              getTouchLineStart: (data, index) => 0,
-            ),
+                distanceCalculator:
+                    (Offset touchPoint, Offset spotPixelCoordinates) =>
+                        touchPointDistanceCalculate(
+                            touchPoint: touchPoint,
+                            spotPixelCoordinates: spotPixelCoordinates,
+                            nearestPointXY: widget.plotData.scalarEventMode),
+                touchTooltipData: LineTouchTooltipData(
+                  maxContentWidth: 100,
+                  fitInsideHorizontally: true,
+                  fitInsideVertically: true,
+                  getTooltipColor: (touchedSpot) => Colors.black,
+                  getTooltipItems: (touchedSpots) =>
+                      _generateLineTooltipItem(touchedSpots: touchedSpots),
+                ),
+                handleBuiltInTouches: true,
+                getTouchLineStart: (data, index) => 0,
+                touchCallback: handleTouchCallback),
             titlesData: _buildTitlesData(
                 plotReply: plotReply, wide: constraints.maxWidth > 600),
           )));
+
+  void handleTouchCallback(FlTouchEvent event, LineTouchResponse? response) {
+    // lineBarSpots are sorted based on their distance to the touch event.
+    if (event is FlPointerHoverEvent && response!.lineBarSpots != null) {
+      widget.plotData.cursorX = response.lineBarSpots![0].x;
+      widget.plotData.cursorY = response.lineBarSpots![0].y;
+    }
+  }
 
   FlTitlesData _buildTitlesData(
       {required PlotReply? plotReply, required bool wide}) {

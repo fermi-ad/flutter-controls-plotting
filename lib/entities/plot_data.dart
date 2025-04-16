@@ -6,7 +6,7 @@ import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
 class PlotData {
   // min/max XY that is currently displayed on the plot.
-  double? _minY, _maxY, _minX, _maxX;
+  double? _minY, _maxY, _minX, _maxX, _cursorX, _cursorY;
 
   // Map of channel name and points split into segments.
   Map<String, List<List<PlotPoint>>> points = {};
@@ -43,6 +43,22 @@ class PlotData {
       return 3.0;
     }
     return _maxY;
+  }
+
+  set cursorY(double? cursorY) {
+    _cursorY = cursorY;
+  }
+
+  set cursorX(double? cursorX) {
+    _cursorX = cursorX;
+  }
+
+  double? get cursorY {
+    return _cursorY;
+  }
+
+  double? get cursorX {
+    return _cursorX;
   }
 
   void processPlotReplyMetadata({required PlotReply plotReply}) {
