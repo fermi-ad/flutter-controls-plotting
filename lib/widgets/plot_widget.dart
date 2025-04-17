@@ -187,32 +187,23 @@ class PlotState extends State<PlotWidget> {
           }
         }
       },
-      child: GestureDetector(
-        // onScaleUpdate: (details) {
-        //   print("Pinch detected");
-        //   widget.onZoom!(details.scale, details.focalPoint);
-        // },
-        onScaleStart: (details) => print('onScaleStart $details'),
-        onScaleUpdate: (details) => print('onScaleUpdate $details'),
-        onScaleEnd: (details) => print('onScaleEnd  $details'),
-        child: Listener(
-          onPointerSignal: (event) {
-            if (event is PointerScrollEvent) {
-              if (event.scrollDelta.dy > 0) {
-                widget.onZoom!(0.9, event.position, false); // Zoom out
-              } else {
-                widget.onZoom!(1.1, event.position, false); // Zoom in
-              }
+      child: Listener(
+        onPointerSignal: (event) {
+          if (event is PointerScrollEvent) {
+            if (event.scrollDelta.dy > 0) {
+              widget.onZoom!(0.9, event.position, false); // Zoom out
+            } else {
+              widget.onZoom!(1.1, event.position, false); // Zoom in
             }
-          },
-          onPointerMove: (event) {
-            // print("pan detected");
-            widget.adjustXAxisLimits!(event.delta.dx);
-          },
-          child: StreamBuilder(
-            stream: _plotStream,
-            builder: _plotStreamBuilder,
-          ),
+          }
+        },
+        onPointerMove: (event) {
+          // print("pan detected");
+          widget.adjustXAxisLimits!(event.delta.dx);
+        },
+        child: StreamBuilder(
+          stream: _plotStream,
+          builder: _plotStreamBuilder,
         ),
       ),
     );
