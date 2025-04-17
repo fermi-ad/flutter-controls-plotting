@@ -13,6 +13,8 @@ class PlotData {
   // min/max XY that is currently displayed on the plot.
   double? _minY, _maxY, _minX, _maxX;
 
+  double? cursorX, cursorY;
+
   // Map of channel name and points split into segments.
   Map<String, List<List<PlotPoint>>> points = {};
 
@@ -268,6 +270,10 @@ class PlotData {
       } else {
         // X axis is displayed as a linear timeline.
         // Find time offset
+        // confX is set when panning.
+        if (confMaxX != null) {
+          maxX = confMaxX;
+        }
         minX = maxX! - timeDelta;
         // Calculate y based on points displayed.
         if (confMinY == null && confMaxY == null) {
