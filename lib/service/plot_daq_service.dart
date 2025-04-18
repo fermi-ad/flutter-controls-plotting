@@ -72,7 +72,10 @@ class StandardPlotDAQ implements PlotDAQService {
     if (updateDelay == 0) {
       // No refresh cycle, attempt to combine gen plots with api results
       var generatePlotFuture = _generatePlot(
-          forChannels: forChannels, args: args, requestTime: requestTime);
+          forChannels: forChannels,
+          args: args,
+          rate: getRate(updateDelay),
+          requestTime: requestTime);
 
       // Verify if any apiChannels provided
       List<String> apiChannels = [];
@@ -126,6 +129,8 @@ class StandardPlotDAQ implements PlotDAQService {
         apiDelay = updateDelay;
       }
 
+      String rate = getRate(updateDelay);
+
       while (validLoop) {
         if (apiDelay == 0) {
           await Future.delayed(Duration(microseconds: updateDelay));
@@ -159,6 +164,7 @@ class StandardPlotDAQ implements PlotDAQService {
         var plot = await _generatePlot(
             forChannels: forChannels,
             requestTime: requestTime,
+            rate: rate,
             apiDelay: apiDelay,
             pointCount: pointCount,
             args: args,
@@ -187,6 +193,7 @@ class StandardPlotDAQ implements PlotDAQService {
     required Set<String> forChannels,
     required _PlotArgs args,
     required double requestTime,
+    required String rate,
     int apiDelay = 0,
     int pointCount = 1,
     bool markChannelNameErrors = false,
@@ -211,11 +218,11 @@ class StandardPlotDAQ implements PlotDAQService {
             (channelData) => channelData.name == forChannel, orElse: () {
           PlotChannelData newChannel;
           if (data != null) {
-            newChannel =
-                PlotChannelData(name: forChannel, units: "V", points: data);
+            newChannel = PlotChannelData(
+                name: forChannel, rate: rate, units: "V", points: data);
           } else {
-            newChannel =
-                PlotChannelData(name: forChannel, units: "", status: -1);
+            newChannel = PlotChannelData(
+                name: forChannel, rate: rate, units: "", status: -1);
           }
           internalDaqData.add(newChannel);
           newChannelAdded = true;
@@ -393,4 +400,17 @@ String parseDaqTimeAsString(double value, {bool showMillis = false}) {
   var millis = ms.toString().padLeft(3, '0');
 
   return showMillis ? '$hour:$minute:$second.$millis' : '$hour:$minute:$second';
+}
+
+String getRate(int? updateDelay) {
+  if (updateDelay == null || updateDelay == 0) {
+    return "";
+  }
+
+  if (updateDelay < 0) {
+    return "Unknown";
+  }
+
+  double frequencyHz = 1e6 / updateDelay;
+  return "${frequencyHz.floor()} Hz";
 }
