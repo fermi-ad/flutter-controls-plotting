@@ -412,5 +412,5 @@ String getRate(int? updateDelay) {
   }
 
   double frequencyHz = 1e6 / updateDelay;
-  return "${frequencyHz.toStringAsFixed(2)} Hz";
+  return "${frequencyHz.floor()} Hz";
 }
