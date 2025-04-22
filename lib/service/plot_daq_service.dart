@@ -217,7 +217,13 @@ class StandardPlotDAQ implements PlotDAQService {
     List<PlotChannelData> internalDaqData = [];
     var xAxisUnits = 'Index';
 
-    for (var i = 0; i < pointCount; i++) {
+    Duration duration = Duration(microseconds: apiDelay);
+
+    int i = 0;
+    var timer = Timer.periodic(duration, (timer) {
+      if (i == pointCount) {
+        timer.cancel();
+      }
       var currentEpochTime = getCurrentAcsysEpochTime();
 
       for (var forChannel in forChannels) {
@@ -252,11 +258,11 @@ class StandardPlotDAQ implements PlotDAQService {
           args.windowSize = max(args.windowSize, data.length);
         }
       }
+      i++;
+    });
 
-      if (apiDelay > 0) {
-        await Future.delayed(Duration(microseconds: apiDelay));
-      }
-    }
+    await Future.delayed(duration * pointCount);
+    timer.cancel();
 
     var generatedPlotReply = PlotReply(
         plotId: "Internal",
