@@ -25,7 +25,8 @@ enum PlotColor {
   purple("Purple", Colors.purple),
   lime("Lime", Colors.lime),
   cyan("Cyan", Colors.cyan),
-  orange("Orange", Colors.orange);
+  orange("Orange", Colors.orange),
+  invisible("Invisible", Colors.transparent);
 
   const PlotColor(this.name, this.color);
   final String name;
