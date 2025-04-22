@@ -28,6 +28,8 @@ class StandardPlotDAQ implements PlotDAQService {
 
   int maxUpdateDelay = 333333;
 
+  int? limitAcquisitionMs;
+
   @override
   Stream<PlotReply> retrievePlot(BuildContext context,
       {required Set<String> forChannels,
@@ -131,6 +133,12 @@ class StandardPlotDAQ implements PlotDAQService {
 
       String rate = getRate(updateDelay);
 
+      Stopwatch? acquisitionStopwatch;
+      if (limitAcquisitionMs != null) {
+        acquisitionStopwatch = Stopwatch();
+        acquisitionStopwatch.start();
+      }
+
       while (validLoop) {
         if (apiDelay == 0) {
           await Future.delayed(Duration(microseconds: updateDelay));
@@ -182,6 +190,13 @@ class StandardPlotDAQ implements PlotDAQService {
         nAcquisitionsInLoop += pointCount;
         if (nAcquisitions != null && nAcquisitionsInLoop == nAcquisitions) {
           validLoop = false;
+        }
+
+        if (limitAcquisitionMs != null) {
+          var msSinceStart = acquisitionStopwatch!.elapsedMilliseconds;
+          if (limitAcquisitionMs! <= msSinceStart) {
+            validLoop = false;
+          }
         }
 
         yield plot;
