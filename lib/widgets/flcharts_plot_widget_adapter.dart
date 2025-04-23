@@ -6,10 +6,13 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   FlchartsPlotWidgetAdapter(
       {required super.widget, required this.isShowLabels}); // Update this line
 
+  final GlobalKey chartKey = GlobalKey();
+
   @override
   Widget buildPlot() => LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) =>
-          LineChart(LineChartData(
+      builder: (BuildContext context, BoxConstraints constraints) => LineChart(
+          key: chartKey,
+          LineChartData(
             clipData: const FlClipData.all(),
             minX: widget.plotData.minX,
             maxX: widget.plotData.maxX,
@@ -40,11 +43,51 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
                 plotReply: plotReply, wide: constraints.maxWidth > 600),
           )));
 
+  // Get the size of the LineChart Widget.
+  Size? getChartSize() {
+    final renderBox = chartKey.currentContext?.findRenderObject() as RenderBox?;
+    return renderBox?.size;
+  }
+
+  // Determine the closest tooltip data point for zooming purpose.
   void handleTouchCallback(FlTouchEvent event, LineTouchResponse? response) {
-    // lineBarSpots are sorted based on their distance to the touch event.
-    if (event is FlPointerHoverEvent && response!.lineBarSpots != null) {
-      widget.plotData.cursorX = response.lineBarSpots![0].x;
-      widget.plotData.cursorY = response.lineBarSpots![0].y;
+    if (event is FlPointerHoverEvent && response?.lineBarSpots != null) {
+      final chartSize = getChartSize();
+
+      if (chartSize == null) {
+        print("Chart size or chart data is null.");
+        return;
+      }
+
+      final touchPosition = event.localPosition;
+      print("Touch position: $touchPosition");
+      print("Chart size: $chartSize");
+
+      LineBarSpot? closestSpot;
+      double minDistance = double.infinity;
+
+      for (final spot in response!.lineBarSpots!) {
+        // print("aaaa");
+        final px = getPixelX(spot, chartSize);
+        final py = getPixelY(spot, chartSize);
+        final spotOffset = Offset(px, py);
+
+        final distance = (touchPosition - spotOffset).distance;
+
+        print("Spot at data (${spot.x}, ${spot.y}) maps to pixel $spotOffset");
+        print("Distance to touch: ${distance.toStringAsFixed(2)}");
+
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestSpot = spot;
+        }
+      }
+      if (closestSpot != null) {
+        widget.plotData.cursorX = closestSpot.x;
+        widget.plotData.cursorY = closestSpot.y;
+        print("Final Closest Spot: (${closestSpot.x}, ${closestSpot.y})");
+        print("-------------------------");
+      }
     }
   }
 
@@ -147,17 +190,42 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   }
 
   double touchPointDistanceCalculate(
-          {required Offset touchPoint,
-          required Offset spotPixelCoordinates,
-          required bool nearestPointXY}) =>
-      nearestPointXY
-          // Determine distance nearest to the cursor.
-          ? (touchPoint - spotPixelCoordinates).distance
-          // Determine distance for all points on x axis.
-          : (touchPoint.dx - spotPixelCoordinates.dx).abs();
+      {required Offset touchPoint,
+      required Offset spotPixelCoordinates,
+      required bool nearestPointXY}) {
+    double distance = nearestPointXY
+        // Determine distance nearest to the cursor.
+        ? (touchPoint - spotPixelCoordinates).distance
+        // Determine distance for all points on x axis.
+        : (touchPoint.dx - spotPixelCoordinates.dx).abs();
+    return distance;
+  }
+
+  // Converts a LineBarSpot's X data value to pixel position,
+  // assuming full widget size is used for the plot area.
+  double getPixelX(LineBarSpot touchedSpot, Size viewSize) {
+    final deltaX = widget.plotData.maxX! - widget.plotData.minX!;
+    if (deltaX == 0.0) {
+      return 0;
+    }
+    return ((touchedSpot.x - widget.plotData.minX!) / deltaX) * viewSize.width;
+  }
+
+  // Converts a LineBarSpot's Y data value to pixel position,
+  // assuming full widget size is used for the plot area.
+  double getPixelY(LineBarSpot touchedSpot, Size viewSize) {
+    final deltaY = widget.plotData.maxY! - widget.plotData.minY!;
+    if (deltaY == 0.0) {
+      return 0;
+    }
+    // Flip the Y axis, the smallest Y is at the top.
+    final normalizedY = (touchedSpot.y - widget.plotData.minY!) / deltaY;
+    return viewSize.height * (1 - normalizedY);
+  }
 
   List<LineTooltipItem> _generateLineTooltipItem(
       {required List<LineBarSpot> touchedSpots}) {
+    // print("------");
     List<LineTooltipItem> tooltips = [];
 
     for (var touchedSpot in touchedSpots) {
