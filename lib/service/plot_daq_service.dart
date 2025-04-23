@@ -255,7 +255,6 @@ class StandardPlotDAQ implements PlotDAQService {
           args.windowSize = max(args.windowSize, data.length);
         }
       }
-      i++;
     }
 
     var totalDuration = (apiDelay * pointCount);
