@@ -217,21 +217,18 @@ class StandardPlotDAQ implements PlotDAQService {
     List<PlotChannelData> internalDaqData = [];
     var xAxisUnits = 'Index';
 
-    Duration duration = Duration(microseconds: apiDelay);
+    var currentEpochTime = getCurrentAcsysEpochTime();
+    double secondsPerPoint = apiDelay / 1e6;
 
-    int i = 0;
-    var timer = Timer.periodic(duration, (timer) {
-      if (i == pointCount) {
-        timer.cancel();
-      }
-      var currentEpochTime = getCurrentAcsysEpochTime();
-
+    for (int i = 0; i < pointCount; i++) {
       for (var forChannel in forChannels) {
         var data = _generateData(
             forChannel: forChannel,
             currentEpochTime: currentEpochTime,
             xAxisUnits: xAxisUnits,
             eventX: eventXList?[i]);
+
+        currentEpochTime += secondsPerPoint;
 
         // Verify if plotChannelData already exists
         bool newChannelAdded = false;
@@ -259,10 +256,11 @@ class StandardPlotDAQ implements PlotDAQService {
         }
       }
       i++;
-    });
+    }
 
-    await Future.delayed(duration * pointCount);
-    timer.cancel();
+    var totalDuration = (apiDelay * pointCount);
+    Duration duration = Duration(microseconds: totalDuration);
+    await Future.delayed(duration);
 
     var generatedPlotReply = PlotReply(
         plotId: "Internal",
