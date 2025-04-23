@@ -342,6 +342,12 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _receiveData(PlotReply plotReply) {
+    // Verify if plotReply still needs to be processed.
+    // Streambuilder by design seems to resend last plot reply on each update.
+    if (!widget.plotData.isPlotReplyValid(plotReply)) {
+      return;
+    }
+
     if (widget.isPaused) {
       if (lastReply != null) {
         _adapter.plotReply = lastReply;
