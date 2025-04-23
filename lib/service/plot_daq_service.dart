@@ -228,8 +228,6 @@ class StandardPlotDAQ implements PlotDAQService {
             xAxisUnits: xAxisUnits,
             eventX: eventXList?[i]);
 
-        currentEpochTime += secondsPerPoint;
-
         // Verify if plotChannelData already exists
         bool newChannelAdded = false;
         var existingChannelData = internalDaqData.firstWhere(
@@ -255,6 +253,7 @@ class StandardPlotDAQ implements PlotDAQService {
           args.windowSize = max(args.windowSize, data.length);
         }
       }
+      currentEpochTime += secondsPerPoint;
     }
 
     var totalDuration = (apiDelay * pointCount);
@@ -318,10 +317,16 @@ class StandardPlotDAQ implements PlotDAQService {
       }
     } else if (forChannel == GenPlots.scalarRandRamp.name) {
       var rand = Random();
-      var currentEpochTime = getCurrentAcsysEpochTime();
-      lastScalarRandRampEpochTime ??= currentEpochTime;
 
-      var value = currentEpochTime - lastScalarRandRampEpochTime!;
+      double value;
+      if (lastScalarRandRampEpochTime == null) {
+        value = 0;
+      } else {
+        value = currentEpochTime - lastScalarRandRampEpochTime!;
+      }
+
+      lastScalarRandRampEpochTime = currentEpochTime;
+
       value = value + (rand.nextInt(50) - 25);
 
       xAxisUnits = 'Time';
