@@ -72,23 +72,24 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         continue;
       }
       var chColor = lineColorForChannel(channelData.name);
+      var textStyle = TextStyle(color: chColor, fontSize: 14);
 
       rowDataContents.add(Padding(
           padding: const EdgeInsets.fromLTRB(0, 0, 0, 5),
           child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             Text(
               channelData.name,
-              style: TextStyle(color: chColor),
+              style: textStyle,
             ),
             Text(
               " (${channelData.units})",
-              style: TextStyle(color: chColor),
+              style: textStyle,
             ),
             channelData.rate.isEmpty
                 ? Container()
                 : Text(
                     " - ${channelData.rate}",
-                    style: TextStyle(color: chColor),
+                    style: textStyle,
                   )
           ])));
     }
