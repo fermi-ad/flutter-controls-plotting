@@ -53,30 +53,17 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   void handleTouchCallback(FlTouchEvent event, LineTouchResponse? response) {
     if (event is FlPointerHoverEvent && response?.lineBarSpots != null) {
       final chartSize = getChartSize();
-
-      if (chartSize == null) {
-        print("Chart size or chart data is null.");
-        return;
-      }
+      if (chartSize == null) return;
 
       final touchPosition = event.localPosition;
-      print("Touch position: $touchPosition");
-      print("Chart size: $chartSize");
-
       LineBarSpot? closestSpot;
       double minDistance = double.infinity;
 
       for (final spot in response!.lineBarSpots!) {
-        // print("aaaa");
         final px = getPixelX(spot, chartSize);
         final py = getPixelY(spot, chartSize);
         final spotOffset = Offset(px, py);
-
         final distance = (touchPosition - spotOffset).distance;
-
-        print("Spot at data (${spot.x}, ${spot.y}) maps to pixel $spotOffset");
-        print("Distance to touch: ${distance.toStringAsFixed(2)}");
-
         if (distance < minDistance) {
           minDistance = distance;
           closestSpot = spot;
@@ -85,8 +72,6 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       if (closestSpot != null) {
         widget.plotData.closestSpotX = closestSpot.x;
         widget.plotData.closestSpotY = closestSpot.y;
-        print("Final Closest Spot: (${closestSpot.x}, ${closestSpot.y})");
-        print("-------------------------");
       }
     }
   }
