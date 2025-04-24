@@ -203,7 +203,6 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
 
   List<LineTooltipItem> _generateLineTooltipItem(
       {required List<LineBarSpot> touchedSpots}) {
-    // print("------");
     List<LineTooltipItem> tooltips = [];
 
     for (var touchedSpot in touchedSpots) {
