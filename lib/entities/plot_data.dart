@@ -13,7 +13,7 @@ class PlotData {
   // min/max XY that is currently displayed on the plot.
   double? _minY, _maxY, _minX, _maxX;
 
-  double? cursorX, cursorY;
+  double? closestSpotX, closestSpotY;
 
   // Map of channel name and points split into segments.
   Map<String, List<List<PlotPoint>>> points = {};

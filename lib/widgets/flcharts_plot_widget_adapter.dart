@@ -83,8 +83,8 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         }
       }
       if (closestSpot != null) {
-        widget.plotData.cursorX = closestSpot.x;
-        widget.plotData.cursorY = closestSpot.y;
+        widget.plotData.closestSpotX = closestSpot.x;
+        widget.plotData.closestSpotY = closestSpot.y;
         print("Final Closest Spot: (${closestSpot.x}, ${closestSpot.y})");
         print("-------------------------");
       }
