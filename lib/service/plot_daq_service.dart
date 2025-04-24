@@ -214,17 +214,43 @@ class StandardPlotDAQ implements PlotDAQService {
     bool markChannelNameErrors = false,
     List<double>? eventXList,
   }) async {
+    var totalDuration = (apiDelay * pointCount);
+
     List<PlotChannelData> internalDaqData = [];
     var xAxisUnits = 'Index';
 
     var currentEpochTime = getCurrentAcsysEpochTime();
     double secondsPerPoint = apiDelay / 1e6;
 
-    for (int i = 0; i < pointCount; i++) {
-      for (var forChannel in forChannels) {
+    for (var forChannel in forChannels) {
+      // Reset Time for next channel.
+      var chEpochTime = currentEpochTime;
+
+      // Set variables that may be specific to the channel.
+      var chRate = rate;
+      var chPoints = pointCount;
+      var chSecondsPerPoint = secondsPerPoint;
+
+      // Override values if channel has special configuration.
+      GenPlots genPlot =
+          GenPlots.values.firstWhere((genPlot) => genPlot.name == forChannel);
+
+      if (genPlot.minUpdateDelay != null) {
+        // Calculate max number of points for this rate and total duration
+        var maxPointsForRate =
+            (totalDuration / genPlot.minUpdateDelay!).floor();
+        if (chPoints > maxPointsForRate) {
+          chPoints = maxPointsForRate;
+          chSecondsPerPoint = genPlot.minUpdateDelay! / 1e6;
+          chRate = getRate(genPlot.minUpdateDelay);
+          // Calculate time per
+        }
+      }
+
+      for (int i = 0; i < chPoints; i++) {
         var data = _generateData(
             forChannel: forChannel,
-            currentEpochTime: currentEpochTime,
+            currentEpochTime: chEpochTime,
             xAxisUnits: xAxisUnits,
             eventX: eventXList?[i]);
 
@@ -235,10 +261,10 @@ class StandardPlotDAQ implements PlotDAQService {
           PlotChannelData newChannel;
           if (data != null) {
             newChannel = PlotChannelData(
-                name: forChannel, rate: rate, units: "V", points: data);
+                name: forChannel, rate: chRate, units: "V", points: data);
           } else {
             newChannel = PlotChannelData(
-                name: forChannel, rate: rate, units: "", status: -1);
+                name: forChannel, rate: chRate, units: "", status: -1);
           }
           internalDaqData.add(newChannel);
           newChannelAdded = true;
@@ -252,11 +278,10 @@ class StandardPlotDAQ implements PlotDAQService {
           args.xMax = max(args.xMax, data.length - 1);
           args.windowSize = max(args.windowSize, data.length);
         }
+        chEpochTime += chSecondsPerPoint;
       }
-      currentEpochTime += secondsPerPoint;
     }
 
-    var totalDuration = (apiDelay * pointCount);
     Duration duration = Duration(microseconds: totalDuration);
     await Future.delayed(duration);
 
@@ -301,7 +326,8 @@ class StandardPlotDAQ implements PlotDAQService {
               x: i.toDouble(),
               y: i.toDouble() + (rand.nextInt(50) - 25),
               t: currentEpochTime));
-    } else if (forChannel == GenPlots.scalarRamp.name) {
+    } else if (forChannel == GenPlots.scalarRamp.name ||
+        forChannel == GenPlots.slowScalarRamp.name) {
       firstScalarRampEpochTime ??= currentEpochTime;
       if (scalarRampCountLimit != null &&
           scalarRampCount >= scalarRampCountLimit!) {
@@ -383,14 +409,16 @@ enum GenPlots {
   ramp("PLOT TEST RAMP"),
   randRamp("PLOT TEST RAND RAMP"),
   scalarRamp("PLOT TEST SCALAR RAMP"),
+  slowScalarRamp("PLOT TEST SLOW SCALAR RAMP", minUpdateDelay: 50000),
   scalarRandRamp("PLOT TEST SCALAR RAND RAMP"),
   parabola("PLOT TEST PARABOLA"),
   parabola64k("PLOT TEST PARABOLA 64K"),
   sine("PLOT TEST SINE"),
   normal("PLOT TEST NORMAL");
 
-  const GenPlots(this.name);
+  const GenPlots(this.name, {this.minUpdateDelay});
   final String name;
+  final int? minUpdateDelay;
 }
 
 // Event of '10' is used for gen plots with reset of 10s acquisitions for scalar plots.
