@@ -232,19 +232,22 @@ class StandardPlotDAQ implements PlotDAQService {
       var chSecondsPerPoint = secondsPerPoint;
 
       // Override values if channel has special configuration.
-      GenPlots genPlot =
-          GenPlots.values.firstWhere((genPlot) => genPlot.name == forChannel);
-
-      if (genPlot.minUpdateDelay != null) {
-        // Calculate max number of points for this rate and total duration
-        var maxPointsForRate =
-            (totalDuration / genPlot.minUpdateDelay!).floor();
-        if (chPoints > maxPointsForRate) {
-          chPoints = maxPointsForRate;
-          chSecondsPerPoint = genPlot.minUpdateDelay! / 1e6;
-          chRate = getRate(genPlot.minUpdateDelay);
-          // Calculate time per
+      for (var genPlot in GenPlots.values) {
+        if (genPlot.name != forChannel) {
+          continue;
         }
+
+        if (genPlot.minUpdateDelay != null) {
+          // Calculate max number of points for this rate and total duration
+          var maxPointsForRate =
+              (totalDuration / genPlot.minUpdateDelay!).floor();
+          if (chPoints > maxPointsForRate) {
+            chPoints = maxPointsForRate;
+            chSecondsPerPoint = genPlot.minUpdateDelay! / 1e6;
+            chRate = getRate(genPlot.minUpdateDelay);
+          }
+        }
+        break;
       }
 
       for (int i = 0; i < chPoints; i++) {
