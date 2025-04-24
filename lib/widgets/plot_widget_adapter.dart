@@ -8,6 +8,7 @@ import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
+import 'package:flutter_controls_plotting/widgets/plot_channel_title.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 import 'package:graphic/graphic.dart';
 
