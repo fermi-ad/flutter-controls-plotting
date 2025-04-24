@@ -28,6 +28,8 @@ class StandardPlotDAQ implements PlotDAQService {
 
   int maxUpdateDelay = 333333;
 
+  int? limitAcquisitionMs;
+
   @override
   Stream<PlotReply> retrievePlot(BuildContext context,
       {required Set<String> forChannels,
@@ -131,6 +133,12 @@ class StandardPlotDAQ implements PlotDAQService {
 
       String rate = getRate(updateDelay);
 
+      Stopwatch? acquisitionStopwatch;
+      if (limitAcquisitionMs != null) {
+        acquisitionStopwatch = Stopwatch();
+        acquisitionStopwatch.start();
+      }
+
       while (validLoop) {
         if (apiDelay == 0) {
           await Future.delayed(Duration(microseconds: updateDelay));
@@ -184,6 +192,13 @@ class StandardPlotDAQ implements PlotDAQService {
           validLoop = false;
         }
 
+        if (limitAcquisitionMs != null) {
+          var msSinceStart = acquisitionStopwatch!.elapsedMilliseconds;
+          if (limitAcquisitionMs! <= msSinceStart) {
+            validLoop = false;
+          }
+        }
+
         yield plot;
       }
     }
@@ -202,9 +217,10 @@ class StandardPlotDAQ implements PlotDAQService {
     List<PlotChannelData> internalDaqData = [];
     var xAxisUnits = 'Index';
 
-    for (var i = 0; i < pointCount; i++) {
-      var currentEpochTime = getCurrentAcsysEpochTime();
+    var currentEpochTime = getCurrentAcsysEpochTime();
+    double secondsPerPoint = apiDelay / 1e6;
 
+    for (int i = 0; i < pointCount; i++) {
       for (var forChannel in forChannels) {
         var data = _generateData(
             forChannel: forChannel,
@@ -237,11 +253,12 @@ class StandardPlotDAQ implements PlotDAQService {
           args.windowSize = max(args.windowSize, data.length);
         }
       }
-
-      if (apiDelay > 0) {
-        await Future.delayed(Duration(microseconds: apiDelay));
-      }
+      currentEpochTime += secondsPerPoint;
     }
+
+    var totalDuration = (apiDelay * pointCount);
+    Duration duration = Duration(microseconds: totalDuration);
+    await Future.delayed(duration);
 
     var generatedPlotReply = PlotReply(
         plotId: "Internal",
@@ -300,10 +317,16 @@ class StandardPlotDAQ implements PlotDAQService {
       }
     } else if (forChannel == GenPlots.scalarRandRamp.name) {
       var rand = Random();
-      var currentEpochTime = getCurrentAcsysEpochTime();
-      lastScalarRandRampEpochTime ??= currentEpochTime;
 
-      var value = currentEpochTime - lastScalarRandRampEpochTime!;
+      double value;
+      if (lastScalarRandRampEpochTime == null) {
+        value = 0;
+      } else {
+        value = currentEpochTime - lastScalarRandRampEpochTime!;
+      }
+
+      lastScalarRandRampEpochTime = currentEpochTime;
+
       value = value + (rand.nextInt(50) - 25);
 
       xAxisUnits = 'Time';

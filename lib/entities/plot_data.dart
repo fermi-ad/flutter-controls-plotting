@@ -15,6 +15,8 @@ class PlotData {
 
   double? cursorX, cursorY;
 
+  int? _lastPlotReplyHash;
+
   // Map of channel name and points split into segments.
   Map<String, List<List<PlotPoint>>> points = {};
 
@@ -78,6 +80,19 @@ class PlotData {
     }
 
     plotMetadata.latestRequestEpochTime = requestTime;
+  }
+
+  bool isPlotReplyValid(PlotReply plotReply) {
+    int plotReplyHash = plotReply.hashCode;
+
+    if (plotReplyHash == _lastPlotReplyHash) {
+      // Already processed
+      return false;
+    }
+
+    _lastPlotReplyHash = plotReplyHash;
+
+    return true;
   }
 
   void filterPoints(
