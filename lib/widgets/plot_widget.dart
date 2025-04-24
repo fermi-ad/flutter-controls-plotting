@@ -410,6 +410,12 @@ class PlotState extends State<PlotWidget> {
       return;
     }
 
+    // Verify if plotReply still needs to be processed.
+    // Streambuilder by design seems to resend last plot reply on each update.
+    if (!widget.plotData.isPlotReplyValid(_adapter.plotReply!)) {
+      return;
+    }
+
     final plotChannels = _adapter.plotReply!.data;
     widget.plotData.filterPoints(
         isTimedScalarData: widget.isTimedScalarData,

@@ -1,4 +1,5 @@
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
 class FakeACSysService implements ACSysServiceAPI {
   int startPlotCount = 0;
@@ -55,6 +56,7 @@ class FakeACSysService implements ACSysServiceAPI {
               PlotChannelData(
                   name: drfs.first,
                   units: "A",
+                  rate: getRate(updateRate),
                   status: 0,
                   points: List.generate(
                       500, (i) => PlotPoint(x: i.toDouble(), y: 5.0)))
@@ -70,7 +72,11 @@ class FakeACSysService implements ACSysServiceAPI {
             requestTime: 0.0,
             data: [
               PlotChannelData(
-                  name: drfs.first, units: "", status: -1, points: [])
+                  name: drfs.first,
+                  units: "",
+                  rate: getRate(updateRate),
+                  status: -1,
+                  points: [])
             ]));
     }
   }

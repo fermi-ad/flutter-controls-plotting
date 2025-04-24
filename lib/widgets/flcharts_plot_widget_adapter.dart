@@ -99,18 +99,11 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       if (_channelHasError(channelData)) {
         continue;
       }
-      rowDataContents.add(Padding(
-          padding: const EdgeInsets.fromLTRB(0, 0, 0, 5),
-          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Text(
-              channelData.name,
-              style: TextStyle(color: lineColorForChannel(channelData.name)),
-            ),
-            Text(
-              " (${channelData.units})",
-              style: TextStyle(color: lineColorForChannel(channelData.name)),
-            )
-          ])));
+
+      var chColor = lineColorForChannel(channelData.name);
+
+      rowDataContents
+          .add(PlotChannelTitle(channelData: channelData, chColor: chColor));
     }
 
     double axisNameSize = plotReply.data.length * 25;

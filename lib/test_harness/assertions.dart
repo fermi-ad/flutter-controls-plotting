@@ -171,7 +171,7 @@ void assertPlotContainsNormalDistribution(WidgetTester tester,
   }
 }
 
-void assertPlotContainsNPoints(WidgetTester tester, int numberOfPoints,
+void assertPlotContainsNPoints(WidgetTester tester, dynamic numberOfPoints,
     {required String channelName, int segment = 0}) {
   final plotPoints =
       _getPlotPoints(tester, channelName: channelName, segment: segment);
