@@ -15,8 +15,8 @@ abstract class PlotDAQService {
 class StandardPlotDAQ implements PlotDAQService {
   StandardPlotDAQ();
 
-  double? lastScalarRampEpochTime;
-  double? lastScalarRandRampEpochTime;
+  double? firstScalarRampEpochTime;
+  double? firstScalarRandRampEpochTime;
 
   int? eventAcquisitionCount;
   int? eventAcquisitionLimit;
@@ -302,13 +302,13 @@ class StandardPlotDAQ implements PlotDAQService {
               y: i.toDouble() + (rand.nextInt(50) - 25),
               t: currentEpochTime));
     } else if (forChannel == GenPlots.scalarRamp.name) {
-      lastScalarRampEpochTime ??= currentEpochTime;
+      firstScalarRampEpochTime ??= currentEpochTime;
       if (scalarRampCountLimit != null &&
           scalarRampCount >= scalarRampCountLimit!) {
         data = [];
       } else {
         scalarRampCount += 1;
-        var difference = currentEpochTime - lastScalarRampEpochTime!;
+        var difference = currentEpochTime - firstScalarRampEpochTime!;
         xAxisUnits = 'Time';
 
         var x = eventX ?? currentEpochTime;
@@ -318,14 +318,8 @@ class StandardPlotDAQ implements PlotDAQService {
     } else if (forChannel == GenPlots.scalarRandRamp.name) {
       var rand = Random();
 
-      double value;
-      if (lastScalarRandRampEpochTime == null) {
-        value = 0;
-      } else {
-        value = currentEpochTime - lastScalarRandRampEpochTime!;
-      }
-
-      lastScalarRandRampEpochTime = currentEpochTime;
+      firstScalarRandRampEpochTime ??= currentEpochTime;
+      var value = currentEpochTime - firstScalarRandRampEpochTime!;
 
       value = value + (rand.nextInt(50) - 25);
 
