@@ -29,10 +29,10 @@ packages:
     dependency: transitive
     description:
       name: asn1lib
-      sha256: e8953f3698626f6f40c32da22c3348b2c6383e0db224402c53c8b8f3215b1e85
+      sha256: "0511d6be23b007e95105ae023db599aea731df604608978dada7f9faf2637623"
       url: "https://pub.dev"
     source: hosted
-    version: "1.6.3"
+    version: "1.6.4"
   async:
     dependency: transitive
     description:
@@ -210,8 +210,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: ch-freq
-      resolved-ref: ff4aba29069d26c03eb408fcdefcf14b6fde9145
+      ref: "v0.2.x"
+      resolved-ref: "45a4751f530b9b2b86bd43e39fb1aaf9fbc5ee09"
       url: "https://github.com/fermi-ad/flutter-controls-core.git"
     source: git
     version: "0.2.21"
