@@ -107,39 +107,39 @@ class PlotData {
       if (!channelHasErrorOrNoPoints(plotChannel)) {
         var newPoints = plotChannel.points;
 
-        if (points.containsKey(plotChannel.name)) {
-          var segments = points[plotChannel.name]!;
-          var pointsList = segments.last;
+        if (!points.containsKey(plotChannel.name)) {
+          points[plotChannel.name] = [[]];
+        }
 
-          if (scalarEventMode) {
-            for (var point in newPoints) {
-              // Check if a new event should be started.
-              var lastX = pointsList.last.x;
-              var newX = point.x;
+        var segments = points[plotChannel.name]!;
+        var pointsList = segments.last;
 
-              if (newX < lastX) {
-                if (!isPersistent) {
-                  // Clear all events.
-                  _clearSegments(segments);
-                }
-                // Reset point limits based on the current data since data is being removed.
-                findPointsLimits();
-                // New event
-                segments.add([]);
-                // Reload pointsList
-                pointsList = segments.last;
+        if (scalarEventMode) {
+          for (var point in newPoints) {
+            // Check if a new event should be started.
+            var lastX = pointsList.isNotEmpty ? pointsList.last.x : null;
+            var newX = point.x;
+
+            if (lastX != null && newX < lastX) {
+              if (!isPersistent) {
+                // Clear all events.
+                _clearSegments(segments);
               }
-              var lastIndex = pointsList.length;
-              pointsList.insert(lastIndex, point);
+              // Reset point limits based on the current data since data is being removed.
+              findPointsLimits();
+              // New event
+              segments.add([]);
+              // Reload pointsList
+              pointsList = segments.last;
             }
-          } else {
             var lastIndex = pointsList.length;
-            pointsList.insertAll(lastIndex, newPoints);
+            pointsList.insert(lastIndex, point);
           }
         } else {
-          points[plotChannel.name] = [];
-          points[plotChannel.name]!.add(List.from(newPoints));
+          var lastIndex = pointsList.length;
+          pointsList.insertAll(lastIndex, newPoints);
         }
+
         // Add bytes from the points added.
         _appendPointsCalculation(newPoints);
         _purgePointsOverData();
