@@ -251,7 +251,8 @@ class StandardPlotDAQ implements PlotDAQService {
       }
 
       for (int i = 0; i < chPoints; i++) {
-        var data = _generateData(
+        List<PlotPoint>? data;
+        (xAxisUnits, data) = _generateData(
             forChannel: forChannel,
             currentEpochTime: chEpochTime,
             xAxisUnits: xAxisUnits,
@@ -300,7 +301,7 @@ class StandardPlotDAQ implements PlotDAQService {
     return generatedPlotReply;
   }
 
-  List<PlotPoint>? _generateData(
+  (String, List<PlotPoint>?) _generateData(
       {required String forChannel,
       required double currentEpochTime,
       required String xAxisUnits,
@@ -388,7 +389,7 @@ class StandardPlotDAQ implements PlotDAQService {
                   (50 * sqrt(2 * pi)),
               t: currentEpochTime));
     }
-    return data;
+    return (xAxisUnits, data);
   }
 }
 
