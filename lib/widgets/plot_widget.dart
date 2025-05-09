@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -142,7 +144,7 @@ class PlotState extends State<PlotWidget> {
   @override
   void didChangeDependencies() {
     _resetAdapter();
-    _resetStream();
+    _initializeStream();
     super.didChangeDependencies();
   }
 
@@ -151,7 +153,7 @@ class PlotState extends State<PlotWidget> {
     _resetAdapter();
 
     if (_streamShouldReset) {
-      _resetStream();
+      _initializeStream();
     }
     super.didUpdateWidget(oldWidget);
   }
@@ -198,40 +200,74 @@ class PlotState extends State<PlotWidget> {
           }
         },
         onPointerMove: (event) {
-          // print("pan detected");
           widget.adjustXAxisLimits!(event.delta.dx);
         },
-        child: StreamBuilder(
-          stream: _plotStream,
-          builder: _plotStreamBuilder,
-        ),
+        child: _buildBasedOnStream(),
       ),
     );
   }
 
-  Widget _plotStreamBuilder(
-      BuildContext context, AsyncSnapshot<PlotReply> snapshot) {
-    _updateStreamConnectionChanged(snapshot.connectionState);
+  // Widget _plotStreamBuilder(
+  //     BuildContext context, AsyncSnapshot<PlotReply> snapshot) {
+  //   _updateStreamConnectionChanged(snapshot.connectionState);
 
-    if (snapshot.connectionState == ConnectionState.none ||
-        snapshot.connectionState == ConnectionState.waiting) {
-      _adapter.plotReply = null;
-      return _buildEmptyPlotWithProgressIndicator();
-    } else if (snapshot.hasError) {
-      _adapter.plotReply = null;
-      return _buildWithErrorMessage(snapshot.error!.toString(),
-          child: _buildEmptyPlot());
-    } else if (snapshot.hasData) {
-      _receiveData(snapshot.data!);
+  //   if (snapshot.connectionState == ConnectionState.none ||
+  //       snapshot.connectionState == ConnectionState.waiting) {
+  //     _adapter.plotReply = null;
+  //     return _buildEmptyPlotWithProgressIndicator();
+  //   } else if (snapshot.hasError) {
+  //     _adapter.plotReply = null;
+  //     return _buildWithErrorMessage(snapshot.error!.toString(),
+  //         child: _buildEmptyPlot());
+  //   } else if (snapshot.hasData) {
+  //     _receiveData(snapshot.data!);
+  //     final errorOnChannel = _plotReplyHasErrors();
+  //     return errorOnChannel != null
+  //         ? _buildWithErrorMessage(
+  //             "An error occured when attempting to acquire data for $errorOnChannel",
+  //             child: _buildPlotFromSnapshot())
+  //         : _buildPlotFromSnapshot();
+  //   } else {
+  //     _adapter.plotReply = null;
+  //     return _buildEmptyPlot();
+  //   }
+  // }
+
+  Widget _buildBasedOnStream() {
+    if (_plotStream != null) {
       final errorOnChannel = _plotReplyHasErrors();
       return errorOnChannel != null
           ? _buildWithErrorMessage(
               "An error occured when attempting to acquire data for $errorOnChannel",
               child: _buildPlotFromSnapshot())
           : _buildPlotFromSnapshot();
+    }
+
+    if (widget.plotChannels.isNotEmpty) {
+      return _buildEmptyPlotWithProgressIndicator();
+    }
+
+    return _buildEmptyPlot();
+  }
+
+  void _initializeStream() {
+    _resetStream();
+    if (widget.plotChannels.isNotEmpty) {
+      _updateStreamConnectionChanged(ConnectionState.waiting);
+
+      _plotStream!.listen((plotReply) {
+        _updateStreamConnectionChanged(ConnectionState.active);
+        _receiveData(plotReply);
+      }, onError: (error) {
+        _updateStreamConnectionChanged(ConnectionState.none);
+        setState(() {
+          _adapter.plotReply = null;
+        });
+      }, onDone: () {
+        _updateStreamConnectionChanged(ConnectionState.done);
+      });
     } else {
-      _adapter.plotReply = null;
-      return _buildEmptyPlot();
+      _plotStream = null;
     }
   }
 
@@ -342,6 +378,12 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _receiveData(PlotReply plotReply) {
+    setState(() {
+      __receiveData(plotReply);
+    });
+  }
+
+  void __receiveData(PlotReply plotReply) {
     if (widget.isPaused) {
       if (lastReply != null) {
         _adapter.plotReply = lastReply;
