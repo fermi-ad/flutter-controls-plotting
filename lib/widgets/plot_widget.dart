@@ -8,6 +8,7 @@ import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
 import 'package:flutter_controls_plotting/entities/plot_metadata.dart';
+import 'package:flutter_controls_plotting/entities/plot_stream_metadata.dart';
 import 'package:flutter_controls_plotting/entities/scalar_data_options.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget_adapter.dart';
@@ -202,49 +203,35 @@ class PlotState extends State<PlotWidget> {
         onPointerMove: (event) {
           widget.adjustXAxisLimits!(event.delta.dx);
         },
-        child: _buildBasedOnStream(),
+        child: ListenableBuilder(
+            listenable: _plotStreamMetadata, builder: _plotListenableBuilder),
       ),
     );
   }
 
-  // Widget _plotStreamBuilder(
-  //     BuildContext context, AsyncSnapshot<PlotReply> snapshot) {
-  //   _updateStreamConnectionChanged(snapshot.connectionState);
-
-  //   if (snapshot.connectionState == ConnectionState.none ||
-  //       snapshot.connectionState == ConnectionState.waiting) {
-  //     _adapter.plotReply = null;
-  //     return _buildEmptyPlotWithProgressIndicator();
-  //   } else if (snapshot.hasError) {
-  //     _adapter.plotReply = null;
-  //     return _buildWithErrorMessage(snapshot.error!.toString(),
-  //         child: _buildEmptyPlot());
-  //   } else if (snapshot.hasData) {
-  //     _receiveData(snapshot.data!);
-  //     final errorOnChannel = _plotReplyHasErrors();
-  //     return errorOnChannel != null
-  //         ? _buildWithErrorMessage(
-  //             "An error occured when attempting to acquire data for $errorOnChannel",
-  //             child: _buildPlotFromSnapshot())
-  //         : _buildPlotFromSnapshot();
-  //   } else {
-  //     _adapter.plotReply = null;
-  //     return _buildEmptyPlot();
-  //   }
-  // }
-
-  Widget _buildBasedOnStream() {
-    if (_plotStream != null) {
-      final errorOnChannel = _plotReplyHasErrors();
-      return errorOnChannel != null
-          ? _buildWithErrorMessage(
-              "An error occured when attempting to acquire data for $errorOnChannel",
-              child: _buildPlotFromSnapshot())
-          : _buildPlotFromSnapshot();
-    }
-
-    if (widget.plotChannels.isNotEmpty) {
+  Widget _plotListenableBuilder(BuildContext context, Widget? child) {
+    if (lastConnectionState == ConnectionState.waiting) {
       return _buildEmptyPlotWithProgressIndicator();
+    }
+    if (_plotStream != null) {
+      if (_plotStreamMetadata.lastStreamError != null) {
+        var error = _plotStreamMetadata.lastStreamError;
+        _plotStreamMetadata.lastStreamError = null;
+        return _buildWithErrorMessage(error!.toString(),
+            child: _buildEmptyPlot());
+      }
+      final errorOnChannel = _plotReplyHasErrors();
+      if (errorOnChannel != null) {
+        _buildWithErrorMessage(
+            "An error occured when attempting to acquire data for $errorOnChannel",
+            child: _buildPlotFromSnapshot());
+      }
+
+      if (_adapter.plotReply == null) {
+        return _buildEmptyPlot();
+      }
+
+      return _buildPlotFromSnapshot();
     }
 
     return _buildEmptyPlot();
@@ -252,19 +239,19 @@ class PlotState extends State<PlotWidget> {
 
   void _initializeStream() {
     _resetStream();
+    _plotStreamSubscription?.cancel();
     if (widget.plotChannels.isNotEmpty) {
       _updateStreamConnectionChanged(ConnectionState.waiting);
 
-      _plotStreamSubscription?.cancel();
+      _adapter.plotReply = null;
 
       _plotStreamSubscription = _plotStream!.listen((plotReply) {
         _updateStreamConnectionChanged(ConnectionState.active);
         _receiveData(plotReply);
       }, onError: (error) {
+        _plotStreamMetadata.lastStreamError = error;
         _updateStreamConnectionChanged(ConnectionState.none);
-        setState(() {
-          _adapter.plotReply = null;
-        });
+        _adapter.plotReply = null;
       }, onDone: () {
         _updateStreamConnectionChanged(ConnectionState.done);
       });
@@ -380,12 +367,7 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _receiveData(PlotReply plotReply) {
-    setState(() {
-      __receiveData(plotReply);
-    });
-  }
-
-  void __receiveData(PlotReply plotReply) {
+    _plotStreamMetadata.plotReply = plotReply;
     if (widget.isPaused) {
       if (lastReply != null) {
         _adapter.plotReply = lastReply;
@@ -497,13 +479,20 @@ class PlotState extends State<PlotWidget> {
 
   late PlotWidgetAdapter _adapter;
 
+  final PlotStreamMetadata _plotStreamMetadata = PlotStreamMetadata();
+
   StreamSubscription<PlotReply>? _plotStreamSubscription;
 
   Stream<PlotReply>? _plotStream;
 
   Map<String, ChannelSetting> _channels = {};
 
-  ConnectionState? lastConnectionState;
+  ConnectionState? get lastConnectionState =>
+      _plotStreamMetadata.lastConnectionState;
+
+  set lastConnectionState(ConnectionState? state) {
+    _plotStreamMetadata.lastConnectionState = state;
+  }
 
   int _updateDelay = 0;
 
