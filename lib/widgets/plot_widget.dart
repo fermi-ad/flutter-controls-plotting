@@ -255,7 +255,9 @@ class PlotState extends State<PlotWidget> {
     if (widget.plotChannels.isNotEmpty) {
       _updateStreamConnectionChanged(ConnectionState.waiting);
 
-      _plotStream!.listen((plotReply) {
+      _plotStreamSubscription?.cancel();
+
+      _plotStreamSubscription = _plotStream!.listen((plotReply) {
         _updateStreamConnectionChanged(ConnectionState.active);
         _receiveData(plotReply);
       }, onError: (error) {
@@ -494,6 +496,8 @@ class PlotState extends State<PlotWidget> {
       _triggerEvent == widget.triggerEvent));
 
   late PlotWidgetAdapter _adapter;
+
+  StreamSubscription<PlotReply>? _plotStreamSubscription;
 
   Stream<PlotReply>? _plotStream;
 
