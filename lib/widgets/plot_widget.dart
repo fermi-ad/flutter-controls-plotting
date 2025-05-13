@@ -227,7 +227,7 @@ class PlotState extends State<PlotWidget> {
             child: _buildPlotFromSnapshot());
       }
 
-      if (_adapter.plotReply == null) {
+      if (_plotStreamMetadata.plotReply == null) {
         return _buildEmptyPlot();
       }
 
@@ -242,7 +242,6 @@ class PlotState extends State<PlotWidget> {
     _plotStreamSubscription?.cancel();
     if (widget.plotChannels.isNotEmpty) {
       _updateStreamConnectionChanged(ConnectionState.waiting);
-
       _adapter.plotReply = null;
 
       _plotStreamSubscription = _plotStream!.listen((plotReply) {
@@ -315,15 +314,18 @@ class PlotState extends State<PlotWidget> {
       case PlotImplementation.flCharts:
         _adapter = FlchartsPlotWidgetAdapter(
             widget: widget,
-            isShowLabels: widget.isShowLabels); // Update this line
+            isShowLabels: widget.isShowLabels,
+            plotReply: _plotStreamMetadata.plotReply);
         break;
 
       case PlotImplementation.graphic:
-        _adapter = GraphicPlotWidgetAdapter(widget: widget);
+        _adapter = GraphicPlotWidgetAdapter(
+            widget: widget, plotReply: _plotStreamMetadata.plotReply);
         break;
 
       case PlotImplementation.fermi:
-        _adapter = FermiPlotWidgetAdapter(widget: widget);
+        _adapter = FermiPlotWidgetAdapter(
+            widget: widget, plotReply: _plotStreamMetadata.plotReply);
         break;
     }
   }
