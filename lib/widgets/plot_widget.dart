@@ -209,7 +209,7 @@ class PlotState extends State<PlotWidget> {
   }
 
   Widget _plotListenableBuilder(BuildContext context, Widget? child) {
-    if (lastConnectionState == ConnectionState.waiting) {
+    if (widget.plotChannels.isNotEmpty && _plotReply == null) {
       return _buildEmptyPlotWithProgressIndicator();
     }
     if (_plotStream != null) {
@@ -221,7 +221,7 @@ class PlotState extends State<PlotWidget> {
       }
       final errorOnChannel = _plotReplyHasErrors();
       if (errorOnChannel != null) {
-        _buildWithErrorMessage(
+        return _buildWithErrorMessage(
             "An error occured when attempting to acquire data for $errorOnChannel",
             child: _buildPlotFromSnapshot());
       }
@@ -249,7 +249,6 @@ class PlotState extends State<PlotWidget> {
         _receiveData(plotReply);
       }, onError: (error) {
         _plotStreamMetadata.lastStreamError = error;
-        _updateStreamConnectionChanged(ConnectionState.none);
         _plotReply = null;
       }, onDone: () {
         _updateStreamConnectionChanged(ConnectionState.done);
@@ -337,6 +336,8 @@ class PlotState extends State<PlotWidget> {
     _updateDelay = widget.updateDelay;
     _triggerEvent = widget.triggerEvent;
     _nAcquisitions = widget.nAcquisitions;
+
+    _updateStreamConnectionChanged(ConnectionState.none);
 
     // Widget is displaying scalar data in one-shot mode.
     if (widget.scalarDataOptions != null) {
