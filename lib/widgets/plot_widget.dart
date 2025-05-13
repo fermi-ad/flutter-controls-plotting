@@ -154,6 +154,10 @@ class PlotState extends State<PlotWidget> {
 
     if (_streamShouldReset) {
       _initializeStream();
+    } else if (_plotStreamMetadata.plotReply != null) {
+      // Simulate last plot reply to reload plot data with potntially new configuration.
+      // This mimics the behavior of stream builder.
+      _receiveData(_plotStreamMetadata.plotReply!);
     }
     super.didUpdateWidget(oldWidget);
   }
