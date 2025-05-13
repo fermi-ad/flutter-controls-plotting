@@ -106,16 +106,16 @@ class PlotState extends State<PlotWidget> {
   }
 
   List<PlotChannelData> get channelData =>
-      _adapter.plotReply != null ? _adapter.plotReply!.data : [];
+      _plotReply != null ? _plotReply!.data : [];
 
-  List<String> get channelNames => _adapter.plotReply != null
-      ? _adapter.plotReply!.data
+  List<String> get channelNames => _plotReply != null
+      ? _plotReply!.data
           .map((PlotChannelData channelData) => channelData.name)
           .toList()
       : [];
 
-  List<String> get channelUnits => _adapter.plotReply != null
-      ? _adapter.plotReply!.data
+  List<String> get channelUnits => _plotReply != null
+      ? _plotReply!.data
           .map((PlotChannelData channelData) => channelData.units)
           .toList()
       : [];
@@ -128,8 +128,7 @@ class PlotState extends State<PlotWidget> {
 
   double? get maxX => widget.plotData.maxX;
 
-  String get xAxisTitle =>
-      _adapter.plotReply != null ? _adapter.plotReply!.xAxisUnits : "";
+  String get xAxisTitle => _plotReply != null ? _plotReply!.xAxisUnits : "";
 
   List<Color> get channelColors => widget.plotChannels.keys
       .map((String channelName) => _adapter.lineColorForChannel(channelName))
@@ -227,7 +226,7 @@ class PlotState extends State<PlotWidget> {
             child: _buildPlotFromSnapshot());
       }
 
-      if (_plotStreamMetadata.plotReply == null) {
+      if (_plotReply == null) {
         return _buildEmptyPlot();
       }
 
@@ -240,9 +239,10 @@ class PlotState extends State<PlotWidget> {
   void _initializeStream() {
     _resetStream();
     _plotStreamSubscription?.cancel();
+    _plotReply = null;
+
     if (widget.plotChannels.isNotEmpty) {
       _updateStreamConnectionChanged(ConnectionState.waiting);
-      _adapter.plotReply = null;
 
       _plotStreamSubscription = _plotStream!.listen((plotReply) {
         _updateStreamConnectionChanged(ConnectionState.active);
@@ -250,7 +250,7 @@ class PlotState extends State<PlotWidget> {
       }, onError: (error) {
         _plotStreamMetadata.lastStreamError = error;
         _updateStreamConnectionChanged(ConnectionState.none);
-        _adapter.plotReply = null;
+        _plotReply = null;
       }, onDone: () {
         _updateStreamConnectionChanged(ConnectionState.done);
       });
@@ -331,7 +331,7 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _resetStream() {
-    _adapter.plotReply = null;
+    _plotReply = null;
 
     _channels = Map.from(widget.plotChannels);
     _updateDelay = widget.updateDelay;
@@ -369,10 +369,9 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _receiveData(PlotReply plotReply) {
-    _plotStreamMetadata.plotReply = plotReply;
     if (widget.isPaused) {
       if (lastReply != null) {
-        _adapter.plotReply = lastReply;
+        _plotReply = lastReply;
 
         _filterPoints();
 
@@ -388,7 +387,7 @@ class PlotState extends State<PlotWidget> {
       return;
     } else {
       for (final element in plotReplyList) {
-        _adapter.plotReply = element;
+        _plotReply = element;
 
         _filterPoints();
 
@@ -408,7 +407,7 @@ class PlotState extends State<PlotWidget> {
     }
 
     widget.plotData.processPlotReplyMetadata(plotReply: plotReply);
-    _adapter.plotReply = plotReply;
+    _plotReply = plotReply;
 
     _filterPoints();
 
@@ -418,11 +417,11 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _findLimits() {
-    if (_adapter.plotReply == null) {
+    if (_plotReply == null) {
       return;
     }
 
-    final plotChannels = _adapter.plotReply!.data;
+    final plotChannels = _plotReply!.data;
 
     widget.plotData.findLimits(
         plotChannels: plotChannels,
@@ -434,17 +433,17 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _filterPoints() {
-    if (_adapter.plotReply == null) {
+    if (_plotReply == null) {
       return;
     }
 
     // Verify if plotReply still needs to be processed.
     // Streambuilder by design seems to resend last plot reply on each update.
-    if (!widget.plotData.isPlotReplyValid(_adapter.plotReply!)) {
+    if (!widget.plotData.isPlotReplyValid(_plotReply!)) {
       return;
     }
 
-    final plotChannels = _adapter.plotReply!.data;
+    final plotChannels = _plotReply!.data;
     widget.plotData.filterPoints(
         isTimedScalarData: widget.isTimedScalarData,
         isPersistent: widget.isPersistent,
@@ -452,8 +451,8 @@ class PlotState extends State<PlotWidget> {
   }
 
   String? _plotReplyHasErrors() {
-    if (_adapter.plotReply != null) {
-      for (PlotChannelData chData in _adapter.plotReply!.data as List) {
+    if (_plotReply != null) {
+      for (PlotChannelData chData in _plotReply!.data as List) {
         if (channelHasError(chData)) {
           return chData.name;
         }
@@ -482,6 +481,13 @@ class PlotState extends State<PlotWidget> {
   late PlotWidgetAdapter _adapter;
 
   final PlotStreamMetadata _plotStreamMetadata = PlotStreamMetadata();
+
+  PlotReply? get _plotReply => _plotStreamMetadata.plotReply;
+
+  set _plotReply(PlotReply? plotReply) {
+    _plotStreamMetadata.plotReply = plotReply;
+    _adapter.plotReply = plotReply;
+  }
 
   StreamSubscription<PlotReply>? _plotStreamSubscription;
 
