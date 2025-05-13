@@ -21,7 +21,7 @@ abstract class PlotWidgetAdapter {
 
   PlotReply? plotReply;
 
-  PlotWidgetAdapter({required this.widget});
+  PlotWidgetAdapter({required this.widget, this.plotReply});
 
   Widget buildPlot();
 
