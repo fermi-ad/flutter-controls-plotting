@@ -200,6 +200,7 @@ class PlotState extends State<PlotWidget> {
         onPointerMove: (event) {
           // print("pan detected");
           widget.adjustXAxisLimits!(event.delta.dx);
+          widget.adjustYAxisLimits!(-1 * event.delta.dy);
         },
         child: StreamBuilder(
           stream: _plotStream,
