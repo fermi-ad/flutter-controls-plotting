@@ -292,9 +292,13 @@ void main() {
     testWidgets("Verify support of the panning plot behaviour",
         (WidgetTester tester) async {
       // Given a mockAdjustXAxisLimits function
-      double? lastDeltaX;
+      double? lastDeltaX, lastDeltaY;
       void mockAdjustXAxisLimits(double deltaX) {
         lastDeltaX = deltaX;
+      }
+
+      void mockAdjustYAxisLimits(double deltaY) {
+        lastDeltaY = deltaY;
       }
 
       // And a channel list containing "PLOT TEST SCALAR RAMP".
@@ -311,6 +315,7 @@ void main() {
       await tester.pumpWidget(_buildPlotWidget(channelList,
           updateDelay: 100000,
           adjustXAxisLimits: mockAdjustXAxisLimits,
+          adjustYAxisLimits: mockAdjustYAxisLimits,
           scalarDataOptions:
               ScalarDataOptions(isOneShot: false, timeDelta: null),
           daqService: daqService));
@@ -320,11 +325,12 @@ void main() {
       await tester.pumpAndSettle(const Duration(milliseconds: 600));
 
       // Simulate a horizontal drag to the left by 5 logical pixels.
-      await tester.drag(find.byType(PlotWidget), const Offset(-5.0, 0.0));
+      await tester.drag(find.byType(PlotWidget), const Offset(-5.0, -5.0));
       await tester.pumpAndSettle();
 
       // Verify that the adjustXAxisLimits function was called with the correct delta.
       expect(lastDeltaX, -5.0);
+      expect(lastDeltaY, 5.0);
     });
 
     testWidgets(
@@ -918,6 +924,7 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
     ACSysServiceAPI? service,
     StandardPlotDAQ? daqService,
     Function(double deltaX)? adjustXAxisLimits,
+    Function(double deltaY)? adjustYAxisLimits,
     Function(PlotReply reply)? onPlotUpdate,
     Function(ConnectionState streamConnectionState)?
         onStreamConnectionStateChange}) {
@@ -937,5 +944,6 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
                   isPersistent: isPersistent,
                   scalarDataOptions: scalarDataOptions,
                   adjustXAxisLimits: adjustXAxisLimits,
+                  adjustYAxisLimits: adjustYAxisLimits,
                   daqService: daqService))));
 }

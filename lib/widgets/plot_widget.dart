@@ -205,6 +205,7 @@ class PlotState extends State<PlotWidget> {
         },
         onPointerMove: (event) {
           widget.adjustXAxisLimits!(event.delta.dx);
+          widget.adjustYAxisLimits!(-1 * event.delta.dy);
         },
         child: ListenableBuilder(
             listenable: _plotStreamMetadata, builder: _plotListenableBuilder),
