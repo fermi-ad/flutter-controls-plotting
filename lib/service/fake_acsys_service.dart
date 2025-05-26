@@ -122,7 +122,7 @@ class FakeACSysService implements ACSysServiceAPI {
 
   @override
   Future<void> saveUserConfiguration(
-      {required PlotConfigurationSnapshot snapshot}) {
+      {required PlotConfigurationSnapshot snapshot, String? user}) {
     throw UnimplementedError();
   }
 
