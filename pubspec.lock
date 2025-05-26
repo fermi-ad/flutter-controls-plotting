@@ -211,10 +211,10 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: "73c8356bfb3977481ef401c8fc0993343a5e9145"
+      resolved-ref: "8098b5f40189cdd432063c33cdac14bce86c90b9"
       url: "https://github.com/fermi-ad/flutter-controls-core.git"
     source: git
-    version: "0.3.0"
+    version: "0.3.1"
   flutter_driver:
     dependency: transitive
     description: flutter
