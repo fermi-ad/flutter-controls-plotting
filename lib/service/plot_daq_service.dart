@@ -125,8 +125,16 @@ class StandardPlotDAQ implements PlotDAQService {
       var itterationPointCount = 1;
       var apiDelay = 0;
 
+      bool array = true;
+      for (String chName in forChannels) {
+        if (chName.contains("SCALAR")) {
+          array = false;
+          break;
+        }
+      }
+
       // Update delay is smaller than max stream update delay.
-      if (maxUpdateDelay > updateDelay) {
+      if (!array && maxUpdateDelay > updateDelay) {
         itterationPointCount = (maxUpdateDelay / updateDelay).floor();
         apiDelay = updateDelay;
       }
