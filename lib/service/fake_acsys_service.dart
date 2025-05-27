@@ -100,9 +100,7 @@ class FakeACSysService implements ACSysServiceAPI {
   }
 
   @override
-  Future<PlotConfigurationSnapshot> retrieveLastUserConfiguration(
-      {String? username}) {
-    // N/A for plotting lib
+  Future<PlotConfigurationSnapshot> retrieveLastUserConfiguration() {
     throw UnimplementedError();
   }
 
