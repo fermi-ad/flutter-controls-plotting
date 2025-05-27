@@ -1,7 +1,7 @@
 part of plotadapter;
 
 class GraphicPlotWidgetAdapter extends PlotWidgetAdapter {
-  GraphicPlotWidgetAdapter({required super.widget});
+  GraphicPlotWidgetAdapter({required super.widget, super.plotReply});
 
   @override
   Widget buildPlot() {

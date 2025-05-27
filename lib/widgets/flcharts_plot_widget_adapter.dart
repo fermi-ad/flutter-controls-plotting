@@ -4,7 +4,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   final bool isShowLabels;
 
   FlchartsPlotWidgetAdapter(
-      {required super.widget, required this.isShowLabels}); // Update this line
+      {required super.widget,
+      required this.isShowLabels,
+      super.plotReply}); // Update this line
 
   final GlobalKey chartKey = GlobalKey();
 
