@@ -8,6 +8,8 @@ const int _gb = _mb * 1024;
 class PlotMetadata with ChangeNotifier {
   double? _latestRequestEpochTime;
   double? _latestDataEpochTime;
+  double? _xMin;
+  double? _xMax;
 
   int plotDataBytes = 0;
 
@@ -43,6 +45,8 @@ class PlotMetadata with ChangeNotifier {
 
   double? get lastestRequestEpochTime => _latestRequestEpochTime;
   double? get latestDataEpochTime => _latestDataEpochTime;
+  double? get xMin => _xMin;
+  double? get xMax => _xMax;
 
   set latestRequestEpochTime(double? lastestRequestEpochTime) {
     _latestRequestEpochTime = lastestRequestEpochTime;
@@ -54,8 +58,20 @@ class PlotMetadata with ChangeNotifier {
     Future.delayed(Duration.zero, () => notifyListeners());
   }
 
+  set xMin(double? xMin) {
+    _xMin = xMin;
+    Future.delayed(Duration.zero, () => notifyListeners());
+  }
+
+  set xMax(double? xMax) {
+    _xMax = xMax;
+    Future.delayed(Duration.zero, () => notifyListeners());
+  }
+
   void cleanUp() {
     _latestDataEpochTime = null;
     _latestRequestEpochTime = null;
+    _xMin = null;
+    _xMax = null;
   }
 }

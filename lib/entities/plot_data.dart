@@ -78,7 +78,6 @@ class PlotData {
         plotMetadata.latestDataEpochTime! >= requestTime) {
       return;
     }
-
     plotMetadata.latestRequestEpochTime = requestTime;
   }
 
@@ -408,5 +407,7 @@ class PlotData {
     _maxY = maxY;
     _minX = minX;
     _maxX = maxX;
+    plotMetadata.xMin = _minX;
+    plotMetadata.xMax = _maxX;
   }
 }
