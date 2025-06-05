@@ -257,6 +257,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     int? minYPairIndex;
     int? maxYPairIndex;
 
+    // Timed X axis and no xMax defined will exit upon last out of range value.
+    bool exitForScalar = widget.xMax == null && widget.isTimedXAxis;
+
     for (PlotPoint point in points.reversed) {
       var x = point.x;
       var y = point.y;
@@ -272,6 +275,10 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
             (minXPair == null || minXPair.x < x)) {
           minXPair = PlotPoint(x: x, y: y);
           minXPairIndex = flSpots.length;
+          if (exitForScalar) {
+            // The last relevant time was reached. No need to check rest of points.
+            break;
+          }
         }
         addPoint = false;
       }
