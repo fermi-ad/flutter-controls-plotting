@@ -160,7 +160,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   Widget _bottomTitleWidgets(double value, TitleMeta meta) {
     if (widget.isTimedXAxis) {
       return SideTitleWidget(
-        axisSide: meta.axisSide,
+        meta: meta,
         angle: -1.57, // -90 * 3.14 / 180,
         child: Text(parseDaqTimeAsString(value)),
       );
