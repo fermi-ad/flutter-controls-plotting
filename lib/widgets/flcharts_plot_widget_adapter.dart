@@ -299,7 +299,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
 
       if (addPoint) {
         FlSpot flSpot = FlSpot(x, y);
-        flSpots.add(flSpot);
+        flSpots.insert(0, flSpot);
       }
     }
 
@@ -327,8 +327,10 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     spotsToInsert.sort((a, b) => b.key.compareTo(a.key));
 
     // Insert the FlSpot objects into flSpots in order from largest index to smallest
-    for (var entry in spotsToInsert) {
-      flSpots.insert(entry.key, entry.value);
+    var offset = flSpots.length;
+    for (var entry in spotsToInsert.reversed) {
+      var index = offset - entry.key;
+      flSpots.insert(index, entry.value);
     }
 
     return flSpots;
