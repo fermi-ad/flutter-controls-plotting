@@ -14,6 +14,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   Widget buildPlot() => LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) => LineChart(
           key: chartKey,
+          duration: widget.plotAnimationDuration,
           LineChartData(
             clipData: const FlClipData.all(),
             minX: widget.plotData.minX,

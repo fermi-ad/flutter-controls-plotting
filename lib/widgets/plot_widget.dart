@@ -86,6 +86,22 @@ class PlotWidget extends StatefulWidget {
     }
     return false;
   }
+
+  Duration get plotAnimationDuration {
+    if (isTimedScalarData) {
+      // No animation for scrolling data.
+      return isTimedXAxis ? Duration.zero : const Duration(milliseconds: 150);
+    }
+
+    // No animation for frequency over 15Hz.
+    if (updateDelay < 66666) {
+      return Duration.zero;
+    }
+
+    // 50ms for frequency over 1Hz. 150 for 1Hz or slower.
+    int animationMs = updateDelay < 1000000 ? 100 : 150;
+    return Duration(milliseconds: animationMs);
+  }
 }
 
 class PlotState extends State<PlotWidget> {
