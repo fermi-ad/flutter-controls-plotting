@@ -344,6 +344,8 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     var minX = plotData.minX;
     var maxX = plotData.maxX;
 
+    int numberOfPoints = 0;
+
     plotChannels.asMap().forEach((index, plotChannel) {
       if (_channelHasError(plotChannel) ||
           !points.containsKey(plotChannel.name)) {
@@ -353,6 +355,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       for (var pointSegment in points[plotChannel.name]!) {
         // min and max y is not passed in for limiting points. This can cause behavior where poitns in the middle of axis are dropped.
         var spots = _toSpots(points: pointSegment, minX: minX, maxX: maxX);
+        numberOfPoints += spots.length;
 
         lineChartList.add(LineChartBarData(
           color: lineColorForChannel(plotChannel.name),
@@ -371,6 +374,8 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         ));
       }
     });
+
+    widget.plotMetadata.numberOfPoints = numberOfPoints;
 
     return lineChartList;
   }
