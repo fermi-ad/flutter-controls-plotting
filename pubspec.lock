@@ -210,8 +210,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: fix-open-telemetry
-      resolved-ref: "0f4ce14fb1b380d015de16da1f47f841388c5b1e"
+      ref: main
+      resolved-ref: a2657a3e3c7142eb46223826f1cb3155f7f37a5d
       url: "https://github.com/fermi-ad/flutter-controls-core.git"
     source: git
     version: "0.3.1"
