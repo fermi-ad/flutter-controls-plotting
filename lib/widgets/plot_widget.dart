@@ -99,7 +99,7 @@ class PlotWidget extends StatefulWidget {
     }
 
     // 50ms for frequency over 1Hz. 150 for 1Hz or slower.
-    int animationMs = updateDelay < 1000000 ? 100 : 150;
+    int animationMs = updateDelay < 1000000 ? 50 : 150;
     return Duration(milliseconds: animationMs);
   }
 }
