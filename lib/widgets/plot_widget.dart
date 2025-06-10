@@ -102,6 +102,8 @@ class PlotWidget extends StatefulWidget {
     int animationMs = updateDelay < 1000000 ? 50 : 150;
     return Duration(milliseconds: animationMs);
   }
+
+  PlotMetadata get plotMetadata => plotData.plotMetadata;
 }
 
 class PlotState extends State<PlotWidget> {
@@ -155,7 +157,7 @@ class PlotState extends State<PlotWidget> {
       .toList();
 
   Map<String, List<List<PlotPoint>>> get points => widget.plotData.points;
-  PlotMetadata get plotMetadata => widget.plotData.plotMetadata;
+  PlotMetadata get plotMetadata => widget.plotMetadata;
 
   @override
   void didChangeDependencies() {
