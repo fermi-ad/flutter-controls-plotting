@@ -327,10 +327,10 @@ packages:
     dependency: "direct main"
     description:
       name: graphic
-      sha256: bded9411106d488b8b26bb6984d566115c07a7a4efb257e3fbf2956df6c2c789
+      sha256: af3a5a967d95ce2c2c9f7dee83c21f8bd6e6a458341820920cf15c0311cdaddc
       url: "https://pub.dev"
     source: hosted
-    version: "2.5.1"
+    version: "2.6.0"
   hive:
     dependency: transitive
     description:
@@ -737,10 +737,10 @@ packages:
     dependency: transitive
     description:
       name: watcher
-      sha256: "69da27e49efa56a15f8afe8f4438c4ec02eff0a117df1b22ea4aad194fe1c104"
+      sha256: "0b7fd4a0bbc4b92641dbf20adfd7e3fd1398fe17102d94b674234563e110088a"
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.1"
+    version: "1.1.2"
   web:
     dependency: transitive
     description:
