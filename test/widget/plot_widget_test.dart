@@ -287,6 +287,9 @@ void main() {
 
       // Once done plotting verify that all 10 points were plotted.
       assertPlotContainsNPoints(tester, 10, channelName: channelName);
+
+      // Ensure all timers finish
+      await tester.pumpAndSettle();
     });
 
     testWidgets("Verify support of the panning plot behaviour",
@@ -331,6 +334,10 @@ void main() {
       // Verify that the adjustXAxisLimits function was called with the correct delta.
       expect(lastDeltaX, -5.0);
       expect(lastDeltaY, 5.0);
+
+      // Ensure all timers finish
+      await tester.pumpAndSettle(Durations.medium4);
+      await tester.pumpAndSettle(Durations.medium4);
     });
 
     testWidgets(
@@ -375,6 +382,9 @@ void main() {
           channelName: channelName, segment: 1);
 
       assertPlotContainsNSegments(tester, 2, channelName: channelName);
+
+      // Ensure all timers finish
+      await tester.pumpAndSettle();
     });
 
     testWidgets("Plot channel list is empty, plot is empty",
