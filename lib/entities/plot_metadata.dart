@@ -12,6 +12,7 @@ class PlotMetadata with ChangeNotifier {
   double? _xMax;
 
   int plotDataBytes = 0;
+  int _numberOfPoints = 0;
 
   PlotMetadata();
 
@@ -55,6 +56,13 @@ class PlotMetadata with ChangeNotifier {
 
   set latestDataEpochTime(double? latestDataEpochTime) {
     _latestDataEpochTime = latestDataEpochTime;
+    Future.delayed(Duration.zero, () => notifyListeners());
+  }
+
+  int get numberOfPoints => _numberOfPoints;
+
+  set numberOfPoints(int numberOfPoints) {
+    _numberOfPoints = numberOfPoints;
     Future.delayed(Duration.zero, () => notifyListeners());
   }
 

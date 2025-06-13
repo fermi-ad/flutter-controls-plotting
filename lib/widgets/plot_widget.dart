@@ -86,6 +86,24 @@ class PlotWidget extends StatefulWidget {
     }
     return false;
   }
+
+  Duration get plotAnimationDuration {
+    if (isTimedScalarData) {
+      // No animation for scrolling data.
+      return isTimedXAxis ? Duration.zero : const Duration(milliseconds: 150);
+    }
+
+    // No animation for frequency over 15Hz.
+    if (updateDelay < 66666) {
+      return Duration.zero;
+    }
+
+    // 50ms for frequency over 1Hz. 150 for 1Hz or slower.
+    int animationMs = updateDelay < 1000000 ? 50 : 150;
+    return Duration(milliseconds: animationMs);
+  }
+
+  PlotMetadata get plotMetadata => plotData.plotMetadata;
 }
 
 class PlotState extends State<PlotWidget> {
@@ -139,7 +157,7 @@ class PlotState extends State<PlotWidget> {
       .toList();
 
   Map<String, List<List<PlotPoint>>> get points => widget.plotData.points;
-  PlotMetadata get plotMetadata => widget.plotData.plotMetadata;
+  PlotMetadata get plotMetadata => widget.plotMetadata;
 
   @override
   void didChangeDependencies() {

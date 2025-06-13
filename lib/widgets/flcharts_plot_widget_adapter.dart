@@ -14,6 +14,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   Widget buildPlot() => LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) => LineChart(
           key: chartKey,
+          duration: widget.plotAnimationDuration,
           LineChartData(
             clipData: const FlClipData.all(),
             minX: widget.plotData.minX,
@@ -160,7 +161,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   Widget _bottomTitleWidgets(double value, TitleMeta meta) {
     if (widget.isTimedXAxis) {
       return SideTitleWidget(
-        axisSide: meta.axisSide,
+        meta: meta,
         angle: -1.57, // -90 * 3.14 / 180,
         child: Text(parseDaqTimeAsString(value)),
       );
@@ -298,7 +299,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
 
       if (addPoint) {
         FlSpot flSpot = FlSpot(x, y);
-        flSpots.add(flSpot);
+        flSpots.insert(0, flSpot);
       }
     }
 
@@ -326,8 +327,10 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     spotsToInsert.sort((a, b) => b.key.compareTo(a.key));
 
     // Insert the FlSpot objects into flSpots in order from largest index to smallest
-    for (var entry in spotsToInsert) {
-      flSpots.insert(entry.key, entry.value);
+    var offset = flSpots.length;
+    for (var entry in spotsToInsert.reversed) {
+      var index = offset - entry.key;
+      flSpots.insert(index, entry.value);
     }
 
     return flSpots;
@@ -341,6 +344,8 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     var minX = plotData.minX;
     var maxX = plotData.maxX;
 
+    int numberOfPoints = 0;
+
     plotChannels.asMap().forEach((index, plotChannel) {
       if (_channelHasError(plotChannel) ||
           !points.containsKey(plotChannel.name)) {
@@ -350,6 +355,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       for (var pointSegment in points[plotChannel.name]!) {
         // min and max y is not passed in for limiting points. This can cause behavior where poitns in the middle of axis are dropped.
         var spots = _toSpots(points: pointSegment, minX: minX, maxX: maxX);
+        numberOfPoints += spots.length;
 
         lineChartList.add(LineChartBarData(
           color: lineColorForChannel(plotChannel.name),
@@ -368,6 +374,8 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         ));
       }
     });
+
+    widget.plotMetadata.numberOfPoints = numberOfPoints;
 
     return lineChartList;
   }
