@@ -66,6 +66,20 @@ void assertPlotXAxisLimits(WidgetTester tester,
   expect(plotState.maxX, closeTo(max, 0.01));
 }
 
+void assertConfigTimeLimits(WidgetTester tester,
+    {required String timeMin, required String timeMax}) {
+  final timeMinTextField = find.byKey(const ValueKey('TimeMinTextField'));
+  final timeMaxTextField = find.byKey(const ValueKey('TimeMaxTextField'));
+
+  final timeMinText =
+      tester.widget<TextFormField>(timeMinTextField).controller?.text;
+  final timeMaxText =
+      tester.widget<TextFormField>(timeMaxTextField).controller?.text;
+
+  expect(timeMinText, equals(timeMin));
+  expect(timeMaxText, equals(timeMax));
+}
+
 void assertPlotYAxisLimits(WidgetTester tester,
     {required double min, required double max}) {
   final plotState = tester.state(find.byType(PlotWidget)) as PlotState;

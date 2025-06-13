@@ -78,7 +78,6 @@ class PlotData {
         plotMetadata.latestDataEpochTime! >= requestTime) {
       return;
     }
-
     plotMetadata.latestRequestEpochTime = requestTime;
   }
 
@@ -231,7 +230,7 @@ class PlotData {
     _recalculateDataForAllPoints();
   }
 
-  void findPointsLimits({double? untilXMin}) {
+  void findPointsLimits({double? untilXMin, double? untilXMax}) {
     double? minY, maxY, minX, maxX;
 
     for (var segments in points.values) {
@@ -242,7 +241,8 @@ class PlotData {
             maxY: maxY,
             minX: minX,
             maxX: maxX,
-            untilXMin: untilXMin);
+            untilXMin: untilXMin,
+            untilXMax: untilXMax);
       }
     }
 
@@ -269,7 +269,6 @@ class PlotData {
       (minY, maxY, minX, maxX) = _getLimitsPerPoints(
           points: points, minY: minY, maxY: maxY, minX: minX, maxX: maxX);
     }
-
     if (timeDelta == null) {
       if (confMinX != null) {
         minX = confMinX;
@@ -292,7 +291,7 @@ class PlotData {
         minX = maxX! - timeDelta;
         // Calculate y based on points displayed.
         if (confMinY == null && confMaxY == null) {
-          findPointsLimits(untilXMin: minX);
+          findPointsLimits(untilXMin: minX, untilXMax: maxX);
           minY = _minY;
           maxY = _maxY;
         }
@@ -306,21 +305,26 @@ class PlotData {
     if (confMaxY != null) {
       maxY = confMaxY;
     }
-
     setLimits(minX: minX, maxX: maxX, minY: minY, maxY: maxY);
   }
 
-  (double?, double?, double?, double?) _getLimitsPerPoints({
-    required List<PlotPoint> points,
-    required double? minY,
-    required double? maxY,
-    required double? minX,
-    required double? maxX,
-    double? untilXMin,
-  }) {
+  (double?, double?, double?, double?) _getLimitsPerPoints(
+      {required List<PlotPoint> points,
+      required double? minY,
+      required double? maxY,
+      required double? minX,
+      required double? maxX,
+      double? untilXMin,
+      double? untilXMax}) {
     for (int i = points.length - 1; i >= 0; i--) {
       final point = points[i];
       double yPoint = point.y;
+      double xPoint = point.x;
+
+      // Skip updating Y limits for points where X is larger than untilXMax.
+      if (untilXMax != null && xPoint > untilXMax) {
+        continue;
+      }
 
       if (minY == null) {
         minY = yPoint;
@@ -333,8 +337,6 @@ class PlotData {
         maxY = max(yPoint, maxY);
       }
 
-      double xPoint = point.x;
-
       if (minX == null) {
         minX = xPoint;
       } else {
@@ -345,11 +347,9 @@ class PlotData {
       } else {
         maxX = max(xPoint, maxX);
       }
-
-      if (untilXMin != null) {
-        if (minX <= untilXMin) {
-          break;
-        }
+      // stop processing further points once minX is less than or equal to untilXMin.
+      if (untilXMin != null && minX <= untilXMin) {
+        break;
       }
     }
 
@@ -408,5 +408,7 @@ class PlotData {
     _maxY = maxY;
     _minX = minX;
     _maxX = maxX;
+    plotMetadata.xMin = _minX;
+    plotMetadata.xMax = _maxX;
   }
 }
