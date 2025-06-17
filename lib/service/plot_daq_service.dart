@@ -392,7 +392,8 @@ class StandardPlotDAQ implements PlotDAQService {
           65535,
           (i) => PlotPoint(
               x: (i - 32767.0).toDouble(),
-              y: sin((i - 32767) / 65535 * 6.28).toDouble(),
+              y: ((sin((i - 32767) / 65535 * 6.28) + 1) / 2 * 1073676289)
+                  .toDouble(),
               t: currentEpochTime));
     } else if (forChannel == GenPlots.normal.name) {
       data = List.generate(
