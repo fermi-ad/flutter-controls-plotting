@@ -397,10 +397,14 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     // Verify if points reduction should be performed.
     int? reducedPoints;
     if (numberOfPoints > maxiumumPointsDisplayed) {
-      // int reductionFactor = (numberOfPoints / maxiumumPointsDisplayed).ceil();
-      var reducedSpots = _reduceSpots(
-          spots: lineChartList.first.spots, maxPoints: maxiumumPointsDisplayed);
-      reducedPoints = reducedSpots.length;
+      reducedPoints ??= 0;
+      for (var lineChart in lineChartList) {
+        var spots = lineChart.spots;
+        var spotsPercentage = spots.length / numberOfPoints;
+        var maxSpots = maxiumumPointsDisplayed * spotsPercentage;
+        _reduceSpots(spots: spots, maxPoints: maxSpots.ceil());
+        reducedPoints = reducedPoints! + spots.length;
+      }
     }
 
     widget.plotMetadata.reducedPoints = reducedPoints;
