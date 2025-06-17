@@ -3,6 +3,8 @@ part of plotadapter;
 class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   final bool isShowLabels;
 
+  final int maxiumumPointsDisplayed = 10000;
+
   FlchartsPlotWidgetAdapter(
       {required super.widget,
       required this.isShowLabels,
@@ -336,6 +338,23 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     return flSpots;
   }
 
+  List<FlSpot> _reduceSpots(
+      {required List<FlSpot> spots, required int maxPoints}) {
+    if (spots.length <= maxPoints) {
+      return spots;
+    }
+
+    double step = (spots.length - 1) / (maxPoints - 1).toDouble();
+
+    for (int i = 0; i < maxPoints; i++) {
+      int index = (i * step).round();
+      spots[i] = spots[index];
+    }
+    spots.removeRange(maxPoints, spots.length);
+
+    return spots;
+  }
+
   List<LineChartBarData> _toLineChartBarDataList(
       List<PlotChannelData> plotChannels, PlotData plotData) {
     List<LineChartBarData> lineChartList = [];
@@ -375,6 +394,20 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       }
     });
 
+    // Verify if points reduction should be performed.
+    int? reducedPoints;
+    if (numberOfPoints > maxiumumPointsDisplayed) {
+      reducedPoints ??= 0;
+      for (var lineChart in lineChartList) {
+        var spots = lineChart.spots;
+        var spotsPercentage = spots.length / numberOfPoints;
+        var maxSpots = maxiumumPointsDisplayed * spotsPercentage;
+        _reduceSpots(spots: spots, maxPoints: maxSpots.ceil());
+        reducedPoints = reducedPoints! + spots.length;
+      }
+    }
+
+    widget.plotMetadata.reducedPoints = reducedPoints;
     widget.plotMetadata.numberOfPoints = numberOfPoints;
 
     return lineChartList;

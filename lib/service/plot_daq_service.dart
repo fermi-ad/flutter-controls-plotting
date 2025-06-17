@@ -380,12 +380,35 @@ class StandardPlotDAQ implements PlotDAQService {
               x: (i - 32767.0).toDouble(),
               y: pow(i - 32767, 2).toDouble(),
               t: currentEpochTime));
+    } else if (forChannel == GenPlots.parabola32k.name) {
+      data = List.generate(
+          32767,
+          (i) => PlotPoint(
+              x: (i - 16383.0).toDouble(),
+              y: pow(i - 16383, 2).toDouble(),
+              t: currentEpochTime));
     } else if (forChannel == GenPlots.sine.name) {
       data = List.generate(
           501,
           (i) => PlotPoint(
               x: (i - 250.0).toDouble(),
               y: sin((i - 250) / 500 * 6.28).toDouble(),
+              t: currentEpochTime));
+    } else if (forChannel == GenPlots.sine64k.name) {
+      data = List.generate(
+          65535,
+          (i) => PlotPoint(
+              x: (i - 32767.0).toDouble(),
+              y: ((sin((i - 32767) / 65535 * 6.28) + 1) / 2 * 1073676289)
+                  .toDouble(),
+              t: currentEpochTime));
+    } else if (forChannel == GenPlots.sine32k.name) {
+      data = List.generate(
+          32767,
+          (i) => PlotPoint(
+              x: (i - 16383.0).toDouble(),
+              y: ((sin((i - 16383) / 32767 * 6.28) + 1) / 2 * 268402689)
+                  .toDouble(),
               t: currentEpochTime));
     } else if (forChannel == GenPlots.normal.name) {
       data = List.generate(
@@ -425,7 +448,10 @@ enum GenPlots {
   scalarRandRamp("PLOT TEST SCALAR RAND RAMP"),
   parabola("PLOT TEST PARABOLA"),
   parabola64k("PLOT TEST PARABOLA 64K"),
+  parabola32k("PLOT TEST PARABOLA 32K"),
   sine("PLOT TEST SINE"),
+  sine64k("PLOT TEST SINE 64K"),
+  sine32k("PLOT TEST SINE 32K"),
   normal("PLOT TEST NORMAL");
 
   const GenPlots(this.name, {this.minUpdateDelay});

@@ -13,6 +13,7 @@ class PlotMetadata with ChangeNotifier {
 
   int plotDataBytes = 0;
   int _numberOfPoints = 0;
+  int? reducedPoints;
 
   PlotMetadata();
 
