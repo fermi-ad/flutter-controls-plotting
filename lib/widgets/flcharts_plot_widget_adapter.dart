@@ -339,12 +339,18 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   }
 
   List<FlSpot> _reduceSpots(
-      {required List<FlSpot> spots, required int reductionFactor}) {
-    for (int i = spots.length - 2; i >= 0; i--) {
-      if (i % reductionFactor != 0) {
-        spots.removeAt(i);
-      }
+      {required List<FlSpot> spots, required int maxPoints}) {
+    if (spots.length <= maxPoints) {
+      return spots;
     }
+
+    double step = (spots.length - 1) / (maxPoints - 1).toDouble();
+
+    for (int i = 0; i < maxPoints; i++) {
+      int index = (i * step).round();
+      spots[i] = spots[index];
+    }
+    spots.removeRange(maxPoints, spots.length);
 
     return spots;
   }
@@ -391,9 +397,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     // Verify if points reduction should be performed.
     int? reducedPoints;
     if (numberOfPoints > maxiumumPointsDisplayed) {
-      int reductionFactor = (numberOfPoints / maxiumumPointsDisplayed).ceil();
+      // int reductionFactor = (numberOfPoints / maxiumumPointsDisplayed).ceil();
       var reducedSpots = _reduceSpots(
-          spots: lineChartList.first.spots, reductionFactor: reductionFactor);
+          spots: lineChartList.first.spots, maxPoints: maxiumumPointsDisplayed);
       reducedPoints = reducedSpots.length;
     }
 
