@@ -387,6 +387,13 @@ class StandardPlotDAQ implements PlotDAQService {
               x: (i - 250.0).toDouble(),
               y: sin((i - 250) / 500 * 6.28).toDouble(),
               t: currentEpochTime));
+    } else if (forChannel == GenPlots.sine64k.name) {
+      data = List.generate(
+          65535,
+          (i) => PlotPoint(
+              x: (i - 32767.0).toDouble(),
+              y: sin((i - 32767) / 65535 * 6.28).toDouble(),
+              t: currentEpochTime));
     } else if (forChannel == GenPlots.normal.name) {
       data = List.generate(
           500,
@@ -426,6 +433,7 @@ enum GenPlots {
   parabola("PLOT TEST PARABOLA"),
   parabola64k("PLOT TEST PARABOLA 64K"),
   sine("PLOT TEST SINE"),
+  sine64k("PLOT TEST SINE 64K"),
   normal("PLOT TEST NORMAL");
 
   const GenPlots(this.name, {this.minUpdateDelay});
