@@ -210,8 +210,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: main
-      resolved-ref: a2657a3e3c7142eb46223826f1cb3155f7f37a5d
+      ref: datalogger-plot
+      resolved-ref: add64bb37d3563b064bb61b1a07873e13cccee7a
       url: "https://github.com/fermi-ad/flutter-controls-core.git"
     source: git
     version: "0.3.1"

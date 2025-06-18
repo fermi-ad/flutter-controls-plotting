@@ -35,6 +35,8 @@ class FakeACSysService implements ACSysServiceAPI {
   Stream<PlotReply> startPlot(List<String> drfs,
       {double? xMin,
       double? xMax,
+      double? startTime,
+      double? endTime,
       int? windowSize,
       int? updateRate,
       int? nAcquisitions,
