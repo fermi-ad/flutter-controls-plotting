@@ -9,6 +9,8 @@ abstract class PlotDAQService {
       {required Set<String> forChannels,
       int updateDelay = 0,
       int nAcquisitions = 0,
+      double? startTime,
+      double? endTime,
       int? triggerEvent});
 }
 
@@ -35,6 +37,8 @@ class StandardPlotDAQ implements PlotDAQService {
       {required Set<String> forChannels,
       int updateDelay = 0,
       int nAcquisitions = 0,
+      double? startTime,
+      double? endTime,
       int? triggerEvent}) {
     var containsGenPlots = false;
     var plotArgs = _PlotArgs(xMin: 0, xMax: 499, windowSize: 500);
@@ -50,6 +54,8 @@ class StandardPlotDAQ implements PlotDAQService {
           forChannels: forChannels,
           args: plotArgs,
           updateDelay: updateDelay,
+          startTime: startTime,
+          endTime: endTime,
           triggerEvent: triggerEvent,
           nAcquisitions: nAcquisitions == 0 ? null : nAcquisitions);
     } else {
@@ -57,6 +63,8 @@ class StandardPlotDAQ implements PlotDAQService {
       return ACSys.api(context).startPlot(forChannels.toList(),
           xMin: plotArgs.xMin,
           xMax: plotArgs.xMax,
+          startTime: startTime,
+          endTime: endTime,
           windowSize: plotArgs.windowSize,
           updateRate: updateDelay,
           triggerEvent: triggerEvent,
@@ -69,6 +77,8 @@ class StandardPlotDAQ implements PlotDAQService {
       required _PlotArgs args,
       int updateDelay = 0,
       int? nAcquisitions,
+      double? startTime,
+      double? endTime,
       int? triggerEvent}) async* {
     var requestTime = getCurrentAcsysEpochTime();
     if (updateDelay == 0) {
@@ -105,6 +115,18 @@ class StandardPlotDAQ implements PlotDAQService {
         yield await generatePlotFuture;
       }
     } else {
+      // Verify if archiver request
+      if (startTime != null) {
+        yield await _generateArchivedPlot(
+            forChannels: forChannels,
+            startTime: startTime,
+            endTime: endTime,
+            args: args,
+            requestTime: requestTime,
+            apiDelay: updateDelay);
+        return;
+      }
+
       // Refresh cycle only API provided.
       bool validLoop = true;
       int nAcquisitionsInLoop = 0;
@@ -212,22 +234,54 @@ class StandardPlotDAQ implements PlotDAQService {
     }
   }
 
-  Future<PlotReply> _generatePlot({
+  Future<PlotReply> _generateArchivedPlot({
     required Set<String> forChannels,
+    required double startTime,
+    required double? endTime,
     required _PlotArgs args,
+    int apiDelay = 1,
     required double requestTime,
-    required String rate,
-    int apiDelay = 0,
-    int pointCount = 1,
-    bool markChannelNameErrors = false,
-    List<double>? eventXList,
   }) async {
+    var rate = getRate(apiDelay);
+
+    endTime ??= getCurrentAcsysEpochTime();
+
+    var totalDuration = endTime - startTime;
+    double secondsPerPoint = apiDelay / 1e6;
+    var pointsPerSecond = 1 / secondsPerPoint;
+
+    var pointsInTotalDuration = (totalDuration * pointsPerSecond).ceil();
+
+    var result = await _generatePlot(
+        forChannels: forChannels,
+        args: args,
+        apiDelay: apiDelay,
+        requestTime: requestTime,
+        pointCount: pointsInTotalDuration,
+        currentEpochTime: startTime,
+        rate: rate,
+        noDelay: true);
+
+    return result;
+  }
+
+  Future<PlotReply> _generatePlot(
+      {required Set<String> forChannels,
+      required _PlotArgs args,
+      required double requestTime,
+      required String rate,
+      int apiDelay = 0,
+      int pointCount = 1,
+      bool markChannelNameErrors = false,
+      List<double>? eventXList,
+      double? currentEpochTime,
+      bool noDelay = false}) async {
     var totalDuration = (apiDelay * pointCount);
 
     List<PlotChannelData> internalDaqData = [];
     var xAxisUnits = 'Index';
 
-    var currentEpochTime = getCurrentAcsysEpochTime();
+    currentEpochTime ??= getCurrentAcsysEpochTime();
     double secondsPerPoint = apiDelay / 1e6;
 
     for (var forChannel in forChannels) {
@@ -294,8 +348,10 @@ class StandardPlotDAQ implements PlotDAQService {
       }
     }
 
-    Duration duration = Duration(microseconds: totalDuration);
-    await Future.delayed(duration);
+    if (!noDelay) {
+      Duration duration = Duration(microseconds: totalDuration);
+      await Future.delayed(duration);
+    }
 
     var generatedPlotReply = PlotReply(
         plotId: "Internal",
