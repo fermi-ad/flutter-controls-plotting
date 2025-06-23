@@ -26,6 +26,9 @@ class PlotWidget extends StatefulWidget {
   final double? xMin;
   final double? xMax;
 
+  final double? dataLoggerStartTime;
+  final double? dataLoggerEndTime;
+
   final int updateDelay;
 
   final int? triggerEvent;
@@ -61,6 +64,8 @@ class PlotWidget extends StatefulWidget {
       this.yMax,
       this.xMin,
       this.xMax,
+      this.dataLoggerStartTime,
+      this.dataLoggerEndTime,
       this.updateDelay = 0,
       this.nAcquisitions = 0,
       this.triggerEvent,
@@ -359,6 +364,8 @@ class PlotState extends State<PlotWidget> {
     _updateDelay = widget.updateDelay;
     _triggerEvent = widget.triggerEvent;
     _nAcquisitions = widget.nAcquisitions;
+    _dataLoggerStartTime = widget.dataLoggerStartTime;
+    _dataLoggerEndTime = widget.dataLoggerEndTime;
 
     _updateStreamConnectionChanged(ConnectionState.none);
 
@@ -388,7 +395,9 @@ class PlotState extends State<PlotWidget> {
           forChannels: _channels.keys.toSet(),
           updateDelay: _updateDelay,
           triggerEvent: _triggerEvent,
-          nAcquisitions: _nAcquisitions);
+          nAcquisitions: _nAcquisitions,
+          startTime: _dataLoggerStartTime,
+          endTime: _dataLoggerEndTime);
     }
   }
 
@@ -531,6 +540,9 @@ class PlotState extends State<PlotWidget> {
   int? _triggerEvent = 0;
 
   int _nAcquisitions = 0;
+
+  double? _dataLoggerStartTime;
+  double? _dataLoggerEndTime;
 
   bool _errorsDismissed = false;
 
