@@ -364,6 +364,7 @@ class PlotState extends State<PlotWidget> {
     _updateDelay = widget.updateDelay;
     _triggerEvent = widget.triggerEvent;
     _nAcquisitions = widget.nAcquisitions;
+    var apiAcquisitions = _nAcquisitions;
     _dataLoggerStartTime = widget.dataLoggerStartTime;
     _dataLoggerEndTime = widget.dataLoggerEndTime;
 
@@ -381,7 +382,7 @@ class PlotState extends State<PlotWidget> {
         // Number of seconds
         pointLimitCalc = pointLimitCalc * timeDelta!;
         // Round up to ensure number of acquisitions include full timeframe.
-        _nAcquisitions = pointLimitCalc.ceil();
+        apiAcquisitions = pointLimitCalc.ceil();
       }
     }
 
@@ -395,7 +396,7 @@ class PlotState extends State<PlotWidget> {
           forChannels: _channels.keys.toSet(),
           updateDelay: _updateDelay,
           triggerEvent: _triggerEvent,
-          nAcquisitions: _nAcquisitions,
+          nAcquisitions: apiAcquisitions,
           startTime: _dataLoggerStartTime,
           endTime: _dataLoggerEndTime);
     }
