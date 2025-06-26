@@ -279,7 +279,7 @@ class StandardPlotDAQ implements PlotDAQService {
       pointsPerReply = pointsLeft;
     }
 
-    var calulatedStartTime = startTime + (pointsPerReply * secondsPerPoint);
+    var calulatedStartTime = startTime + (pointsProcessed * secondsPerPoint);
 
     var result = await _generatePlot(
         forChannels: forChannels,
