@@ -262,6 +262,14 @@ class StandardPlotDAQ implements PlotDAQService {
 
     endTime ??= getCurrentAcsysEpochTime();
 
+    if (endTime > requestTime) {
+      endTime = requestTime;
+    }
+
+    if (startTime > requestTime) {
+      startTime = requestTime;
+    }
+
     var totalDuration = endTime - startTime;
     double secondsPerPoint = apiDelay / 1e6;
     var pointsPerSecond = 1 / secondsPerPoint;
