@@ -193,6 +193,16 @@ void assertPlotContainsNPoints(WidgetTester tester, dynamic numberOfPoints,
   expect(plotPoints.length, numberOfPoints);
 }
 
+void assertPlotContainsStartAndEndX(WidgetTester tester,
+    {required dynamic startX,
+    required dynamic endX,
+    required String channelName}) {
+  final plotPoints = _getPlotPoints(tester, channelName: channelName);
+
+  expect(plotPoints.first.x, startX);
+  expect(plotPoints.last.x, endX);
+}
+
 Future<void> assertPlotIsPaused(WidgetTester tester) async {
   final beforePlotWidget =
       find.byType(PlotWidget).evaluate().first.widget as PlotWidget;
