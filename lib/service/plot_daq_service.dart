@@ -117,13 +117,27 @@ class StandardPlotDAQ implements PlotDAQService {
     } else {
       // Verify if archiver request
       if (startTime != null) {
-        yield await _generateArchivedPlot(
-            forChannels: forChannels,
-            startTime: startTime,
-            endTime: endTime,
-            args: args,
-            requestTime: requestTime,
-            apiDelay: updateDelay);
+        var pointsProcessed = 0;
+        while (true) {
+          var archivedPlotMetadata = await _generateArchivedPlot(
+              forChannels: forChannels,
+              startTime: startTime,
+              endTime: endTime,
+              args: args,
+              pointsProcessed: pointsProcessed,
+              requestTime: requestTime,
+              apiDelay: updateDelay);
+
+          var reply = archivedPlotMetadata.currentPlotReply;
+          if (reply == null) {
+            break;
+          }
+
+          yield reply;
+
+          pointsProcessed = archivedPlotMetadata.pointsProcessed;
+        }
+
         return;
       }
 
@@ -234,12 +248,14 @@ class StandardPlotDAQ implements PlotDAQService {
     }
   }
 
-  Future<PlotReply> _generateArchivedPlot({
+  Future<ArchivedPlotReplyMetadata> _generateArchivedPlot({
     required Set<String> forChannels,
     required double startTime,
     required double? endTime,
     required _PlotArgs args,
-    int apiDelay = 1,
+    required int apiDelay,
+    int pointsPerReply = 100,
+    int pointsProcessed = 0,
     required double requestTime,
   }) async {
     var rate = getRate(apiDelay);
@@ -252,17 +268,32 @@ class StandardPlotDAQ implements PlotDAQService {
 
     var pointsInTotalDuration = (totalDuration * pointsPerSecond).ceil();
 
+    var pointsLeft = (pointsInTotalDuration - pointsProcessed);
+
+    if (pointsLeft == 0) {
+      return ArchivedPlotReplyMetadata(
+          currentPlotReply: null, pointsProcessed: pointsProcessed);
+    }
+
+    if (pointsLeft < pointsPerReply) {
+      pointsPerReply = pointsLeft;
+    }
+
+    var calulatedStartTime = startTime + (pointsPerReply * secondsPerPoint);
+
     var result = await _generatePlot(
         forChannels: forChannels,
         args: args,
         apiDelay: apiDelay,
         requestTime: requestTime,
-        pointCount: pointsInTotalDuration,
-        currentEpochTime: startTime,
+        pointCount: pointsPerReply,
+        currentEpochTime: calulatedStartTime,
         rate: rate,
         noDelay: true);
 
-    return result;
+    pointsProcessed += pointsPerReply;
+    return ArchivedPlotReplyMetadata(
+        currentPlotReply: result, pointsProcessed: pointsProcessed);
   }
 
   Future<PlotReply> _generatePlot(
@@ -492,6 +523,14 @@ class _PlotArgs {
   int windowSize;
 
   _PlotArgs({required this.xMin, required this.xMax, required this.windowSize});
+}
+
+class ArchivedPlotReplyMetadata {
+  PlotReply? currentPlotReply;
+  int pointsProcessed;
+
+  ArchivedPlotReplyMetadata(
+      {required this.currentPlotReply, required this.pointsProcessed});
 }
 
 enum GenPlots {
