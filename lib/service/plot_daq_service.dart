@@ -138,7 +138,9 @@ class StandardPlotDAQ implements PlotDAQService {
           pointsProcessed = archivedPlotMetadata.pointsProcessed;
         }
 
-        return;
+        if (endTime != null) {
+          return;
+        }
       }
 
       // Refresh cycle only API provided.
