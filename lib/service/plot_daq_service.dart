@@ -141,6 +141,11 @@ class StandardPlotDAQ implements PlotDAQService {
         if (endTime != null) {
           return;
         }
+
+        // wait for future plot
+        while (getCurrentAcsysEpochTime() < startTime) {
+          await Future.delayed(const Duration(milliseconds: 100));
+        }
       }
 
       // Refresh cycle only API provided.
