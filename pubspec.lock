@@ -211,7 +211,7 @@ packages:
     description:
       path: "."
       ref: datalogger-plot
-      resolved-ref: "5518ee808587e0a4d88ee0af04fa1443943567f1"
+      resolved-ref: e07bf57c56773749c543d9a3fdcc2bc334d9f012
       url: "https://github.com/fermi-ad/flutter-controls-core.git"
     source: git
     version: "0.3.1"
