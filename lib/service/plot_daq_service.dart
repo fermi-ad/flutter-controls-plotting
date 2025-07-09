@@ -138,7 +138,7 @@ class StandardPlotDAQ implements PlotDAQService {
           pointsProcessed = archivedPlotMetadata.pointsProcessed;
         }
 
-        if (endTime != null) {
+        if (endTime != null && getCurrentAcsysEpochTime() > endTime) {
           return;
         }
 
@@ -189,7 +189,6 @@ class StandardPlotDAQ implements PlotDAQService {
         acquisitionStopwatch = Stopwatch();
         acquisitionStopwatch.start();
       }
-
       while (validLoop) {
         if (apiDelay == 0) {
           await Future.delayed(Duration(microseconds: updateDelay));
@@ -248,6 +247,11 @@ class StandardPlotDAQ implements PlotDAQService {
           if (limitAcquisitionMs! <= msSinceStart) {
             validLoop = false;
           }
+        }
+
+        // If end time is specified end the acquisition once the end time is reached.
+        if (endTime != null && getCurrentAcsysEpochTime() >= endTime) {
+          validLoop = false;
         }
 
         yield plot;
@@ -320,6 +324,7 @@ class StandardPlotDAQ implements PlotDAQService {
       int pointCount = 1,
       bool markChannelNameErrors = false,
       List<double>? eventXList,
+      // Optional parameter used for fetching "archived" data.
       double? currentEpochTime,
       bool noDelay = false}) async {
     var totalDuration = (apiDelay * pointCount);
