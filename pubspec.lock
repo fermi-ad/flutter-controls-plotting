@@ -13,10 +13,10 @@ packages:
     dependency: transitive
     description:
       name: analyzer
-      sha256: "01949bf52ad33f0e0f74f881fbaac4f348c556531951d92c8d16f1262aa19ff8"
+      sha256: de617bfdc64f3d8b00835ec2957441ceca0a29cdf7881f7ab231bc14f71159c0
       url: "https://pub.dev"
     source: hosted
-    version: "7.5.4"
+    version: "7.5.6"
   args:
     dependency: transitive
     description:
@@ -211,7 +211,7 @@ packages:
     description:
       path: "."
       ref: datalogger-plot
-      resolved-ref: "5518ee808587e0a4d88ee0af04fa1443943567f1"
+      resolved-ref: ea3d5af1737887f9f7fb1bb6cf19463e5f0d0132
       url: "https://github.com/fermi-ad/flutter-controls-core.git"
     source: git
     version: "0.3.1"
