@@ -21,8 +21,8 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
             clipData: const FlClipData.all(),
             minX: widget.plotData.minX,
             maxX: widget.plotData.maxX,
-            minY: widget.plotData.minY,
-            maxY: widget.plotData.maxY,
+            minY: 0,
+            maxY: 1,
             lineBarsData: plotReply == null
                 ? []
                 : _toLineChartBarDataList(plotReply!.data, widget.plotData),
