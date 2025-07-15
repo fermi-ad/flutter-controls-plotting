@@ -2,20 +2,42 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 
 class FlchartCache {
-  Map<String, List<List<FlSpot>>> points = {};
-
-  int spotsGenCtr = 0;
+  Map<String, List<List<FlSpot>>> spots = {};
+  Map<String, List<int>> lastProcessedIndex = {};
 
   List<FlSpot> toSpots(
       {required List<PlotPoint> points,
+      required channelName,
+      required int segmentIndex,
       double? minX,
       double? maxX,
       double? minY,
       double? maxY,
       bool exitForScalar = false}) {
-    List<FlSpot> flSpots = [];
+    List<FlSpot> flSpots;
+    int startIndex = 0;
 
-    // Find the closest points to each min and max
+    if (!spots.containsKey(channelName)) {
+      spots[channelName] = [];
+      lastProcessedIndex[channelName] = [];
+    }
+
+    while (spots[channelName]!.length <= segmentIndex) {
+      spots[channelName]!.add([]);
+      lastProcessedIndex[channelName]!.add(-1);
+    }
+
+    if (spots[channelName]![segmentIndex].isNotEmpty) {
+      flSpots = List.from(spots[channelName]![segmentIndex]);
+      startIndex = lastProcessedIndex[channelName]![segmentIndex] + 1;
+
+      if (startIndex >= points.length) {
+        return flSpots;
+      }
+    } else {
+      flSpots = [];
+    }
+
     PlotPoint? minXPair;
     PlotPoint? maxXPair;
     PlotPoint? minYPair;
@@ -26,7 +48,9 @@ class FlchartCache {
     int? minYPairIndex;
     int? maxYPairIndex;
 
-    for (PlotPoint point in points.reversed) {
+    List<FlSpot> newSpots = [];
+    for (int i = points.length - 1; i >= startIndex; i--) {
+      PlotPoint point = points[i];
       var x = point.x;
       var y = point.y;
 
@@ -36,11 +60,11 @@ class FlchartCache {
         if ((maxX != null && x > maxX) &&
             (maxXPair == null || maxXPair.x > x)) {
           maxXPair = PlotPoint(x: x, y: y);
-          maxXPairIndex = flSpots.length;
+          maxXPairIndex = newSpots.length;
         } else if ((minX != null && x < minX) &&
             (minXPair == null || minXPair.x < x)) {
           minXPair = PlotPoint(x: x, y: y);
-          minXPairIndex = flSpots.length;
+          minXPairIndex = newSpots.length;
           if (exitForScalar) {
             // The last relevant time was reached. No need to check rest of points.
             break;
@@ -53,18 +77,18 @@ class FlchartCache {
         if ((maxY != null && y > maxY) &&
             (maxYPair == null || maxYPair.y > y)) {
           maxYPair = PlotPoint(x: x, y: y);
-          maxYPairIndex = flSpots.length;
+          maxYPairIndex = newSpots.length;
         } else if ((minY != null && y < minY) &&
             (minYPair == null || minYPair.y < y)) {
           minYPair = PlotPoint(x: x, y: y);
-          minYPairIndex = flSpots.length;
+          minYPairIndex = newSpots.length;
         }
         addPoint = false;
       }
 
       if (addPoint) {
         FlSpot flSpot = FlSpot(x, y);
-        flSpots.insert(0, flSpot);
+        newSpots.insert(0, flSpot);
       }
     }
 
@@ -92,12 +116,16 @@ class FlchartCache {
     spotsToInsert.sort((a, b) => b.key.compareTo(a.key));
 
     // Insert the FlSpot objects into flSpots in order from largest index to smallest
-    var offset = flSpots.length;
+    var offset = newSpots.length;
     for (var entry in spotsToInsert.reversed) {
       var index = offset - entry.key;
-      flSpots.insert(index, entry.value);
+      newSpots.insert(index, entry.value);
     }
 
+    flSpots.addAll(newSpots);
+
+    spots[channelName]![segmentIndex] = flSpots;
+    lastProcessedIndex[channelName]![segmentIndex] = points.length - 1;
     return flSpots;
   }
 
