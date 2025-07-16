@@ -278,6 +278,8 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         // min and max y is not passed in for limiting points. This can cause behavior where poitns in the middle of axis are dropped.
         var spots = cache.toSpots(
             points: pointSegment,
+            channelName: plotChannel.name,
+            segmentIndex: segmentIndex,
             minX: minX,
             maxX: maxX,
             exitForScalar: exitForScalar);
