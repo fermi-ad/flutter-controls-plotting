@@ -5,6 +5,11 @@ class FlchartCache {
   Map<String, List<List<FlSpot>>> spots = {};
   Map<String, List<int>> lastProcessedIndex = {};
 
+  int? reducedPoints;
+  int totalPoints = 0;
+
+  bool _resetCache = false;
+
   List<FlSpot> toSpots(
       {required List<PlotPoint> points,
       required channelName,
@@ -14,6 +19,9 @@ class FlchartCache {
       double? minY,
       double? maxY,
       bool exitForScalar = false}) {
+    if (_resetCache) {
+      clearAll();
+    }
     List<FlSpot> flSpots;
     int startIndex = 0;
 
@@ -122,6 +130,8 @@ class FlchartCache {
       newSpots.insert(index, entry.value);
     }
 
+    totalPoints += newSpots.length;
+
     flSpots.addAll(newSpots);
 
     spots[channelName]![segmentIndex] = flSpots;
@@ -132,5 +142,63 @@ class FlchartCache {
   bool __isWithinBounds(double value, double? min, double? max) {
     // Check if the given value is within the specified bounds (min and max).
     return (min == null || value >= min) && (max == null || value <= max);
+  }
+
+  int? reduceSpots(
+      {int minimumPointsNeeded = 8000, int maxiumumPointsDisplayed = 10000}) {
+    int numberOfPoints = 0;
+    for (var channelSpots in spots.values) {
+      for (var segmentSpots in channelSpots) {
+        numberOfPoints += segmentSpots.length;
+      }
+    }
+
+    if (numberOfPoints > maxiumumPointsDisplayed) {
+      if (reducedPoints != null) {
+        // Already reduced, will reduce on next itteration.
+        reducedPoints = numberOfPoints;
+        _resetCache = true;
+        return reducedPoints;
+      }
+      reducedPoints ??= 0;
+      for (var channelSpots in spots.values) {
+        for (var spots in channelSpots) {
+          var spotsPercentage = spots.length / numberOfPoints;
+          var maxSpots = minimumPointsNeeded * spotsPercentage;
+          __reduceSpots(spots: spots, maxPoints: maxSpots.ceil());
+          reducedPoints = reducedPoints! + spots.length;
+        }
+      }
+    } else if (numberOfPoints > minimumPointsNeeded) {
+      reducedPoints = numberOfPoints;
+    }
+
+    return reducedPoints;
+  }
+
+  List<FlSpot> __reduceSpots(
+      {required List<FlSpot> spots, required int maxPoints}) {
+    if (spots.length <= maxPoints) {
+      return spots;
+    }
+
+    double step = (spots.length - 1) / (maxPoints - 1).toDouble();
+
+    for (int i = 0; i < maxPoints; i++) {
+      int index = (i * step).round();
+      spots[i] = spots[index];
+    }
+    spots.removeRange(maxPoints, spots.length);
+
+    return spots;
+  }
+
+  void clearAll() {
+    spots.clear();
+    lastProcessedIndex.clear();
+
+    totalPoints = 0;
+    reducedPoints = null;
+    _resetCache = false;
   }
 }

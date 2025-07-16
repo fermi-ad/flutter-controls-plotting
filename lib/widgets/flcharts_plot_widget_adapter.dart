@@ -236,23 +236,6 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     return tooltips;
   }
 
-  List<FlSpot> _reduceSpots(
-      {required List<FlSpot> spots, required int maxPoints}) {
-    if (spots.length <= maxPoints) {
-      return spots;
-    }
-
-    double step = (spots.length - 1) / (maxPoints - 1).toDouble();
-
-    for (int i = 0; i < maxPoints; i++) {
-      int index = (i * step).round();
-      spots[i] = spots[index];
-    }
-    spots.removeRange(maxPoints, spots.length);
-
-    return spots;
-  }
-
   List<LineChartBarData> _toLineChartBarDataList(
       List<PlotChannelData> plotChannels, PlotData plotData) {
     List<LineChartBarData> lineChartList = [];
@@ -264,8 +247,6 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     // Timed X axis and no xMax defined will exit upon last out of range value.
     bool exitForScalar = widget.xMax == null && widget.isTimedXAxis;
     var cache = widget.plotData.flchartCache;
-
-    int numberOfPoints = 0;
 
     plotChannels.asMap().forEach((index, plotChannel) {
       if (_channelHasError(plotChannel) ||
@@ -283,7 +264,6 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
             minX: minX,
             maxX: maxX,
             exitForScalar: exitForScalar);
-        numberOfPoints += spots.length;
 
         lineChartList.add(LineChartBarData(
           color: lineColorForChannel(plotChannel.name),
@@ -304,20 +284,10 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     });
 
     // Verify if points reduction should be performed.
-    int? reducedPoints;
-    if (numberOfPoints > maxiumumPointsDisplayed) {
-      reducedPoints ??= 0;
-      for (var lineChart in lineChartList) {
-        var spots = lineChart.spots;
-        var spotsPercentage = spots.length / numberOfPoints;
-        var maxSpots = maxiumumPointsDisplayed * spotsPercentage;
-        _reduceSpots(spots: spots, maxPoints: maxSpots.ceil());
-        reducedPoints = reducedPoints! + spots.length;
-      }
-    }
+    int? reducedPoints = cache.reduceSpots();
 
     widget.plotMetadata.reducedPoints = reducedPoints;
-    widget.plotMetadata.numberOfPoints = numberOfPoints;
+    widget.plotMetadata.numberOfPoints = cache.totalPoints;
 
     return lineChartList;
   }
