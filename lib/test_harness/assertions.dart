@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
+import 'package:flutter_controls_plotting/widgets/plot_y_axis_label_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void assertEmptyPlot(WidgetTester tester, {required bool isVisible}) {
@@ -86,6 +87,17 @@ void assertPlotYAxisLimits(WidgetTester tester,
 
   expect(plotState.minY, closeTo(min, 0.01));
   expect(plotState.maxY, closeTo(max, 0.01));
+}
+
+void assertPlotYAxisLabel(
+    {required bool isVisible, required Color color, required String withText}) {
+  final finder = find.descendant(
+      of: find.byType(PlotWidget),
+      matching: find.descendant(
+          of: find.byType(PlotYAxisLabelWidget),
+          matching: find.text(withText)));
+
+  expect(finder, isVisible ? findsAtLeastNWidgets(1) : findsNothing);
 }
 
 void assertPlotContainsHorizontalLine(WidgetTester tester,

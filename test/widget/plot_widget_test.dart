@@ -399,6 +399,8 @@ void main() {
 
       // ... and the Y-axis limits are 0 to 1
       assertPlotYAxisLimits(tester, min: 0, max: 3);
+      assertPlotYAxisLabel(isVisible: true, color: Colors.red, withText: "0");
+      assertPlotYAxisLabel(isVisible: true, color: Colors.red, withText: "3");
 
       // ... and the X-axis limits are 0 to 1
       assertPlotXAxisLimits(tester, min: 0, max: 3);
