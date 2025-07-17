@@ -41,5 +41,33 @@ void main() {
       assertPlotYAxisLabel(
           isVisible: true, color: Colors.red, withText: "10.00");
     });
+
+    testWidgets(
+        "Min is negative and max is positive, correct normalized value is displayed",
+        (WidgetTester tester) async {
+      // Given a set of PlotYAxisLabelWidgets with min: -10 and max: 10
+      // When I build the PlotYAxisLabelWidget with a normalizedValue of 0, 0.1, 0.5 and 1
+      await tester.pumpWidget(const MaterialApp(
+          home: Scaffold(
+              body: Column(children: [
+        PlotYAxisLabelWidget(min: -10, max: 10, normalizedValue: 0.0),
+        PlotYAxisLabelWidget(min: -10, max: 10, normalizedValue: 0.1),
+        PlotYAxisLabelWidget(min: -10, max: 10, normalizedValue: 0.5),
+        PlotYAxisLabelWidget(min: -10, max: 10, normalizedValue: 0.6),
+        PlotYAxisLabelWidget(min: -10, max: 10, normalizedValue: 1.0)
+      ]))));
+
+      // Then the displayed values are...
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.red, withText: "-10.00");
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.red, withText: "-8.00");
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.red, withText: "0.00");
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.red, withText: "2.00");
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.red, withText: "10.00");
+    });
   });
 }
