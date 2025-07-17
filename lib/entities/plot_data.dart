@@ -381,6 +381,7 @@ class PlotData {
 
   void cleanUpPoints(
       {Iterable<String> keepChannelList = const Iterable.empty()}) {
+    flchartCache.clearAll();
     List<String> garbageChannels = [];
     for (var channelName in points.keys) {
       if (!keepChannelList.contains(channelName)) {
