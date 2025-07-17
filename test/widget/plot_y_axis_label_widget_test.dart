@@ -20,16 +20,21 @@ void main() {
     testWidgets(
         "Min is 0 and max is positive, correct normalized value is displayed",
         (WidgetTester tester) async {
-      // Given a PlotYAxisLabelWidget with min: 0 and max: 10
-      // When I build the PlotYAxisLabelWidget with a normalizedValue of 1
+      // Given a set of PlotYAxisLabelWidgets with min: 0 and max: 10
+      // When I build the PlotYAxisLabelWidget with a normalizedValue of 0, 0.1, 0.5 and 1
       await tester.pumpWidget(const MaterialApp(
           home: Scaffold(
-              body: PlotYAxisLabelWidget(
-                  min: 0, max: 10, normalizedValue: 1.0))));
+              body: Column(children: [
+        PlotYAxisLabelWidget(min: 0, max: 10, normalizedValue: 1.0)
+      ]))));
 
-      // Then the display value is...
+      // Then the displayed values are...
       assertPlotYAxisLabel(
           isVisible: true, color: Colors.red, withText: "0.00");
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.red, withText: "1.00");
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.red, withText: "5.00");
       assertPlotYAxisLabel(
           isVisible: true, color: Colors.red, withText: "10.00");
     });
