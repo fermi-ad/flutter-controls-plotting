@@ -120,9 +120,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         axisNameSize: axisNameSize,
         axisNameWidget: axisNameWidget,
         sideTitles: SideTitles(
-          showTitles: isShowLabels,
-          reservedSize: 60,
-        ),
+            showTitles: isShowLabels,
+            reservedSize: 60,
+            getTitlesWidget: _buildYLabelWidget),
       );
 
       topTitles = emptyTitles;
@@ -130,9 +130,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       // Displayed on narrow screen
       leftTitles = AxisTitles(
         sideTitles: SideTitles(
-          showTitles: isShowLabels,
-          reservedSize: 60,
-        ),
+            showTitles: isShowLabels,
+            reservedSize: 60,
+            getTitlesWidget: _buildYLabelWidget),
       );
 
       topTitles = AxisTitles(
@@ -171,6 +171,15 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
 
     return defaultGetTitle(value, meta);
   }
+
+  SideTitleWidget _buildYLabelWidget(double value, TitleMeta meta) =>
+      SideTitleWidget(
+          meta: meta,
+          child: PlotYAxisLabelWidget(
+            min: widget.plotData.minY,
+            max: widget.plotData.maxY,
+            normalizedValue: value,
+          ));
 
   double touchPointDistanceCalculate(
       {required Offset touchPoint,

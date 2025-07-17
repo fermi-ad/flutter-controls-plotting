@@ -397,12 +397,10 @@ void main() {
       // Then the plot is empty
       assertEmptyPlot(tester, isVisible: true);
 
-      // ... and the Y-axis limits are 0 to 1
+      // ... and the Y-axis limits are 0 to 3
       assertPlotYAxisLimits(tester, min: 0, max: 3);
-      assertPlotYAxisLabel(isVisible: true, color: Colors.red, withText: "0");
-      assertPlotYAxisLabel(isVisible: true, color: Colors.red, withText: "3");
 
-      // ... and the X-axis limits are 0 to 1
+      // ... and the X-axis limits are 0 to 3
       assertPlotXAxisLimits(tester, min: 0, max: 3);
     });
 
@@ -425,6 +423,10 @@ void main() {
 
       // ... and the Y-axis has limits of...
       assertPlotYAxisLimits(tester, min: 5, max: 5);
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.red, withText: "0.00");
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.red, withText: "5.00");
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");

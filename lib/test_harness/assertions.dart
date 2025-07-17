@@ -92,10 +92,7 @@ void assertPlotYAxisLimits(WidgetTester tester,
 void assertPlotYAxisLabel(
     {required bool isVisible, required Color color, required String withText}) {
   final finder = find.descendant(
-      of: find.byType(PlotWidget),
-      matching: find.descendant(
-          of: find.byType(PlotYAxisLabelWidget),
-          matching: find.text(withText)));
+      of: find.byType(PlotYAxisLabelWidget), matching: find.text(withText));
 
   expect(finder, isVisible ? findsAtLeastNWidgets(1) : findsNothing);
 }
