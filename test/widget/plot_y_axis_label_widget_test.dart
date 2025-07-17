@@ -25,6 +25,9 @@ void main() {
       await tester.pumpWidget(const MaterialApp(
           home: Scaffold(
               body: Column(children: [
+        PlotYAxisLabelWidget(min: 0, max: 10, normalizedValue: 0.0),
+        PlotYAxisLabelWidget(min: 0, max: 10, normalizedValue: 0.1),
+        PlotYAxisLabelWidget(min: 0, max: 10, normalizedValue: 0.5),
         PlotYAxisLabelWidget(min: 0, max: 10, normalizedValue: 1.0)
       ]))));
 
