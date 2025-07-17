@@ -136,6 +136,8 @@ class StandardPlotDAQ implements PlotDAQService {
           yield reply;
 
           pointsProcessed = archivedPlotMetadata.pointsProcessed;
+
+          await Future.delayed(Duration.zero);
         }
 
         if (endTime != null && getCurrentAcsysEpochTime() > endTime) {
@@ -265,7 +267,7 @@ class StandardPlotDAQ implements PlotDAQService {
     required double? endTime,
     required _PlotArgs args,
     required int apiDelay,
-    int pointsPerReply = 100,
+    int pointsPerReply = 1000,
     int pointsProcessed = 0,
     required double requestTime,
   }) async {
