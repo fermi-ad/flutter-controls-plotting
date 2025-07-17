@@ -29,6 +29,8 @@ void main() {
 
       // Then the display value is...
       assertPlotYAxisLabel(
+          isVisible: true, color: Colors.red, withText: "0.00");
+      assertPlotYAxisLabel(
           isVisible: true, color: Colors.red, withText: "10.00");
     });
   });
