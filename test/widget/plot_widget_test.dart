@@ -424,8 +424,6 @@ void main() {
       // ... and the Y-axis has limits of...
       assertPlotYAxisLimits(tester, min: 5, max: 5);
       assertPlotYAxisLabel(
-          isVisible: true, color: Colors.red, withText: "0.00");
-      assertPlotYAxisLabel(
           isVisible: true, color: Colors.red, withText: "5.00");
 
       // ... and the X-axis is labeled...

@@ -12,8 +12,7 @@ class PlotYAxisLabelWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = value.toStringAsFixed(2);
     print("$min $max $normalizedValue $value");
-    return Text(text);
+    return Text(value.toStringAsFixed(2));
   }
 }
