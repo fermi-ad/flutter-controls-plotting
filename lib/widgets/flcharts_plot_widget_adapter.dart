@@ -309,7 +309,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       }
 
       if (addPoint) {
-        FlSpot flSpot = FlSpot(x, y);
+        FlSpot flSpot = FlSpot(x, _normalizeY(y, min: minY, max: maxY));
         flSpots.insert(0, flSpot);
       }
     }
@@ -346,6 +346,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
 
     return flSpots;
   }
+
+  double _normalizeY(double y, {required double? min, required double? max}) =>
+      y;
 
   List<FlSpot> _reduceSpots(
       {required List<FlSpot> spots, required int maxPoints}) {
