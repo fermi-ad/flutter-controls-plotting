@@ -97,13 +97,13 @@ void main() {
         PlotYAxisLabelWidget(
             channels: channels,
             normalizedValue: 0.0,
-            globalMin: 0,
-            globalMax: 10),
+            defaultMin: 0,
+            defaultMax: 10),
         PlotYAxisLabelWidget(
             channels: channels,
             normalizedValue: 1.0,
-            globalMin: 0,
-            globalMax: 10)
+            defaultMin: 0,
+            defaultMax: 10)
       ]))));
 
       // Then the global min and max is used for every channel

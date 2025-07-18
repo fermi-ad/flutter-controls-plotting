@@ -4,22 +4,24 @@ import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 class PlotYAxisLabelWidget extends StatelessWidget {
   final double normalizedValue;
   final Map<String, ChannelSetting> channels;
-  final double? globalMin;
-  final double? globalMax;
+  final double? defaultMin;
+  final double? defaultMax;
 
   const PlotYAxisLabelWidget(
       {super.key,
       required this.normalizedValue,
       required this.channels,
-      this.globalMin,
-      this.globalMax});
+      this.defaultMin,
+      this.defaultMax});
 
   @override
   Widget build(BuildContext context) {
     List<Text> labels = [];
 
     for (final channelName in channels.keys) {
-      labels.add(Text(_calculateValue(channelName).toStringAsFixed(2),
+      final label = _calculateValue(channelName).toStringAsFixed(2);
+
+      labels.add(Text(label,
           style: TextStyle(color: channels[channelName]!.lineColor)));
     }
 
@@ -31,8 +33,8 @@ class PlotYAxisLabelWidget extends StatelessWidget {
       _min(channelName);
 
   double _min(String channelName) =>
-      globalMin ?? channels[channelName]?.min ?? 0;
+      defaultMin ?? channels[channelName]?.min ?? 0;
 
   double _max(String channelName) =>
-      globalMax ?? channels[channelName]?.max ?? 1;
+      defaultMax ?? channels[channelName]?.max ?? 1;
 }
