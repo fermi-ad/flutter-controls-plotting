@@ -81,13 +81,12 @@ void main() {
     });
 
     testWidgets(
-        "Set globalMin and globalMax, overrides channel-level min and max",
+        "Set defaultMin and defaultMax, used when channel-level min and max are not set",
         (WidgetTester tester) async {
       // Given a list of channels with varying y-scales
       final channels = {
         "Test1": ChannelSetting(lineColor: Colors.red, min: -10, max: 10),
-        "Test2": ChannelSetting(lineColor: Colors.blue, min: -1, max: 1),
-        "Test3": ChannelSetting(lineColor: Colors.green, min: 0, max: 5),
+        "Test3": ChannelSetting(lineColor: Colors.green),
       };
 
       // When I build the PlotYAxisLabelWidgets for normalized values of 0 and 1 and global min/max of 0 to 10
@@ -98,28 +97,24 @@ void main() {
             channels: channels,
             normalizedValue: 0.0,
             defaultMin: 0,
-            defaultMax: 10),
+            defaultMax: 5),
         PlotYAxisLabelWidget(
             channels: channels,
             normalizedValue: 1.0,
             defaultMin: 0,
-            defaultMax: 10)
+            defaultMax: 5)
       ]))));
 
       // Then the global min and max is used for every channel
       assertPlotYAxisLabel(
-          isVisible: true, color: Colors.red, withText: "0.00");
-      assertPlotYAxisLabel(
-          isVisible: true, color: Colors.blue, withText: "0.00");
+          isVisible: true, color: Colors.red, withText: "-10.00");
       assertPlotYAxisLabel(
           isVisible: true, color: Colors.green, withText: "0.00");
 
       assertPlotYAxisLabel(
           isVisible: true, color: Colors.red, withText: "10.00");
       assertPlotYAxisLabel(
-          isVisible: true, color: Colors.blue, withText: "10.00");
-      assertPlotYAxisLabel(
-          isVisible: true, color: Colors.green, withText: "10.00");
+          isVisible: true, color: Colors.green, withText: "5.00");
     });
   });
 }

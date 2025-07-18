@@ -33,8 +33,8 @@ class PlotYAxisLabelWidget extends StatelessWidget {
       _min(channelName);
 
   double _min(String channelName) =>
-      defaultMin ?? channels[channelName]?.min ?? 0;
+      channels[channelName]?.min ?? defaultMin ?? 0;
 
   double _max(String channelName) =>
-      defaultMax ?? channels[channelName]?.max ?? 1;
+      channels[channelName]?.max ?? defaultMax ?? 1;
 }
