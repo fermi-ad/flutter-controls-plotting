@@ -252,6 +252,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
 
   List<FlSpot> _toSpots(
       {required List<PlotPoint> points,
+      required String channelName,
       double? minX,
       double? maxX,
       double? minY,
@@ -385,7 +386,11 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
 
       for (var pointSegment in points[plotChannel.name]!) {
         // min and max y is not passed in for limiting points. This can cause behavior where poitns in the middle of axis are dropped.
-        var spots = _toSpots(points: pointSegment, minX: minX, maxX: maxX);
+        var spots = _toSpots(
+            points: pointSegment,
+            minX: minX,
+            maxX: maxX,
+            channelName: plotChannel.name);
         numberOfPoints += spots.length;
 
         lineChartList.add(LineChartBarData(
