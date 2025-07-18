@@ -208,7 +208,11 @@ class FlchartCache {
         }
       }
     } else if (numberOfPoints > minimumPointsNeeded) {
-      reducedPoints = numberOfPoints;
+      if (totalPoints > numberOfPoints) {
+        reducedPoints = numberOfPoints;
+      } else {
+        reducedPoints = null;
+      }
     }
 
     return reducedPoints;
