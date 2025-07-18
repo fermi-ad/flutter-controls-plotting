@@ -13,7 +13,7 @@ void main() {
       await tester.pumpWidget(MaterialApp(
           home: Scaffold(
               body: PlotYAxisLabelWidget(
-                  channels: {"Test": ChannelSetting()},
+                  channels: {"Test": ChannelSetting(lineColor: Colors.red)},
                   normalizedValue: 1.0))));
 
       // Then the normalized value is displayed
@@ -26,7 +26,9 @@ void main() {
         (WidgetTester tester) async {
       // Given a set of PlotYAxisLabelWidgets with min: 0 and max: 10
       // When I build the PlotYAxisLabelWidget with a normalizedValue of 0, 0.1, 0.5 and 1
-      final channels = {"Test": ChannelSetting(min: 0, max: 10)};
+      final channels = {
+        "Test": ChannelSetting(min: 0, max: 10, lineColor: Colors.red)
+      };
       await tester.pumpWidget(MaterialApp(
           home: Scaffold(
               body: Column(children: [
@@ -52,7 +54,9 @@ void main() {
         (WidgetTester tester) async {
       // Given a set of PlotYAxisLabelWidgets with min: -10 and max: 10
       // When I build the PlotYAxisLabelWidget with a normalizedValue of 0, 0.1, 0.5 and 1
-      final channels = {"Test": ChannelSetting(min: -10, max: 10)};
+      final channels = {
+        "Test": ChannelSetting(min: -10, max: 10, lineColor: Colors.red)
+      };
       await tester.pumpWidget(MaterialApp(
           home: Scaffold(
               body: Column(children: [
@@ -74,6 +78,48 @@ void main() {
           isVisible: true, color: Colors.red, withText: "2.00");
       assertPlotYAxisLabel(
           isVisible: true, color: Colors.red, withText: "10.00");
+    });
+
+    testWidgets(
+        "Set globalMin and globalMax, overrides channel-level min and max",
+        (WidgetTester tester) async {
+      // Given a list of channels with varying y-scales
+      final channels = {
+        "Test1": ChannelSetting(lineColor: Colors.red, min: -10, max: 10),
+        "Test2": ChannelSetting(lineColor: Colors.blue, min: -1, max: 1),
+        "Test3": ChannelSetting(lineColor: Colors.green, min: 0, max: 5),
+      };
+
+      // When I build the PlotYAxisLabelWidgets for normalized values of 0 and 1 and global min/max of 0 to 10
+      await tester.pumpWidget(MaterialApp(
+          home: Scaffold(
+              body: Column(children: [
+        PlotYAxisLabelWidget(
+            channels: channels,
+            normalizedValue: 0.0,
+            globalMin: 0,
+            globalMax: 10),
+        PlotYAxisLabelWidget(
+            channels: channels,
+            normalizedValue: 1.0,
+            globalMin: 0,
+            globalMax: 10)
+      ]))));
+
+      // Then the global min and max is used for every channel
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.red, withText: "0.00");
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.blue, withText: "0.00");
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.green, withText: "0.00");
+
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.red, withText: "10.00");
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.blue, withText: "10.00");
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.green, withText: "10.00");
     });
   });
 }

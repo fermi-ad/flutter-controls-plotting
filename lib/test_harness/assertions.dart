@@ -92,7 +92,8 @@ void assertPlotYAxisLimits(WidgetTester tester,
 void assertPlotYAxisLabel(
     {required bool isVisible, required Color color, required String withText}) {
   final finder = find.descendant(
-      of: find.byType(PlotYAxisLabelWidget), matching: find.text(withText));
+      of: find.byType(PlotYAxisLabelWidget),
+      matching: findTextWithColor(withText, color));
 
   expect(finder, isVisible ? findsAtLeastNWidgets(1) : findsNothing);
 }
@@ -245,4 +246,12 @@ List<PlotPoint> _getPlotPoints(WidgetTester tester,
   final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
 
   return plotState.points[channelName]?[segment] ?? [];
+}
+
+Finder findTextWithColor(String text, Color color) {
+  return find.byWidgetPredicate(
+    (widget) =>
+        widget is Text && widget.data == text && widget.style?.color == color,
+    description: 'Text widget with text "$text" and color $color',
+  );
 }
