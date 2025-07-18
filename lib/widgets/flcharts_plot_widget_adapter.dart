@@ -176,10 +176,10 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       SideTitleWidget(
           meta: meta,
           child: PlotYAxisLabelWidget(
-            min: widget.plotData.minY,
-            max: widget.plotData.maxY,
-            normalizedValue: value,
-          ));
+              channels: widget.plotChannels,
+              normalizedValue: value,
+              globalMin: widget.plotData.minY,
+              globalMax: widget.plotData.maxY));
 
   double touchPointDistanceCalculate(
       {required Offset touchPoint,

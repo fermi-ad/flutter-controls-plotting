@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/test_harness/assertions.dart';
 import 'package:flutter_controls_plotting/widgets/plot_y_axis_label_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,8 +10,11 @@ void main() {
         (WidgetTester tester) async {
       // Given a PlotYAxisLabelWidget with no min: or max: parameters
       // When I build the PlotYAxisLabelWidget with a normalizedValue of 1
-      await tester.pumpWidget(const MaterialApp(
-          home: Scaffold(body: PlotYAxisLabelWidget(normalizedValue: 1.0))));
+      await tester.pumpWidget(MaterialApp(
+          home: Scaffold(
+              body: PlotYAxisLabelWidget(
+                  channels: {"Test": ChannelSetting()},
+                  normalizedValue: 1.0))));
 
       // Then the normalized value is displayed
       assertPlotYAxisLabel(
@@ -22,13 +26,14 @@ void main() {
         (WidgetTester tester) async {
       // Given a set of PlotYAxisLabelWidgets with min: 0 and max: 10
       // When I build the PlotYAxisLabelWidget with a normalizedValue of 0, 0.1, 0.5 and 1
-      await tester.pumpWidget(const MaterialApp(
+      final channels = {"Test": ChannelSetting(min: 0, max: 10)};
+      await tester.pumpWidget(MaterialApp(
           home: Scaffold(
               body: Column(children: [
-        PlotYAxisLabelWidget(min: 0, max: 10, normalizedValue: 0.0),
-        PlotYAxisLabelWidget(min: 0, max: 10, normalizedValue: 0.1),
-        PlotYAxisLabelWidget(min: 0, max: 10, normalizedValue: 0.5),
-        PlotYAxisLabelWidget(min: 0, max: 10, normalizedValue: 1.0)
+        PlotYAxisLabelWidget(channels: channels, normalizedValue: 0.0),
+        PlotYAxisLabelWidget(channels: channels, normalizedValue: 0.1),
+        PlotYAxisLabelWidget(channels: channels, normalizedValue: 0.5),
+        PlotYAxisLabelWidget(channels: channels, normalizedValue: 1.0)
       ]))));
 
       // Then the displayed values are...
@@ -47,14 +52,15 @@ void main() {
         (WidgetTester tester) async {
       // Given a set of PlotYAxisLabelWidgets with min: -10 and max: 10
       // When I build the PlotYAxisLabelWidget with a normalizedValue of 0, 0.1, 0.5 and 1
-      await tester.pumpWidget(const MaterialApp(
+      final channels = {"Test": ChannelSetting(min: -10, max: 10)};
+      await tester.pumpWidget(MaterialApp(
           home: Scaffold(
               body: Column(children: [
-        PlotYAxisLabelWidget(min: -10, max: 10, normalizedValue: 0.0),
-        PlotYAxisLabelWidget(min: -10, max: 10, normalizedValue: 0.1),
-        PlotYAxisLabelWidget(min: -10, max: 10, normalizedValue: 0.5),
-        PlotYAxisLabelWidget(min: -10, max: 10, normalizedValue: 0.6),
-        PlotYAxisLabelWidget(min: -10, max: 10, normalizedValue: 1.0)
+        PlotYAxisLabelWidget(channels: channels, normalizedValue: 0.0),
+        PlotYAxisLabelWidget(channels: channels, normalizedValue: 0.1),
+        PlotYAxisLabelWidget(channels: channels, normalizedValue: 0.5),
+        PlotYAxisLabelWidget(channels: channels, normalizedValue: 0.6),
+        PlotYAxisLabelWidget(channels: channels, normalizedValue: 1.0)
       ]))));
 
       // Then the displayed values are...
