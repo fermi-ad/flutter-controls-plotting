@@ -9,6 +9,10 @@ class FlchartCache {
   int totalPoints = 0;
 
   bool _resetCache = false;
+  double? _spotsMinX;
+  double? _spotsMaxX;
+  double? _spotsMinY;
+  double? _spotsMaxY;
 
   List<FlSpot> toSpots(
       {required List<PlotPoint> points,
@@ -19,9 +23,21 @@ class FlchartCache {
       double? minY,
       double? maxY,
       bool exitForScalar = false}) {
+    if (!_resetCache) {
+      _resetCache =
+          shouldResetCache(minX: minX, maxX: maxX, minY: minY, maxY: maxY);
+    }
+
     if (_resetCache) {
       clearAll();
     }
+
+    // Update global min/max values
+    _spotsMinX = minX;
+    _spotsMaxX = maxX;
+    _spotsMinY = minY;
+    _spotsMaxY = maxY;
+
     List<FlSpot> flSpots;
     int startIndex = 0;
 
@@ -139,6 +155,28 @@ class FlchartCache {
     return flSpots;
   }
 
+  bool shouldResetCache({
+    double? minX,
+    double? maxX,
+    double? minY,
+    double? maxY,
+  }) {
+    // Check if any of the new bounds are outside the cached bounds
+    if (_spotsMinX != null && minX != null && minX < _spotsMinX!) {
+      return true;
+    }
+    if (_spotsMaxX != null && maxX != null && maxX > _spotsMaxX!) {
+      return true;
+    }
+    if (_spotsMinY != null && minY != null && minY < _spotsMinY!) {
+      return true;
+    }
+    if (_spotsMaxY != null && maxY != null && maxY > _spotsMaxY!) {
+      return true;
+    }
+    return false;
+  }
+
   bool __isWithinBounds(double value, double? min, double? max) {
     // Check if the given value is within the specified bounds (min and max).
     return (min == null || value >= min) && (max == null || value <= max);
@@ -196,6 +234,11 @@ class FlchartCache {
   void clearAll() {
     spots.clear();
     lastProcessedIndex.clear();
+
+    _spotsMinX = null;
+    _spotsMaxX = null;
+    _spotsMinY = null;
+    _spotsMaxY = null;
 
     totalPoints = 0;
     reducedPoints = null;
