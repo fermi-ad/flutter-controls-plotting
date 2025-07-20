@@ -310,7 +310,15 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       }
 
       if (addPoint) {
-        FlSpot flSpot = FlSpot(x, _normalizeY(y, min: minY, max: maxY));
+        FlSpot flSpot = FlSpot(
+            x,
+            _normalizeY(y,
+                min: widget.plotChannels[channelName]?.min ??
+                    widget.plotData.minY ??
+                    0,
+                max: widget.plotChannels[channelName]?.max ??
+                    widget.plotData.maxY ??
+                    1));
         flSpots.insert(0, flSpot);
       }
     }
@@ -348,8 +356,12 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     return flSpots;
   }
 
-  double _normalizeY(double y, {required double? min, required double? max}) =>
-      y;
+  double _normalizeY(double y, {required double min, required double max}) {
+    final ySpan = max - min;
+    final yRatio = 1 / ySpan;
+    final yOffset = min.abs() * yRatio;
+    return yOffset + (y * yRatio);
+  }
 
   List<FlSpot> _reduceSpots(
       {required List<FlSpot> spots, required int maxPoints}) {
@@ -386,11 +398,14 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
 
       for (var pointSegment in points[plotChannel.name]!) {
         // min and max y is not passed in for limiting points. This can cause behavior where poitns in the middle of axis are dropped.
+        final channelSettings = widget.plotChannels[plotChannel.name]!;
         var spots = _toSpots(
             points: pointSegment,
+            channelName: plotChannel.name,
             minX: minX,
             maxX: maxX,
-            channelName: plotChannel.name);
+            minY: channelSettings.min,
+            maxY: channelSettings.max);
         numberOfPoints += spots.length;
 
         lineChartList.add(LineChartBarData(
