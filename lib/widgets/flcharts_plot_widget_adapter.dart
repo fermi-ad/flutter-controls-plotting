@@ -236,8 +236,16 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         xString = x.toString();
       }
 
+      final channelIndex = touchedSpots.indexOf(touchedSpot);
+      final channelName = widget.plotChannels.keys.toList()[channelIndex];
+      final min =
+          widget.plotChannels[channelName]?.min ?? widget.plotData.minY ?? 0;
+      final max =
+          widget.plotChannels[channelName]?.max ?? widget.plotData.maxY ?? 1;
+      final yValue = _scaleY(y, min: min, max: max);
+
       tooltips.add(LineTooltipItem(
-        '$xString, ${y.toStringAsFixed(2)}',
+        '$xString, ${yValue.toStringAsFixed(2)}',
         textStyle,
       ));
     }
@@ -361,6 +369,12 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     final yRatio = 1 / ySpan;
     final yOffset = min.abs() * yRatio;
     return yOffset + (y * yRatio);
+  }
+
+  double _scaleY(double yNormalized,
+      {required double min, required double max}) {
+    final ySpan = max - min;
+    return (yNormalized * ySpan + min);
   }
 
   List<FlSpot> _reduceSpots(
