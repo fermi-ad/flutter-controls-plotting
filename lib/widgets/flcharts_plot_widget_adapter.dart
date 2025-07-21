@@ -261,8 +261,8 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
             points: pointSegment,
             channelName: plotChannel.name,
             segmentIndex: segmentIndex,
-            minX: minX,
-            maxX: maxX,
+            minX: widget.xMin,
+            maxX: widget.xMax,
             exitForScalar: exitForScalar);
 
         lineChartList.add(LineChartBarData(
