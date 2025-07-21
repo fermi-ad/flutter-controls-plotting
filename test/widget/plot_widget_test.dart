@@ -397,10 +397,10 @@ void main() {
       // Then the plot is empty
       assertEmptyPlot(tester, isVisible: true);
 
-      // ... and the Y-axis limits are 0 to 1
+      // ... and the Y-axis limits are 0 to 3
       assertPlotYAxisLimits(tester, min: 0, max: 3);
 
-      // ... and the X-axis limits are 0 to 1
+      // ... and the X-axis limits are 0 to 3
       assertPlotXAxisLimits(tester, min: 0, max: 3);
     });
 
@@ -423,6 +423,8 @@ void main() {
 
       // ... and the Y-axis has limits of...
       assertPlotYAxisLimits(tester, min: 5, max: 5);
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.red, withText: "5.00");
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
@@ -447,6 +449,10 @@ void main() {
 
       // ... and the limits for the Y-axis are 0 to 500
       assertPlotYAxisLimits(tester, min: 0, max: 499);
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.red, withText: "0.00");
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.red, withText: "499.00");
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
@@ -463,6 +469,10 @@ void main() {
       // Ensure that the axis limits accomodate the sine plot test.
       assertPlotXAxisLimits(tester, min: -250.0, max: 250.0);
       assertPlotYAxisLimits(tester, min: -1, max: 1);
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.red, withText: "-1.00");
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.red, withText: "1.00");
 
       // Plot a second channel.
       channelList["PLOT TEST CONSTANT"] = ChannelSetting();
@@ -472,6 +482,10 @@ void main() {
       // Ensure that the axis limits changed to accomodate the new plot.
       assertPlotXAxisLimits(tester, min: -250, max: 499);
       assertPlotYAxisLimits(tester, min: -1, max: 5);
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.red, withText: "-1.00");
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.red, withText: "5.00");
     });
 
     testWidgets(
@@ -648,6 +662,33 @@ void main() {
 
       // Verify that color is as expected.
       assertColorOfPlot(tester, expectedColor: PlotColor.blue.color);
+    });
+
+    testWidgets(
+        "Plot two channels with independent y-scales, scales are labeled correctly",
+        (WidgetTester tester) async {
+      // Given a channel list with two channels and independent y-scales
+      final channelList = {
+        "PLOT TEST CONSTANT": ChannelSetting(
+            lineColor: PlotColor.red.color, min: 0.00, max: 10.00),
+        "PLOT TEST RAMP": ChannelSetting(
+            lineColor: PlotColor.blue.color, min: -5.00, max: 5.00)
+      };
+
+      // When I plot both channels
+      await tester.pumpWidget(_buildPlotWidget(channelList));
+      await waitForPlotDataToLoad(tester);
+
+      // Verify that the correct min/max values for the two scales are displayed
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.red, withText: "0.00");
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.blue, withText: "-5.00");
+
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.red, withText: "10.00");
+      assertPlotYAxisLabel(
+          isVisible: true, color: Colors.blue, withText: "5.00");
     });
   });
 

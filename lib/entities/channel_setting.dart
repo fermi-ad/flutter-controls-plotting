@@ -4,8 +4,11 @@ import 'package:flutter/material.dart';
 class ChannelSetting {
   Color? lineColor;
   PlotMarker plotMarker;
+  double? min;
+  double? max;
 
-  ChannelSetting({this.lineColor, this.plotMarker = PlotMarker.line});
+  ChannelSetting(
+      {this.lineColor, this.plotMarker = PlotMarker.line, this.min, this.max});
 
   // Clone functionality.
   static ChannelSetting from(ChannelSetting setting) {
