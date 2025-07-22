@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/entities/flchart_cache.dart';
 import 'package:flutter_controls_plotting/entities/plot_metadata.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
@@ -27,6 +28,8 @@ class PlotData {
   int? _maxDataBytes;
 
   late int purgeDataSize;
+
+  final FlchartCache flchartCache = FlchartCache();
 
   PlotData({int? maxDataBytes, int? purgeSize}) : _maxDataBytes = maxDataBytes {
     if (purgeSize == null) {
@@ -378,6 +381,7 @@ class PlotData {
 
   void cleanUpPoints(
       {Iterable<String> keepChannelList = const Iterable.empty()}) {
+    flchartCache.clearAll();
     List<String> garbageChannels = [];
     for (var channelName in points.keys) {
       if (!keepChannelList.contains(channelName)) {

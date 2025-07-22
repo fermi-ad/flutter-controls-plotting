@@ -253,149 +253,10 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     return tooltips;
   }
 
-  bool __isWithinBounds(double value, double? min, double? max) {
-    // Check if the given value is within the specified bounds (min and max).
-    return (min == null || value >= min) && (max == null || value <= max);
-  }
-
-  List<FlSpot> _toSpots(
-      {required List<PlotPoint> points,
-      required String channelName,
-      double? minX,
-      double? maxX,
-      double? minY,
-      double? maxY}) {
-    List<FlSpot> flSpots = [];
-
-    // Find the closest points to each min and max
-    PlotPoint? minXPair;
-    PlotPoint? maxXPair;
-    PlotPoint? minYPair;
-    PlotPoint? maxYPair;
-
-    int? minXPairIndex;
-    int? maxXPairIndex;
-    int? minYPairIndex;
-    int? maxYPairIndex;
-
-    // Timed X axis and no xMax defined will exit upon last out of range value.
-    bool exitForScalar = widget.xMax == null && widget.isTimedXAxis;
-
-    for (PlotPoint point in points.reversed) {
-      var x = point.x;
-      var y = point.y;
-
-      bool addPoint = true;
-
-      if (!__isWithinBounds(x, minX, maxX)) {
-        if ((maxX != null && x > maxX) &&
-            (maxXPair == null || maxXPair.x > x)) {
-          maxXPair = PlotPoint(x: x, y: y);
-          maxXPairIndex = flSpots.length;
-        } else if ((minX != null && x < minX) &&
-            (minXPair == null || minXPair.x < x)) {
-          minXPair = PlotPoint(x: x, y: y);
-          minXPairIndex = flSpots.length;
-          if (exitForScalar) {
-            // The last relevant time was reached. No need to check rest of points.
-            break;
-          }
-        }
-        addPoint = false;
-      }
-
-      if (!__isWithinBounds(y, minY, maxY)) {
-        if ((maxY != null && y > maxY) &&
-            (maxYPair == null || maxYPair.y > y)) {
-          maxYPair = PlotPoint(x: x, y: y);
-          maxYPairIndex = flSpots.length;
-        } else if ((minY != null && y < minY) &&
-            (minYPair == null || minYPair.y < y)) {
-          minYPair = PlotPoint(x: x, y: y);
-          minYPairIndex = flSpots.length;
-        }
-        addPoint = false;
-      }
-
-      if (addPoint) {
-        FlSpot flSpot = FlSpot(x, _normalizeY(y, channelName: channelName));
-        flSpots.insert(0, flSpot);
-      }
-    }
-
-    // Collect the indices and corresponding FlSpot objects
-    final List<MapEntry<int, FlSpot>> spotsToInsert = [];
-
-    if (minXPairIndex != null) {
-      spotsToInsert.add(MapEntry(
-          minXPairIndex,
-          FlSpot(
-              minXPair!.x, _normalizeY(minXPair.y, channelName: channelName))));
-    }
-    if (maxXPairIndex != null) {
-      spotsToInsert.add(MapEntry(
-          maxXPairIndex,
-          FlSpot(
-              maxXPair!.x, _normalizeY(maxXPair.y, channelName: channelName))));
-    }
-    if (minYPairIndex != null) {
-      spotsToInsert.add(MapEntry(
-          minYPairIndex,
-          FlSpot(
-              minYPair!.x, _normalizeY(minYPair.y, channelName: channelName))));
-    }
-    if (maxYPairIndex != null) {
-      spotsToInsert.add(MapEntry(
-          maxYPairIndex,
-          FlSpot(
-              maxYPair!.x, _normalizeY(maxYPair.y, channelName: channelName))));
-    }
-
-    // Sort the list by indices in descending order
-    spotsToInsert.sort((a, b) => b.key.compareTo(a.key));
-
-    // Insert the FlSpot objects into flSpots in order from largest index to smallest
-    var offset = flSpots.length;
-    for (var entry in spotsToInsert.reversed) {
-      var index = offset - entry.key;
-      flSpots.insert(index, entry.value);
-    }
-
-    return flSpots;
-  }
-
-  double _normalizeY(double y, {required String channelName}) {
-    final max =
-        widget.plotChannels[channelName]?.max ?? widget.plotData.maxY ?? 1;
-    final min =
-        widget.plotChannels[channelName]?.min ?? widget.plotData.minY ?? 0;
-    final ySpan = max - min;
-    final yRatio = 1 / ySpan;
-    final yOffset = min.abs() * yRatio;
-    return yOffset + (y * yRatio);
-  }
-
   double _scaleY(double yNormalized,
       {required double min, required double max}) {
     final ySpan = max - min;
     return (yNormalized * ySpan + min);
-  }
-
-  List<FlSpot> _reduceSpots(
-      {required List<FlSpot> spots, required int maxPoints}) {
-    if (spots.length <= maxPoints) {
-      return spots;
-    }
-
-    double step = (spots.length - 1) / (maxPoints - 1).toDouble();
-
-    for (int i = 0; i < maxPoints; i++) {
-      int index = (i * step).round();
-      spots[i] = spots[index];
-    }
-    spots.removeRange(maxPoints, spots.length);
-
-    return spots;
   }
 
   List<LineChartBarData> _toLineChartBarDataList(
@@ -403,10 +264,10 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     List<LineChartBarData> lineChartList = [];
 
     var points = plotData.points;
-    var minX = plotData.minX;
-    var maxX = plotData.maxX;
 
-    int numberOfPoints = 0;
+    // Timed X axis and no xMax defined will exit upon last out of range value.
+    bool exitForScalar = widget.xMax == null && widget.isTimedXAxis;
+    var cache = widget.plotData.flchartCache;
 
     plotChannels.asMap().forEach((index, plotChannel) {
       if (_channelHasError(plotChannel) ||
@@ -414,17 +275,19 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         return;
       }
 
-      for (var pointSegment in points[plotChannel.name]!) {
+      for (var (segmentIndex, pointSegment)
+          in points[plotChannel.name]!.indexed) {
         // min and max y is not passed in for limiting points. This can cause behavior where poitns in the middle of axis are dropped.
-        final channelSettings = widget.plotChannels[plotChannel.name]!;
-        var spots = _toSpots(
+        var spots = cache.toSpots(
             points: pointSegment,
             channelName: plotChannel.name,
-            minX: minX,
-            maxX: maxX,
-            minY: channelSettings.min,
-            maxY: channelSettings.max);
-        numberOfPoints += spots.length;
+            channelSetting: widget.plotChannels[plotChannel.name]!,
+            segmentIndex: segmentIndex,
+            minX: widget.xMin,
+            maxX: widget.xMax,
+            normalizeMinY: widget.plotData.minY,
+            normalizeMaxY: widget.plotData.maxY,
+            exitForScalar: exitForScalar);
 
         lineChartList.add(LineChartBarData(
           color: lineColorForChannel(plotChannel.name),
@@ -445,20 +308,10 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     });
 
     // Verify if points reduction should be performed.
-    int? reducedPoints;
-    if (numberOfPoints > maxiumumPointsDisplayed) {
-      reducedPoints ??= 0;
-      for (var lineChart in lineChartList) {
-        var spots = lineChart.spots;
-        var spotsPercentage = spots.length / numberOfPoints;
-        var maxSpots = maxiumumPointsDisplayed * spotsPercentage;
-        _reduceSpots(spots: spots, maxPoints: maxSpots.ceil());
-        reducedPoints = reducedPoints! + spots.length;
-      }
-    }
+    int? reducedPoints = cache.reduceSpots();
 
     widget.plotMetadata.reducedPoints = reducedPoints;
-    widget.plotMetadata.numberOfPoints = numberOfPoints;
+    widget.plotMetadata.numberOfPoints = cache.totalPoints;
 
     return lineChartList;
   }
