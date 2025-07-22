@@ -327,20 +327,28 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     final List<MapEntry<int, FlSpot>> spotsToInsert = [];
 
     if (minXPairIndex != null) {
-      spotsToInsert
-          .add(MapEntry(minXPairIndex, FlSpot(minXPair!.x, minXPair.y)));
+      spotsToInsert.add(MapEntry(
+          minXPairIndex,
+          FlSpot(
+              minXPair!.x, _normalizeY(minXPair.y, channelName: channelName))));
     }
     if (maxXPairIndex != null) {
-      spotsToInsert
-          .add(MapEntry(maxXPairIndex, FlSpot(maxXPair!.x, maxXPair.y)));
+      spotsToInsert.add(MapEntry(
+          maxXPairIndex,
+          FlSpot(
+              maxXPair!.x, _normalizeY(maxXPair.y, channelName: channelName))));
     }
     if (minYPairIndex != null) {
-      spotsToInsert
-          .add(MapEntry(minYPairIndex, FlSpot(minYPair!.x, minYPair.y)));
+      spotsToInsert.add(MapEntry(
+          minYPairIndex,
+          FlSpot(
+              minYPair!.x, _normalizeY(minYPair.y, channelName: channelName))));
     }
     if (maxYPairIndex != null) {
-      spotsToInsert
-          .add(MapEntry(maxYPairIndex, FlSpot(maxYPair!.x, maxYPair.y)));
+      spotsToInsert.add(MapEntry(
+          maxYPairIndex,
+          FlSpot(
+              maxYPair!.x, _normalizeY(maxYPair.y, channelName: channelName))));
     }
 
     // Sort the list by indices in descending order
