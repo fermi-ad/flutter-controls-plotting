@@ -24,6 +24,8 @@ class FlchartCache {
       double? maxX,
       double? minY,
       double? maxY,
+      double? normalizeMinY,
+      double? normalizeMaxY,
       bool exitForScalar = false}) {
     if (!_resetCache) {
       _resetCache =
@@ -118,8 +120,8 @@ class FlchartCache {
             _normalizeY(y,
                 channelName: channelName,
                 channelSetting: channelSetting,
-                minY: minY,
-                maxY: maxY));
+                minY: normalizeMinY,
+                maxY: normalizeMaxY));
         newSpots.insert(0, flSpot);
       }
     }
@@ -135,8 +137,8 @@ class FlchartCache {
               _normalizeY(minXPair.y,
                   channelName: channelName,
                   channelSetting: channelSetting,
-                  minY: minY,
-                  maxY: maxY))));
+                  minY: normalizeMinY,
+                  maxY: normalizeMaxY))));
     }
     if (maxXPairIndex != null) {
       spotsToInsert.add(MapEntry(
@@ -146,8 +148,8 @@ class FlchartCache {
               _normalizeY(maxXPair.y,
                   channelName: channelName,
                   channelSetting: channelSetting,
-                  minY: minY,
-                  maxY: maxY))));
+                  minY: normalizeMinY,
+                  maxY: normalizeMaxY))));
     }
     if (minYPairIndex != null) {
       spotsToInsert.add(MapEntry(
@@ -157,8 +159,8 @@ class FlchartCache {
               _normalizeY(minYPair.y,
                   channelName: channelName,
                   channelSetting: channelSetting,
-                  minY: minY,
-                  maxY: maxY))));
+                  minY: normalizeMinY,
+                  maxY: normalizeMaxY))));
     }
     if (maxYPairIndex != null) {
       spotsToInsert.add(MapEntry(
@@ -168,8 +170,8 @@ class FlchartCache {
               _normalizeY(maxYPair.y,
                   channelName: channelName,
                   channelSetting: channelSetting,
-                  minY: minY,
-                  maxY: maxY))));
+                  minY: normalizeMinY,
+                  maxY: normalizeMaxY))));
     }
 
     // Sort the list by indices in descending order
