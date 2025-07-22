@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
@@ -246,6 +247,18 @@ List<PlotPoint> _getPlotPoints(WidgetTester tester,
   final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
 
   return plotState.points[channelName]?[segment] ?? [];
+}
+
+void assertAllFlSpotsAreNormal(WidgetTester tester) {
+  final lineChartWidget =
+      find.byType(LineChart).evaluate().first.widget as LineChart;
+  final channels = lineChartWidget.data.lineBarsData;
+
+  for (final channel in channels) {
+    for (final spot in channel.spots) {
+      expect(spot.y, inInclusiveRange(0.0, 1.0));
+    }
+  }
 }
 
 Finder findTextWithColor(String text, Color color) {
