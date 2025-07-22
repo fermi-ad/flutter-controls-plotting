@@ -253,13 +253,17 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     return tooltips;
   }
 
+  double _scaleY(double yNormalized,
+      {required double min, required double max}) {
+    final ySpan = max - min;
+    return (yNormalized * ySpan + min);
+  }
+
   List<LineChartBarData> _toLineChartBarDataList(
       List<PlotChannelData> plotChannels, PlotData plotData) {
     List<LineChartBarData> lineChartList = [];
 
     var points = plotData.points;
-    var minX = plotData.minX;
-    var maxX = plotData.maxX;
 
     // Timed X axis and no xMax defined will exit upon last out of range value.
     bool exitForScalar = widget.xMax == null && widget.isTimedXAxis;
@@ -277,6 +281,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         var spots = cache.toSpots(
             points: pointSegment,
             channelName: plotChannel.name,
+            channelSetting: widget.plotChannels[plotChannel.name]!,
             segmentIndex: segmentIndex,
             minX: widget.xMin,
             maxX: widget.xMax,

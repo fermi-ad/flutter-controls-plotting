@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 
 class FlchartCache {
   Map<String, List<List<FlSpot>>> spots = {};
@@ -18,6 +19,7 @@ class FlchartCache {
       {required List<PlotPoint> points,
       required channelName,
       required int segmentIndex,
+      required ChannelSetting channelSetting,
       double? minX,
       double? maxX,
       double? minY,
@@ -111,7 +113,13 @@ class FlchartCache {
       }
 
       if (addPoint) {
-        FlSpot flSpot = FlSpot(x, _normalizeY(y, channelName: channelName));
+        FlSpot flSpot = FlSpot(
+            x,
+            _normalizeY(y,
+                channelName: channelName,
+                channelSetting: channelSetting,
+                minY: minY,
+                maxY: maxY));
         newSpots.insert(0, flSpot);
       }
     }
@@ -123,25 +131,45 @@ class FlchartCache {
       spotsToInsert.add(MapEntry(
           minXPairIndex,
           FlSpot(
-              minXPair!.x, _normalizeY(minXPair.y, channelName: channelName))));
+              minXPair!.x,
+              _normalizeY(minXPair.y,
+                  channelName: channelName,
+                  channelSetting: channelSetting,
+                  minY: minY,
+                  maxY: maxY))));
     }
     if (maxXPairIndex != null) {
       spotsToInsert.add(MapEntry(
           maxXPairIndex,
           FlSpot(
-              maxXPair!.x, _normalizeY(maxXPair.y, channelName: channelName))));
+              maxXPair!.x,
+              _normalizeY(maxXPair.y,
+                  channelName: channelName,
+                  channelSetting: channelSetting,
+                  minY: minY,
+                  maxY: maxY))));
     }
     if (minYPairIndex != null) {
       spotsToInsert.add(MapEntry(
           minYPairIndex,
           FlSpot(
-              minYPair!.x, _normalizeY(minYPair.y, channelName: channelName))));
+              minYPair!.x,
+              _normalizeY(minYPair.y,
+                  channelName: channelName,
+                  channelSetting: channelSetting,
+                  minY: minY,
+                  maxY: maxY))));
     }
     if (maxYPairIndex != null) {
       spotsToInsert.add(MapEntry(
           maxYPairIndex,
           FlSpot(
-              maxYPair!.x, _normalizeY(maxYPair.y, channelName: channelName))));
+              maxYPair!.x,
+              _normalizeY(maxYPair.y,
+                  channelName: channelName,
+                  channelSetting: channelSetting,
+                  minY: minY,
+                  maxY: maxY))));
     }
 
     // Sort the list by indices in descending order
@@ -163,21 +191,19 @@ class FlchartCache {
     return flSpots;
   }
 
-  double _normalizeY(double y, {required String channelName}) {
-    final max =
-        widget.plotChannels[channelName]?.max ?? widget.plotData.maxY ?? 1;
-    final min =
-        widget.plotChannels[channelName]?.min ?? widget.plotData.minY ?? 0;
+  double _normalizeY(
+    double y, {
+    required String channelName,
+    required ChannelSetting channelSetting,
+    required double? minY,
+    required double? maxY,
+  }) {
+    final max = channelSetting.max ?? maxY ?? 1;
+    final min = channelSetting.min ?? minY ?? 0;
     final ySpan = max - min;
     final yRatio = 1 / ySpan;
     final yOffset = min.abs() * yRatio;
     return yOffset + (y * yRatio);
-  }
-
-  double _scaleY(double yNormalized,
-      {required double min, required double max}) {
-    final ySpan = max - min;
-    return (yNormalized * ySpan + min);
   }
 
   bool shouldResetCache({
