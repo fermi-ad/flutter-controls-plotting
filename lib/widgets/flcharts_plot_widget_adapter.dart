@@ -318,15 +318,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       }
 
       if (addPoint) {
-        FlSpot flSpot = FlSpot(
-            x,
-            _normalizeY(y,
-                min: widget.plotChannels[channelName]?.min ??
-                    widget.plotData.minY ??
-                    0,
-                max: widget.plotChannels[channelName]?.max ??
-                    widget.plotData.maxY ??
-                    1));
+        FlSpot flSpot = FlSpot(x, _normalizeY(y, channelName: channelName));
         flSpots.insert(0, flSpot);
       }
     }
@@ -364,7 +356,11 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     return flSpots;
   }
 
-  double _normalizeY(double y, {required double min, required double max}) {
+  double _normalizeY(double y, {required String channelName}) {
+    final max =
+        widget.plotChannels[channelName]?.max ?? widget.plotData.maxY ?? 1;
+    final min =
+        widget.plotChannels[channelName]?.min ?? widget.plotData.minY ?? 0;
     final ySpan = max - min;
     final yRatio = 1 / ySpan;
     final yOffset = min.abs() * yRatio;
