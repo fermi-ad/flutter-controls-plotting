@@ -21,8 +21,8 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
             clipData: const FlClipData.all(),
             minX: widget.plotData.minX,
             maxX: widget.plotData.maxX,
-            minY: widget.plotData.minY,
-            maxY: widget.plotData.maxY,
+            minY: 0,
+            maxY: 1,
             lineBarsData: plotReply == null
                 ? []
                 : _toLineChartBarDataList(plotReply!.data, widget.plotData),
@@ -120,9 +120,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         axisNameSize: axisNameSize,
         axisNameWidget: axisNameWidget,
         sideTitles: SideTitles(
-          showTitles: isShowLabels,
-          reservedSize: 60,
-        ),
+            showTitles: isShowLabels,
+            reservedSize: 60,
+            getTitlesWidget: _buildYLabelWidget),
       );
 
       topTitles = emptyTitles;
@@ -130,9 +130,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       // Displayed on narrow screen
       leftTitles = AxisTitles(
         sideTitles: SideTitles(
-          showTitles: isShowLabels,
-          reservedSize: 60,
-        ),
+            showTitles: isShowLabels,
+            reservedSize: 60,
+            getTitlesWidget: _buildYLabelWidget),
       );
 
       topTitles = AxisTitles(
@@ -171,6 +171,15 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
 
     return defaultGetTitle(value, meta);
   }
+
+  SideTitleWidget _buildYLabelWidget(double value, TitleMeta meta) =>
+      SideTitleWidget(
+          meta: meta,
+          child: PlotYAxisLabelWidget(
+              channels: widget.plotChannels,
+              normalizedValue: value,
+              defaultMin: widget.plotData.minY,
+              defaultMax: widget.plotData.maxY));
 
   double touchPointDistanceCalculate(
       {required Offset touchPoint,
@@ -227,8 +236,16 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         xString = x.toString();
       }
 
+      final channelIndex = touchedSpots.indexOf(touchedSpot);
+      final channelName = widget.plotChannels.keys.toList()[channelIndex];
+      final min =
+          widget.plotChannels[channelName]?.min ?? widget.plotData.minY ?? 0;
+      final max =
+          widget.plotChannels[channelName]?.max ?? widget.plotData.maxY ?? 1;
+      final yValue = _scaleY(y, min: min, max: max);
+
       tooltips.add(LineTooltipItem(
-        '$xString, ${y.toStringAsFixed(2)}',
+        '$xString, ${yValue.toStringAsFixed(2)}',
         textStyle,
       ));
     }

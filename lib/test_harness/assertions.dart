@@ -1,8 +1,10 @@
 import 'dart:math';
 
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
+import 'package:flutter_controls_plotting/widgets/plot_y_axis_label_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void assertEmptyPlot(WidgetTester tester, {required bool isVisible}) {
@@ -86,6 +88,15 @@ void assertPlotYAxisLimits(WidgetTester tester,
 
   expect(plotState.minY, closeTo(min, 0.01));
   expect(plotState.maxY, closeTo(max, 0.01));
+}
+
+void assertPlotYAxisLabel(
+    {required bool isVisible, required Color color, required String withText}) {
+  final finder = find.descendant(
+      of: find.byType(PlotYAxisLabelWidget),
+      matching: findTextWithColor(withText, color));
+
+  expect(finder, isVisible ? findsAtLeastNWidgets(1) : findsNothing);
 }
 
 void assertPlotContainsHorizontalLine(WidgetTester tester,
@@ -236,4 +247,24 @@ List<PlotPoint> _getPlotPoints(WidgetTester tester,
   final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
 
   return plotState.points[channelName]?[segment] ?? [];
+}
+
+void assertAllFlSpotsAreNormal(WidgetTester tester) {
+  final lineChartWidget =
+      find.byType(LineChart).evaluate().first.widget as LineChart;
+  final channels = lineChartWidget.data.lineBarsData;
+
+  for (final channel in channels) {
+    for (final spot in channel.spots) {
+      expect(spot.y, inInclusiveRange(0.0, 1.0));
+    }
+  }
+}
+
+Finder findTextWithColor(String text, Color color) {
+  return find.byWidgetPredicate(
+    (widget) =>
+        widget is Text && widget.data == text && widget.style?.color == color,
+    description: 'Text widget with text "$text" and color $color',
+  );
 }
