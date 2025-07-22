@@ -690,6 +690,23 @@ void main() {
       assertPlotYAxisLabel(
           isVisible: true, color: Colors.blue, withText: "5.00");
     });
+
+    testWidgets(
+        "Set x-min and x-max to fractional values, all points are normalized properly",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST PARABOLA"
+      final channelList = {
+        "PLOT TEST PARABOLA": ChannelSetting(lineColor: PlotColor.blue.color)
+      };
+
+      // When I build the PlotWidget with xMin = -249.1 and xMax = 249.1
+      await tester
+          .pumpWidget(_buildPlotWidget(channelList, xMin: -249.1, xMax: 249.1));
+      await waitForPlotDataToLoad(tester);
+
+      // Then all of the spots are between 0 and 1
+      assertAllFlSpotsAreNormal(tester);
+    });
   });
 
   group("PlotWidget (implementation = Graphic) widget tests", () {
@@ -978,13 +995,17 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
     Function(double deltaY)? adjustYAxisLimits,
     Function(PlotReply reply)? onPlotUpdate,
     Function(ConnectionState streamConnectionState)?
-        onStreamConnectionStateChange}) {
+        onStreamConnectionStateChange,
+    double? xMin,
+    double? xMax}) {
   daqService ??= StandardPlotDAQ();
   return MaterialApp(
       home: Scaffold(
           body: ACSysProvider.factory(service: service ?? FakeACSysService())(
               child: PlotWidget(
                   plotChannels: channelList,
+                  xMin: xMin,
+                  xMax: xMax,
                   implementation: impl,
                   plotData: PlotData(),
                   updateDelay: updateDelay,
