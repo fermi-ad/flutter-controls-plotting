@@ -5,6 +5,7 @@ import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 class FlchartCache {
   Map<String, List<List<FlSpot>>> spots = {};
   Map<String, List<int>> lastProcessedIndex = {};
+  static const int minimumNumberOfReducedPoints = 8000;
 
   int? reducedPoints;
   int totalPoints = 0;
@@ -236,7 +237,8 @@ class FlchartCache {
   }
 
   int? reduceSpots(
-      {int minimumPointsNeeded = 8000, int maxiumumPointsDisplayed = 10000}) {
+      {int minimumPointsNeeded = minimumNumberOfReducedPoints,
+      int maxiumumPointsDisplayed = 10000}) {
     int numberOfPoints = 0;
     for (var channelSpots in spots.values) {
       for (var segmentSpots in channelSpots) {
