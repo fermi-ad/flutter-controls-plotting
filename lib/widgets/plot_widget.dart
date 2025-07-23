@@ -389,6 +389,11 @@ class PlotState extends State<PlotWidget> {
     widget.plotData.scalarEventMode =
         widget.isTimedScalarData && !widget.isTimedXAxis;
 
+    if (widget.implementation == PlotImplementation.flCharts) {
+      widget.plotData.flchartCache.prepareDataLoggerAcquisition(
+          startTime: _dataLoggerStartTime, endTime: _dataLoggerEndTime);
+    }
+
     if (widget.plotChannels.isNotEmpty) {
       _errorsDismissed = false;
 
