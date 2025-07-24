@@ -285,8 +285,6 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
             segmentIndex: segmentIndex,
             minX: widget.xMin,
             maxX: widget.xMax,
-            normalizeMinY: widget.plotData.minY,
-            normalizeMaxY: widget.plotData.maxY,
             exitForScalar: exitForScalar);
 
         lineChartList.add(LineChartBarData(
@@ -309,6 +307,10 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
 
     // Verify if points reduction should be performed.
     int? reducedPoints = cache.reduceSpots();
+    cache.normalizeCacheSpots(
+        channels: widget.plotChannels,
+        minY: widget.plotData.minY,
+        maxY: widget.plotData.maxY);
 
     widget.plotMetadata.reducedPoints = reducedPoints;
     widget.plotMetadata.numberOfPoints = cache.totalPoints;
