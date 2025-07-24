@@ -261,6 +261,20 @@ void assertAllFlSpotsAreNormal(WidgetTester tester) {
   }
 }
 
+void assertNormalizedFlSpots(WidgetTester tester, List<List<double>> shouldBe) {
+  final lineChartWidget =
+      find.byType(LineChart).evaluate().first.widget as LineChart;
+  final channels = lineChartWidget.data.lineBarsData;
+
+  for (int channelIndex = 0; channelIndex != channels.length; channelIndex++) {
+    final channel = channels[channelIndex];
+    for (int spotIndex = 0; spotIndex != channel.spots.length; spotIndex++) {
+      expect(channel.spots[spotIndex].y,
+          moreOrLessEquals(shouldBe[channelIndex][spotIndex]));
+    }
+  }
+}
+
 Finder findTextWithColor(String text, Color color) {
   return find.byWidgetPredicate(
     (widget) =>

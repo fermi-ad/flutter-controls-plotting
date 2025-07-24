@@ -27,6 +27,7 @@ class FlchartCache {
       double? normalizeMinY,
       double? normalizeMaxY,
       bool exitForScalar = false}) {
+    print("toSpots");
     if (!_resetCache) {
       _resetCache =
           shouldResetCache(minX: minX, maxX: maxX, minY: minY, maxY: maxY);
@@ -200,12 +201,22 @@ class FlchartCache {
     required double? minY,
     required double? maxY,
   }) {
+    print("_normalizeY, minY = $minY, maxY = $maxY");
     final max = channelSetting.max ?? maxY ?? 1;
     final min = channelSetting.min ?? minY ?? 0;
-    final ySpan = max - min;
-    final yRatio = 1 / ySpan;
-    final yOffset = min.abs() * yRatio;
-    return yOffset + (y * yRatio);
+    final double ret;
+    if (min == max) {
+      ret = y;
+    } else {
+      final ySpan = max - min;
+      final yRatio = 1 / ySpan;
+      final yOffset = min.abs() * yRatio;
+      ret = yOffset + (y * yRatio);
+      print(
+          "y = $y, ret = $ret, yOffset = $yOffset, yRatio = $yRatio, ySpan = $ySpan, min = $min, max = $max");
+    }
+
+    return ret;
   }
 
   bool shouldResetCache({
