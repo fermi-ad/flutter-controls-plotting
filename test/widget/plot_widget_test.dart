@@ -707,6 +707,24 @@ void main() {
       // Then all of the spots are between 0 and 1
       assertAllFlSpotsAreNormal(tester);
     });
+
+    testWidgets(
+        "Set y-min and y-max to a range less than 1, all points are normalized properly",
+        (WidgetTester tester) async {
+      // Given a channel list containing "PLOT TEST CONTANT"
+      //   ... and y-min and y-max set to a range of 0.2
+      final channelList = {
+        "PLOT TEST CONSTANT":
+            ChannelSetting(lineColor: PlotColor.blue.color, min: 4.9, max: 5.1)
+      };
+
+      // When I build the PlotWidget
+      await tester.pumpWidget(_buildPlotWidget(channelList));
+      await waitForPlotDataToLoad(tester);
+
+      // Then all of the spots are between 0 and 1
+      assertAllFlSpotsAreNormal(tester);
+    });
   });
 
   group("PlotWidget (implementation = Graphic) widget tests", () {

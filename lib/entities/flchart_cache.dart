@@ -213,10 +213,15 @@ class FlchartCache {
   }) {
     final max = channelSetting.max ?? maxY ?? 1;
     final min = channelSetting.min ?? minY ?? 0;
+
+    if (min == max) {
+      return 0;
+    }
+
     final ySpan = max - min;
-    final yRatio = 1 / ySpan;
-    final yOffset = min.abs() * yRatio;
-    return yOffset + (y * yRatio);
+    final ret = (y - min) / ySpan;
+
+    return ret;
   }
 
   bool shouldResetCache({
