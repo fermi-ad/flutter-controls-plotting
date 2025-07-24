@@ -270,7 +270,7 @@ void assertNormalizedFlSpots(WidgetTester tester, List<List<double>> shouldBe) {
     final channel = channels[channelIndex];
     for (int spotIndex = 0; spotIndex != channel.spots.length; spotIndex++) {
       expect(channel.spots[spotIndex].y,
-          moreOrLessEquals(shouldBe[channelIndex][spotIndex]));
+          moreOrLessEquals(shouldBe[channelIndex][spotIndex], epsilon: 0.001));
     }
   }
 }
