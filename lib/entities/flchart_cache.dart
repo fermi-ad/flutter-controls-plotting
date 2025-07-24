@@ -1,12 +1,12 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
+import 'package:flutter_controls_plotting/entities/plotting_fl_spot.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
 class FlchartCache {
   static const int minimumNumberOfReducedPoints = 8000;
 
-  final Map<String, List<List<FlSpot>>> spots = {};
+  final Map<String, List<List<PlottingFlSpot>>> spots = {};
   final Map<String, List<int>> lastProcessedIndex = {};
 
   int? reducedPoints;
@@ -25,7 +25,7 @@ class FlchartCache {
   double? __dLoggerEstimatedNumberOfPoints;
   int? __dLoggerPointSkipCount;
 
-  List<FlSpot> toSpots(
+  List<PlottingFlSpot> toSpots(
       {required List<PlotPoint> points,
       required channelName,
       required int segmentIndex,
@@ -34,8 +34,6 @@ class FlchartCache {
       double? maxX,
       double? minY,
       double? maxY,
-      double? normalizeMinY,
-      double? normalizeMaxY,
       bool exitForScalar = false}) {
     if (!_resetCache) {
       _resetCache =
@@ -56,7 +54,7 @@ class FlchartCache {
     _spotsMinY = minY;
     _spotsMaxY = maxY;
 
-    List<FlSpot> flSpots;
+    List<PlottingFlSpot> flSpots;
     int startIndex = 0;
 
     if (!spots.containsKey(channelName)) {
@@ -90,7 +88,7 @@ class FlchartCache {
     int? minYPairIndex;
     int? maxYPairIndex;
 
-    List<FlSpot> newSpots = [];
+    List<PlottingFlSpot> newSpots = [];
     for (int i = points.length - 1; i >= startIndex; i--) {
       PlotPoint point = points[i];
       var x = point.x;
@@ -144,63 +142,29 @@ class FlchartCache {
       }
 
       if (addPoint) {
-        FlSpot flSpot = FlSpot(
-            x,
-            _normalizeY(y,
-                channelName: channelName,
-                channelSetting: channelSetting,
-                minY: normalizeMinY,
-                maxY: normalizeMaxY));
+        PlottingFlSpot flSpot = PlottingFlSpot(x, y);
         newSpots.insert(0, flSpot);
       }
     }
 
     // Collect the indices and corresponding FlSpot objects
-    final List<MapEntry<int, FlSpot>> spotsToInsert = [];
+    final List<MapEntry<int, PlottingFlSpot>> spotsToInsert = [];
 
     if (minXPairIndex != null) {
-      spotsToInsert.add(MapEntry(
-          minXPairIndex,
-          FlSpot(
-              minXPair!.x,
-              _normalizeY(minXPair.y,
-                  channelName: channelName,
-                  channelSetting: channelSetting,
-                  minY: normalizeMinY,
-                  maxY: normalizeMaxY))));
+      spotsToInsert.add(
+          MapEntry(minXPairIndex, PlottingFlSpot(minXPair!.x, minXPair.y)));
     }
     if (maxXPairIndex != null) {
-      spotsToInsert.add(MapEntry(
-          maxXPairIndex,
-          FlSpot(
-              maxXPair!.x,
-              _normalizeY(maxXPair.y,
-                  channelName: channelName,
-                  channelSetting: channelSetting,
-                  minY: normalizeMinY,
-                  maxY: normalizeMaxY))));
+      spotsToInsert.add(
+          MapEntry(maxXPairIndex, PlottingFlSpot(maxXPair!.x, maxXPair.y)));
     }
     if (minYPairIndex != null) {
-      spotsToInsert.add(MapEntry(
-          minYPairIndex,
-          FlSpot(
-              minYPair!.x,
-              _normalizeY(minYPair.y,
-                  channelName: channelName,
-                  channelSetting: channelSetting,
-                  minY: normalizeMinY,
-                  maxY: normalizeMaxY))));
+      spotsToInsert.add(
+          MapEntry(minYPairIndex, PlottingFlSpot(minYPair!.x, minYPair.y)));
     }
     if (maxYPairIndex != null) {
-      spotsToInsert.add(MapEntry(
-          maxYPairIndex,
-          FlSpot(
-              maxYPair!.x,
-              _normalizeY(maxYPair.y,
-                  channelName: channelName,
-                  channelSetting: channelSetting,
-                  minY: normalizeMinY,
-                  maxY: normalizeMaxY))));
+      spotsToInsert.add(
+          MapEntry(maxYPairIndex, PlottingFlSpot(maxYPair!.x, maxYPair.y)));
     }
 
     // Sort the list by indices in descending order
@@ -222,9 +186,27 @@ class FlchartCache {
     return flSpots;
   }
 
+  void normalizeCacheSpots({
+    required Map<String, ChannelSetting> channels,
+    required double? minY,
+    required double? maxY,
+  }) {
+    for (var entry in spots.entries) {
+      var channelName = entry.key;
+      var channelSpots = entry.value;
+      var channelSetting = channels[channelName]!;
+      for (var segmentSpots in channelSpots) {
+        for (var spot in segmentSpots) {
+          var normalizedY = _normalizeY(spot.originalY,
+              channelSetting: channelSetting, minY: minY, maxY: maxY);
+          spot.normalizedY = normalizedY;
+        }
+      }
+    }
+  }
+
   double _normalizeY(
     double y, {
-    required String channelName,
     required ChannelSetting channelSetting,
     required double? minY,
     required double? maxY,
@@ -301,8 +283,8 @@ class FlchartCache {
     return reducedPoints;
   }
 
-  List<FlSpot> __reduceSpots(
-      {required List<FlSpot> spots, required int maxPoints}) {
+  List<PlottingFlSpot> __reduceSpots(
+      {required List<PlottingFlSpot> spots, required int maxPoints}) {
     if (spots.length <= maxPoints) {
       return spots;
     }
@@ -369,6 +351,9 @@ class FlchartCache {
   }
 
   int? get _dLoggerPointSkipCount {
+    if (!isDataLogger) {
+      return null;
+    }
     if (__dLoggerPointSkipCount != null) {
       return __dLoggerPointSkipCount;
     }
