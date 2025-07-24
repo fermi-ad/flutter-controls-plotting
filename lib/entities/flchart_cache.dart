@@ -96,7 +96,8 @@ class FlchartCache {
 
       // Skip points based on the calculated skip count for data logger
       if (skipIndexCount != null && skipIndexCount > 1) {
-        if (x > _dataLoggerEndTime!) {
+        if (_dataLoggerEndTime == null ||
+            _dataLoggerEndTime != null && x > _dataLoggerEndTime!) {
           // Data gathered
           clearDataLogger();
         } else if (i % skipIndexCount != 0) {
