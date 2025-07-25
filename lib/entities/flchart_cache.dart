@@ -1,10 +1,13 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
+import 'package:flutter_controls_plotting/entities/plotting_fl_spot.dart';
+import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
 class FlchartCache {
-  Map<String, List<List<FlSpot>>> spots = {};
-  Map<String, List<int>> lastProcessedIndex = {};
+  static const int minimumNumberOfReducedPoints = 8000;
+
+  final Map<String, List<List<PlottingFlSpot>>> spots = {};
+  final Map<String, List<int>> lastProcessedIndex = {};
 
   int? reducedPoints;
   int totalPoints = 0;
@@ -15,7 +18,14 @@ class FlchartCache {
   double? _spotsMinY;
   double? _spotsMaxY;
 
-  List<FlSpot> toSpots(
+  // Datalogger skip cache spots.
+  double? _dataLoggerStartTime;
+  double? _dataLoggerEndTime;
+  final Map<String, double> _dLoggerEstimatedNumberOfPointsPerCh = {};
+  double? __dLoggerEstimatedNumberOfPoints;
+  int? __dLoggerPointSkipCount;
+
+  List<PlottingFlSpot> toSpots(
       {required List<PlotPoint> points,
       required channelName,
       required int segmentIndex,
@@ -24,8 +34,6 @@ class FlchartCache {
       double? maxX,
       double? minY,
       double? maxY,
-      double? normalizeMinY,
-      double? normalizeMaxY,
       bool exitForScalar = false}) {
     if (!_resetCache) {
       _resetCache =
@@ -36,13 +44,17 @@ class FlchartCache {
       clearAll();
     }
 
+    estimateDataLoggerPoints(channelName: channelName, firstSample: points);
+
+    var skipIndexCount = _dLoggerPointSkipCount;
+
     // Update global min/max values
     _spotsMinX = minX;
     _spotsMaxX = maxX;
     _spotsMinY = minY;
     _spotsMaxY = maxY;
 
-    List<FlSpot> flSpots;
+    List<PlottingFlSpot> flSpots;
     int startIndex = 0;
 
     if (!spots.containsKey(channelName)) {
@@ -76,11 +88,27 @@ class FlchartCache {
     int? minYPairIndex;
     int? maxYPairIndex;
 
-    List<FlSpot> newSpots = [];
+    List<PlottingFlSpot> newSpots = [];
     for (int i = points.length - 1; i >= startIndex; i--) {
       PlotPoint point = points[i];
       var x = point.x;
       var y = point.y;
+
+      // Skip points based on the calculated skip count for data logger
+      if (skipIndexCount != null && skipIndexCount > 1) {
+        if (_dataLoggerEndTime == null ||
+            _dataLoggerEndTime != null && x > _dataLoggerEndTime!) {
+          // Data gathered
+          clearDataLogger();
+        } else if (i % skipIndexCount != 0) {
+          // Ensure to reflect the skipped point in total points counter.
+          totalPoints += 1;
+          // Do not further process point, in datalogger acquisition.
+          continue;
+        } else {
+          reducedPoints ??= 0;
+        }
+      }
 
       bool addPoint = true;
 
@@ -115,63 +143,29 @@ class FlchartCache {
       }
 
       if (addPoint) {
-        FlSpot flSpot = FlSpot(
-            x,
-            _normalizeY(y,
-                channelName: channelName,
-                channelSetting: channelSetting,
-                minY: normalizeMinY,
-                maxY: normalizeMaxY));
+        PlottingFlSpot flSpot = PlottingFlSpot(x, y);
         newSpots.insert(0, flSpot);
       }
     }
 
     // Collect the indices and corresponding FlSpot objects
-    final List<MapEntry<int, FlSpot>> spotsToInsert = [];
+    final List<MapEntry<int, PlottingFlSpot>> spotsToInsert = [];
 
     if (minXPairIndex != null) {
-      spotsToInsert.add(MapEntry(
-          minXPairIndex,
-          FlSpot(
-              minXPair!.x,
-              _normalizeY(minXPair.y,
-                  channelName: channelName,
-                  channelSetting: channelSetting,
-                  minY: normalizeMinY,
-                  maxY: normalizeMaxY))));
+      spotsToInsert.add(
+          MapEntry(minXPairIndex, PlottingFlSpot(minXPair!.x, minXPair.y)));
     }
     if (maxXPairIndex != null) {
-      spotsToInsert.add(MapEntry(
-          maxXPairIndex,
-          FlSpot(
-              maxXPair!.x,
-              _normalizeY(maxXPair.y,
-                  channelName: channelName,
-                  channelSetting: channelSetting,
-                  minY: normalizeMinY,
-                  maxY: normalizeMaxY))));
+      spotsToInsert.add(
+          MapEntry(maxXPairIndex, PlottingFlSpot(maxXPair!.x, maxXPair.y)));
     }
     if (minYPairIndex != null) {
-      spotsToInsert.add(MapEntry(
-          minYPairIndex,
-          FlSpot(
-              minYPair!.x,
-              _normalizeY(minYPair.y,
-                  channelName: channelName,
-                  channelSetting: channelSetting,
-                  minY: normalizeMinY,
-                  maxY: normalizeMaxY))));
+      spotsToInsert.add(
+          MapEntry(minYPairIndex, PlottingFlSpot(minYPair!.x, minYPair.y)));
     }
     if (maxYPairIndex != null) {
-      spotsToInsert.add(MapEntry(
-          maxYPairIndex,
-          FlSpot(
-              maxYPair!.x,
-              _normalizeY(maxYPair.y,
-                  channelName: channelName,
-                  channelSetting: channelSetting,
-                  minY: normalizeMinY,
-                  maxY: normalizeMaxY))));
+      spotsToInsert.add(
+          MapEntry(maxYPairIndex, PlottingFlSpot(maxYPair!.x, maxYPair.y)));
     }
 
     // Sort the list by indices in descending order
@@ -193,9 +187,27 @@ class FlchartCache {
     return flSpots;
   }
 
+  void normalizeCacheSpots({
+    required Map<String, ChannelSetting> channels,
+    required double? minY,
+    required double? maxY,
+  }) {
+    for (var entry in spots.entries) {
+      var channelName = entry.key;
+      var channelSpots = entry.value;
+      var channelSetting = channels[channelName]!;
+      for (var segmentSpots in channelSpots) {
+        for (var spot in segmentSpots) {
+          var normalizedY = _normalizeY(spot.originalY,
+              channelSetting: channelSetting, minY: minY, maxY: maxY);
+          spot.normalizedY = normalizedY;
+        }
+      }
+    }
+  }
+
   double _normalizeY(
     double y, {
-    required String channelName,
     required ChannelSetting channelSetting,
     required double? minY,
     required double? maxY,
@@ -241,7 +253,8 @@ class FlchartCache {
   }
 
   int? reduceSpots(
-      {int minimumPointsNeeded = 8000, int maxiumumPointsDisplayed = 10000}) {
+      {int minimumPointsNeeded = minimumNumberOfReducedPoints,
+      int maxiumumPointsDisplayed = 10000}) {
     int numberOfPoints = 0;
     for (var channelSpots in spots.values) {
       for (var segmentSpots in channelSpots) {
@@ -265,7 +278,7 @@ class FlchartCache {
           reducedPoints = reducedPoints! + spots.length;
         }
       }
-    } else if (numberOfPoints > minimumPointsNeeded) {
+    } else {
       if (totalPoints > numberOfPoints) {
         reducedPoints = numberOfPoints;
       } else {
@@ -276,8 +289,8 @@ class FlchartCache {
     return reducedPoints;
   }
 
-  List<FlSpot> __reduceSpots(
-      {required List<FlSpot> spots, required int maxPoints}) {
+  List<PlottingFlSpot> __reduceSpots(
+      {required List<PlottingFlSpot> spots, required int maxPoints}) {
     if (spots.length <= maxPoints) {
       return spots;
     }
@@ -293,6 +306,124 @@ class FlchartCache {
     return spots;
   }
 
+  void prepareDataLoggerAcquisition({double? startTime, double? endTime}) {
+    clearDataLogger();
+
+    if (startTime == null) {
+      return;
+    }
+
+    if (startTime > getCurrentAcsysEpochTime()) {
+      // No need since it is in the future.
+      return;
+    }
+
+    _dataLoggerStartTime = startTime;
+    if (endTime != null) {
+      if (endTime > getCurrentAcsysEpochTime()) {
+        endTime = getCurrentAcsysEpochTime();
+      }
+      _dataLoggerEndTime = endTime;
+    } else {
+      _dataLoggerEndTime = getCurrentAcsysEpochTime();
+    }
+  }
+
+  bool get isDataLogger => _dataLoggerStartTime != null;
+
+  double? get _dLoggerEstimatedNumberOfPoints {
+    if (__dLoggerEstimatedNumberOfPoints != null) {
+      return __dLoggerEstimatedNumberOfPoints;
+    }
+
+    if (_dLoggerEstimatedNumberOfPointsPerCh.isEmpty) {
+      return null;
+    }
+
+    double total = 0;
+    for (var points in _dLoggerEstimatedNumberOfPointsPerCh.values) {
+      total += points;
+    }
+
+    __dLoggerEstimatedNumberOfPoints = total;
+    return __dLoggerEstimatedNumberOfPoints;
+  }
+
+  set _dLoggerEstimatedNumberOfPoints(double? value) {
+    if (value == null) {
+      __dLoggerPointSkipCount = null;
+    }
+    __dLoggerEstimatedNumberOfPoints = value;
+  }
+
+  int? get _dLoggerPointSkipCount {
+    if (!isDataLogger) {
+      return null;
+    }
+    if (__dLoggerPointSkipCount != null) {
+      return __dLoggerPointSkipCount;
+    }
+
+    final estimatedPoints = _dLoggerEstimatedNumberOfPoints;
+    if (estimatedPoints == null) {
+      return null;
+    }
+
+    if (estimatedPoints <= minimumNumberOfReducedPoints) {
+      __dLoggerPointSkipCount = 1;
+    } else {
+      __dLoggerPointSkipCount =
+          (estimatedPoints / minimumNumberOfReducedPoints).ceil();
+    }
+
+    return __dLoggerPointSkipCount;
+  }
+
+  void estimateDataLoggerPoints({
+    required String channelName,
+    required List<PlotPoint> firstSample,
+  }) {
+    if (!isDataLogger) {
+      return;
+    }
+
+    if (_dLoggerEstimatedNumberOfPointsPerCh.containsKey(channelName)) {
+      return;
+    }
+
+    if (_dataLoggerStartTime == null ||
+        firstSample.isEmpty ||
+        firstSample.length <= 2) {
+      return;
+    }
+
+    // Calculate the time span of the first sample
+    double sampleStartTime = firstSample[0].x;
+    double sampleEndTime = firstSample[1].x;
+
+    double sampleTimeSpan = sampleEndTime - sampleStartTime;
+
+    if (sampleTimeSpan <= 0) {
+      return;
+    }
+
+    // Calculate total time span.
+    double totalTimeSpan;
+    totalTimeSpan = _dataLoggerEndTime! - _dataLoggerStartTime!;
+
+    // Calculate points per unit time.
+    double pointsPerTimeUnit = 1 / sampleTimeSpan;
+
+    // Estimate total number of points.
+    double estimatedPoints = totalTimeSpan * pointsPerTimeUnit;
+
+    // Store the estimation for this channel.
+    _dLoggerEstimatedNumberOfPointsPerCh[channelName] = estimatedPoints;
+
+    // Reset the estimated number of points to recalculate.
+    _dLoggerEstimatedNumberOfPoints = null;
+  }
+
   void clearAll() {
     spots.clear();
     lastProcessedIndex.clear();
@@ -305,5 +436,15 @@ class FlchartCache {
     totalPoints = 0;
     reducedPoints = null;
     _resetCache = false;
+
+    clearDataLogger();
+  }
+
+  void clearDataLogger() {
+    _dataLoggerStartTime = null;
+    _dataLoggerEndTime = null;
+    _dLoggerEstimatedNumberOfPointsPerCh.clear();
+    _dLoggerEstimatedNumberOfPoints = null;
+    reducedPoints = null;
   }
 }
