@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_controls_plotting/entities/PlottingPoint.dart';
+import 'package:flutter_controls_plotting/entities/plotting_point.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 import 'package:flutter_controls_plotting/widgets/plot_y_axis_label_widget.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -1,4 +1,4 @@
-import 'package:flutter_controls_plotting/entities/PlottingPoint.dart';
+import 'package:flutter_controls_plotting/entities/plotting_point.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plotting_fl_spot.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';

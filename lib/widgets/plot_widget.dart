@@ -5,7 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
-import 'package:flutter_controls_plotting/entities/PlottingPoint.dart';
+import 'package:flutter_controls_plotting/entities/plotting_point.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
 import 'package:flutter_controls_plotting/entities/plot_metadata.dart';
