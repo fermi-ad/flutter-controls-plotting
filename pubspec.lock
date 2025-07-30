@@ -210,8 +210,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: main
-      resolved-ref: a97157d325b1043d7757917daf3820f8cb82a95b
+      ref: deviceValue-POC
+      resolved-ref: "428fbd574b7d5052e2d3b0511f3768bd75e21d9e"
       url: "https://github.com/fermi-ad/flutter-controls-core.git"
     source: git
     version: "0.3.1"
