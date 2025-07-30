@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/entities/PlottingPoint.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 import 'package:flutter_controls_plotting/widgets/plot_y_axis_label_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -242,7 +243,7 @@ void assertPlotLoadingIndicator({required bool isVisible}) => expect(
     find.byType(LinearProgressIndicator),
     isVisible ? findsOneWidget : findsNothing);
 
-List<PlotPoint> _getPlotPoints(WidgetTester tester,
+List<PlottingPoint> _getPlotPoints(WidgetTester tester,
     {required String channelName, int segment = 0}) {
   final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
 
