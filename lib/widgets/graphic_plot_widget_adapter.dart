@@ -79,8 +79,17 @@ class GraphicPlotWidgetAdapter extends PlotWidgetAdapter {
     if (plotReply != null && plotReply!.data.isNotEmpty) {
       for (final channel in plotReply!.data) {
         for (final point in channel.points) {
-          data.add(
-              {"Index": point.x, "Value": point.y, "Channel": channel.name});
+          var deviceValue = point.value;
+          if (deviceValue is DevScalarArray) {
+            // Handle DevScalarArray type
+            for (int i = 0; i < deviceValue.value.length; i++) {
+              data.add({
+                "Index": i,
+                "Value": deviceValue.value[i],
+                "Channel": channel.name
+              });
+            }
+          }
         }
       }
     } else {
