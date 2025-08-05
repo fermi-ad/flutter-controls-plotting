@@ -466,7 +466,7 @@ class StandardPlotDAQ implements PlotDAQService {
 
         var x = eventX ?? currentEpochTime;
 
-        data = [PlotPoint(value: DevScalar(difference), t: currentEpochTime)];
+        data = [PlotPoint(value: DevScalar(difference), t: x)];
       }
     } else if (forChannel == GenPlots.scalarRandRamp.name) {
       var rand = Random();
@@ -480,7 +480,7 @@ class StandardPlotDAQ implements PlotDAQService {
 
       var x = eventX ?? currentEpochTime;
 
-      data = [PlotPoint(value: DevScalar(value), t: currentEpochTime)];
+      data = [PlotPoint(value: DevScalar(value), t: x)];
     } else if (forChannel == GenPlots.parabola.name) {
       data = [
         PlotPoint(
