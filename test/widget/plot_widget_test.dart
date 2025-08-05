@@ -175,8 +175,14 @@ void main() {
       // Then a PlotReply was received
       expect(lastUpdate, isNotNull);
 
+      // We get a single scalar device response.
+      expect(lastUpdate!.data.first.points.length, 1);
+
+      var deviceValue =
+          lastUpdate!.data.first.points.first.value as DevScalarArray;
+
       // ... and the PlotReply contains 500 samples of data
-      expect(lastUpdate!.data.first.points.length, 500);
+      expect(deviceValue.value.length, 500);
     });
   });
 
@@ -467,7 +473,7 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Ensure that the axis limits accomodate the sine plot test.
-      assertPlotXAxisLimits(tester, min: -250.0, max: 250.0);
+      assertPlotXAxisLimits(tester, min: 0, max: 500.0);
       assertPlotYAxisLimits(tester, min: -1, max: 1);
       assertPlotYAxisLabel(
           isVisible: true, color: Colors.red, withText: "-1.00");
@@ -480,7 +486,7 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Ensure that the axis limits changed to accomodate the new plot.
-      assertPlotXAxisLimits(tester, min: -250, max: 499);
+      assertPlotXAxisLimits(tester, min: 0, max: 500);
       assertPlotYAxisLimits(tester, min: -1, max: 5);
       assertPlotYAxisLabel(
           isVisible: true, color: Colors.red, withText: "-1.00");
@@ -509,7 +515,7 @@ void main() {
           titles: ["PLOT TEST PARABOLA"], units: ["V"]);
 
       // ... and the limits for the X-axis are -250 to 250
-      assertPlotXAxisLimits(tester, min: -250.0, max: 250.0);
+      assertPlotXAxisLimits(tester, min: 0, max: 500.0);
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
@@ -534,8 +540,8 @@ void main() {
       // ... and the Y-axis is labeled
       assertPlotYAxisTitles(tester, titles: ["PLOT TEST SINE"], units: ["V"]);
 
-      // ... and the limits for the X-axis are -250 to 250
-      assertPlotXAxisLimits(tester, min: -250.0, max: 250.0);
+      // ... and the limits for the X-axis are 0 to 500
+      assertPlotXAxisLimits(tester, min: 0, max: 500.0);
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
@@ -576,7 +582,7 @@ void main() {
           titles: ["PLOT TEST PARABOLA 64K"], units: ["V"]);
 
       // ... and the limits for the X-axis are -250 to 250
-      assertPlotXAxisLimits(tester, min: -32767.0, max: 32767.0);
+      assertPlotXAxisLimits(tester, min: 0, max: 65534);
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
