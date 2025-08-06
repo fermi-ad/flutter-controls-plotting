@@ -84,7 +84,7 @@ class GraphicPlotWidgetAdapter extends PlotWidgetAdapter {
             // Handle DevScalarArray type
             for (int i = 0; i < deviceValue.value.length; i++) {
               data.add({
-                "Index": i,
+                "Index": i.toDouble(),
                 "Value": deviceValue.value[i],
                 "Channel": channel.name
               });

@@ -817,7 +817,7 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Ensure that the axis limits accomodate the sine plot test.
-      assertPlotXAxisLimits(tester, min: -250.0, max: 250.0);
+      assertPlotXAxisLimits(tester, min: 0, max: 500);
       assertPlotYAxisLimits(tester, min: -1, max: 1);
 
       // Plot a second channel.
@@ -826,7 +826,7 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Ensure that the axis limits changed to accomodate the new plot.
-      assertPlotXAxisLimits(tester, min: -250, max: 499);
+      assertPlotXAxisLimits(tester, min: 0, max: 500);
       assertPlotYAxisLimits(tester, min: -1, max: 5);
     });
 
@@ -851,8 +851,8 @@ void main() {
       assertPlotYAxisTitles(tester,
           titles: ["PLOT TEST PARABOLA"], units: ["V"]);
 
-      // ... and the limits for the X-axis are -250 to 250
-      assertPlotXAxisLimits(tester, min: -250.0, max: 250.0);
+      // ... and the limits for the X-axis are 0 to 500
+      assertPlotXAxisLimits(tester, min: 0, max: 500);
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
@@ -878,8 +878,8 @@ void main() {
       // ... and the Y-axis is labeled
       assertPlotYAxisTitles(tester, titles: ["PLOT TEST SINE"], units: ["V"]);
 
-      // ... and the limits for the X-axis are -250 to 250
-      assertPlotXAxisLimits(tester, min: -250.0, max: 250.0);
+      // ... and the limits for the X-axis are 0 to 500
+      assertPlotXAxisLimits(tester, min: 0, max: 500);
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
@@ -922,7 +922,7 @@ void main() {
           titles: ["PLOT TEST PARABOLA 64K"], units: ["V"]);
 
       // ... and the limits for the X-axis are -250 to 250
-      assertPlotXAxisLimits(tester, min: -32767.0, max: 32767.0);
+      assertPlotXAxisLimits(tester, min: 0, max: 65534);
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
