@@ -6,9 +6,14 @@ class ChannelSetting {
   PlotMarker plotMarker;
   double? min;
   double? max;
+  bool isLogScale;
 
   ChannelSetting(
-      {this.lineColor, this.plotMarker = PlotMarker.line, this.min, this.max});
+      {this.lineColor,
+      this.plotMarker = PlotMarker.line,
+      this.min,
+      this.max,
+      this.isLogScale = false});
 
   // Clone functionality.
   static ChannelSetting from(ChannelSetting setting) {
