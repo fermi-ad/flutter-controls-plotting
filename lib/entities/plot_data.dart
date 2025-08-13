@@ -17,6 +17,11 @@ class PlotData {
 
   double? closestSpotX, closestSpotY;
 
+  double? _selectedArrayTime;
+  double? minArrayTime;
+  double? maxArrayTime;
+  double? arrayTimeStep;
+
   int? _lastPlotReplyHash;
 
   // Map of channel name and points split into segments.
@@ -38,6 +43,47 @@ class PlotData {
     } else {
       purgeDataSize = purgeSize;
     }
+  }
+
+  bool get displayArrayTimeSelectionSlider {
+    return minArrayTime != null &&
+        maxArrayTime != null &&
+        minArrayTime != maxArrayTime;
+  }
+
+  bool get selectedArrayTimeSet {
+    return _selectedArrayTime != null;
+  }
+
+  double? get selectedArrayTime {
+    if (_selectedArrayTime == null) {
+      return maxArrayTime;
+    }
+    return _selectedArrayTime;
+  }
+
+  set selectedArrayTime(double? selectedArrayTime) {
+    _selectedArrayTime = selectedArrayTime;
+  }
+
+  int? get selectedArrayTimeDivisions {
+    if (minArrayTime == null) {
+      return null;
+    }
+    if (maxArrayTime == null) {
+      return null;
+    }
+    if (arrayTimeStep == null) {
+      return null;
+    }
+
+    var timespan = maxArrayTime! - minArrayTime!;
+
+    if (timespan == 0) {
+      return null;
+    }
+
+    return (timespan / arrayTimeStep!).ceil();
   }
 
   double? get minX {
@@ -105,6 +151,20 @@ class PlotData {
       var time = plotPoint.t;
 
       if (deviceValue is DevScalarArray) {
+        if (time != null) {
+          if (minArrayTime == null) {
+            minArrayTime = time;
+            maxArrayTime = time;
+            arrayTimeStep = 1;
+          } else {
+            var curStep = time - maxArrayTime!;
+            if (curStep > 0) {
+              arrayTimeStep = min(arrayTimeStep!, curStep);
+              maxArrayTime = time;
+            }
+          }
+        }
+
         var array = deviceValue.value;
         for (var x = 0; x < array.length; x++) {
           var y = array[x];
@@ -126,10 +186,6 @@ class PlotData {
       {required bool isTimedScalarData,
       required bool isPersistent,
       required List<PlotChannelData> plotChannels}) {
-    if (!isTimedScalarData && !isPersistent) {
-      points.clear();
-      plotMetadata.plotDataBytes = 0;
-    }
     for (final plotChannel in plotChannels) {
       if (!channelHasErrorOrNoPoints(plotChannel)) {
         var newPoints = __processDeviceValue(plotChannel.points);
@@ -163,6 +219,12 @@ class PlotData {
             pointsList.insert(lastIndex, point);
           }
         } else {
+          if (!isTimedScalarData && pointsList.isNotEmpty) {
+            // New array data, new segment.
+            segments.add([]);
+            // Reload pointsList
+            pointsList = segments.last;
+          }
           var lastIndex = pointsList.length;
           pointsList.insertAll(lastIndex, newPoints);
         }
@@ -418,6 +480,11 @@ class PlotData {
     for (var garbageChannel in garbageChannels) {
       points.remove(garbageChannel);
     }
+
+    _selectedArrayTime = null;
+    minArrayTime = null;
+    maxArrayTime = null;
+    arrayTimeStep = null;
 
     if (garbageChannels.isNotEmpty) {
       // Displayed channels changed.
