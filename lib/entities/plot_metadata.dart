@@ -11,6 +11,8 @@ class PlotMetadata with ChangeNotifier {
   double? _xMin;
   double? _xMax;
 
+  double? displayedArrayTime;
+
   int plotDataBytes = 0;
   int _numberOfPoints = 0;
   int? reducedPoints;
@@ -78,6 +80,7 @@ class PlotMetadata with ChangeNotifier {
   }
 
   void cleanUp() {
+    displayedArrayTime = null;
     _latestDataEpochTime = null;
     _latestRequestEpochTime = null;
     _xMin = null;

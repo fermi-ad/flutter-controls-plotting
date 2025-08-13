@@ -275,8 +275,39 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         return;
       }
 
+      int nearestSegmentIndex = points[plotChannel.name]!.length - 1;
+      if (!widget.isTimedScalarData) {
+        // Array data
+        cache.clearAll();
+        var selectedTime = plotData.selectedArrayTime;
+        if (selectedTime != null) {
+          // Find the segment index nearest to selectedArrayTime
+          double minTimeDiff = double.infinity;
+
+          for (var (idx, segment) in points[plotChannel.name]!.indexed) {
+            var t = segment.first.t;
+            if (t != null) {
+              var timeDiff = (t - selectedTime).abs();
+              if (timeDiff < minTimeDiff) {
+                minTimeDiff = timeDiff;
+                nearestSegmentIndex = idx;
+              }
+            }
+          }
+        }
+      }
+
       for (var (segmentIndex, pointSegment)
           in points[plotChannel.name]!.indexed) {
+        if (!widget.isTimedScalarData) {
+          // Array data
+          if (nearestSegmentIndex != segmentIndex) {
+            continue;
+          }
+
+          widget.plotMetadata.displayedArrayTime = pointSegment.first.t;
+        }
+
         // min and max y is not passed in for limiting points. This can cause behavior where poitns in the middle of axis are dropped.
         var spots = cache.toSpots(
             points: pointSegment,
@@ -302,6 +333,11 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
           dotData: _selectFlDotData(markerIndexForChannel(plotChannel.name),
               lineColorForChannel(plotChannel.name)),
         ));
+
+        if (!widget.isTimedScalarData) {
+          // Array data
+          break;
+        }
       }
     });
 
