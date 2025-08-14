@@ -62,6 +62,7 @@ class FakeACSysService implements ACSysServiceAPI {
                   status: 0,
                   points: [
                     PlotPoint(
+                        t: getCurrentAcsysEpochTime(),
                         value: DevScalarArray(List.generate(500, (i) => 5)))
                   ])
             ]));

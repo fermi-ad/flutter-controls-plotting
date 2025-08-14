@@ -41,7 +41,7 @@ dependencies:
     # path: ../flutter-controls-core
     git:
        url: https://github.com/fermi-ad/flutter-controls-core.git
-       ref: deviceValue-POC
+       ref: main
 
   fl_chart: ^1.0.0
 
