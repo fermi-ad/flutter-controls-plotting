@@ -206,6 +206,7 @@ class StandardPlotDAQ implements PlotDAQService {
         }
 
         List<double>? eventXList;
+        int itrPointCount = pointCount;
 
         for (var i = 0; i < pointCount; i++) {
           if (triggerEvent != null && eventAcquisitionCount != null) {
@@ -215,6 +216,8 @@ class StandardPlotDAQ implements PlotDAQService {
 
             if (eventAcquisitionCount == eventAcquisitionLimit) {
               eventAcquisitionCount = 0;
+              itrPointCount = i + 1;
+              break;
             } else {
               eventAcquisitionCount = eventAcquisitionCount! + 1;
             }
@@ -226,7 +229,7 @@ class StandardPlotDAQ implements PlotDAQService {
             requestTime: requestTime,
             rate: rate,
             apiDelay: apiDelay,
-            pointCount: pointCount,
+            pointCount: itrPointCount,
             args: args,
             markChannelNameErrors: true,
             eventXList: eventXList);
@@ -406,8 +409,15 @@ class StandardPlotDAQ implements PlotDAQService {
       await Future.delayed(duration);
     }
 
+    double? triggerTimestamp;
+
+    if (eventXList != null && eventXList.isNotEmpty) {
+      triggerTimestamp = currentEpochTime - eventXList.last;
+    }
+
     var generatedPlotReply = PlotReply(
         plotId: "Internal",
+        triggerTimestamp: triggerTimestamp,
         requestTime: requestTime,
         xAxisUnits: xAxisUnits,
         xAxisMin: args.xMin + 0.0,
