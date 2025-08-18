@@ -151,17 +151,15 @@ class PlotData {
       var time = plotPoint.t;
 
       if (deviceValue is DevScalarArray) {
-        if (time != null) {
-          if (minArrayTime == null) {
-            minArrayTime = time;
+        if (minArrayTime == null) {
+          minArrayTime = time;
+          maxArrayTime = time;
+          arrayTimeStep = 1;
+        } else {
+          var curStep = time - maxArrayTime!;
+          if (curStep > 0) {
+            arrayTimeStep = min(arrayTimeStep!, curStep);
             maxArrayTime = time;
-            arrayTimeStep = 1;
-          } else {
-            var curStep = time - maxArrayTime!;
-            if (curStep > 0) {
-              arrayTimeStep = min(arrayTimeStep!, curStep);
-              maxArrayTime = time;
-            }
           }
         }
 
@@ -172,7 +170,7 @@ class PlotData {
           points.add(PlottingPoint(x: x.toDouble(), y: y, t: time));
         }
       } else if (deviceValue is DevScalar) {
-        points.add(PlottingPoint(x: time!, y: deviceValue.value, t: time));
+        points.add(PlottingPoint(x: time, y: deviceValue.value, t: time));
       } else {
         throw Exception(
             'Unsupported device value type: ${deviceValue.runtimeType}');
@@ -236,9 +234,8 @@ class PlotData {
         // Update last response time.
         double? t = plotChannel.points.last.t;
 
-        if (t != null &&
-            (plotMetadata.latestDataEpochTime == null ||
-                plotMetadata.latestDataEpochTime! < t)) {
+        if (plotMetadata.latestDataEpochTime == null ||
+            plotMetadata.latestDataEpochTime! < t) {
           plotMetadata.latestDataEpochTime = t;
         }
       }
