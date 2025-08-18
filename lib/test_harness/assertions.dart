@@ -150,13 +150,25 @@ void assertPlotContainsSineWave(WidgetTester tester,
 }
 
 Future<void> assertPlotPointsDifferent(WidgetTester tester,
-    {required String channelName}) async {
-  final plotPoints = _getPlotPoints(tester, channelName: channelName);
+    {required String channelName, bool isNewSegment = false}) async {
+  int segment = 0;
+  if (isNewSegment) {
+    var segments = _getChannelSegments(tester, channelName: channelName);
+    segment = segments.length - 1;
+  }
+
+  final plotPoints =
+      _getPlotPoints(tester, channelName: channelName, segment: segment);
   var changed = false;
 
   await tester.pumpAndSettle();
 
-  final plotPointsAfter = _getPlotPoints(tester, channelName: channelName);
+  if (isNewSegment) {
+    segment += 1;
+  }
+
+  final plotPointsAfter =
+      _getPlotPoints(tester, channelName: channelName, segment: segment);
 
   expect(plotPoints.length, plotPointsAfter.length);
 
@@ -232,10 +244,16 @@ Future<void> assertPlotIsPaused(WidgetTester tester) async {
 
 void assertPlotContainsNSegments(WidgetTester tester, int numberOfSegments,
     {required String channelName}) {
+  var pointSegments = _getChannelSegments(tester, channelName: channelName);
+  expect(pointSegments.length, numberOfSegments);
+}
+
+List<List<PlottingPoint>> _getChannelSegments(WidgetTester tester,
+    {required String channelName}) {
   final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
   final pointSegments = plotState.points[channelName] ?? [];
 
-  expect(pointSegments.length, numberOfSegments);
+  return pointSegments;
 }
 
 void assertPlotLoadingIndicator({required bool isVisible}) => expect(
