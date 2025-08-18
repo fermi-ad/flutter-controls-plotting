@@ -487,6 +487,7 @@ class PlotState extends State<PlotWidget> {
     widget.plotData.filterPoints(
         isTimedScalarData: widget.isTimedScalarData,
         isPersistent: widget.isPersistent,
+        isOneShot: widget.nAcquisitions == 1,
         plotChannels: plotChannels);
   }
 

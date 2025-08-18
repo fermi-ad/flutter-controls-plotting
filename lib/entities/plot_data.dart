@@ -183,6 +183,7 @@ class PlotData {
   void filterPoints(
       {required bool isTimedScalarData,
       required bool isPersistent,
+      required bool isOneShot,
       required List<PlotChannelData> plotChannels}) {
     for (final plotChannel in plotChannels) {
       if (!channelHasErrorOrNoPoints(plotChannel)) {
@@ -218,10 +219,14 @@ class PlotData {
           }
         } else {
           if (!isTimedScalarData && pointsList.isNotEmpty) {
-            // New array data, new segment.
-            segments.add([]);
-            // Reload pointsList
-            pointsList = segments.last;
+            if (!isOneShot) {
+              // New array data, new segment.
+              segments.add([]);
+              // Reload pointsList
+              pointsList = segments.last;
+            } else {
+              _clearSegments(segments);
+            }
           }
           var lastIndex = pointsList.length;
           pointsList.insertAll(lastIndex, newPoints);
