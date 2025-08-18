@@ -275,8 +275,10 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         return;
       }
 
+      var arrayNonPersistentData =
+          (!widget.isTimedScalarData && !widget.isPersistent);
       int nearestSegmentIndex = points[plotChannel.name]!.length - 1;
-      if (!widget.isTimedScalarData) {
+      if (arrayNonPersistentData) {
         // Array data
         cache.clearAll();
         var selectedTime = plotData.selectedArrayTime;
@@ -299,7 +301,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
 
       for (var (segmentIndex, pointSegment)
           in points[plotChannel.name]!.indexed) {
-        if (!widget.isTimedScalarData) {
+        if (arrayNonPersistentData) {
           // Array data
           if (nearestSegmentIndex != segmentIndex) {
             continue;
@@ -334,7 +336,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
               lineColorForChannel(plotChannel.name)),
         ));
 
-        if (!widget.isTimedScalarData) {
+        if (arrayNonPersistentData) {
           // Array data
           break;
         }
