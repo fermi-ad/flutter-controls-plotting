@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_controls_plotting/entities/plotting_point.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plotting_fl_spot.dart';
@@ -25,19 +27,24 @@ class FlchartCache {
   double? __dLoggerEstimatedNumberOfPoints;
   int? __dLoggerPointSkipCount;
 
-  List<PlottingFlSpot> toSpots(
-      {required List<PlottingPoint> points,
-      required channelName,
-      required int segmentIndex,
-      required ChannelSetting channelSetting,
-      double? minX,
-      double? maxX,
-      double? minY,
-      double? maxY,
-      bool exitForScalar = false}) {
+  List<PlottingFlSpot> toSpots({
+    required List<PlottingPoint> points,
+    required channelName,
+    required int segmentIndex,
+    required ChannelSetting channelSetting,
+    double? minX,
+    double? maxX,
+    double? minY,
+    double? maxY,
+    bool exitForScalar = false,
+  }) {
     if (!_resetCache) {
-      _resetCache =
-          shouldResetCache(minX: minX, maxX: maxX, minY: minY, maxY: maxY);
+      _resetCache = shouldResetCache(
+        minX: minX,
+        maxX: maxX,
+        minY: minY,
+        maxY: maxY,
+      );
     }
 
     if (_resetCache) {
@@ -93,6 +100,15 @@ class FlchartCache {
       PlottingPoint point = points[i];
       var x = point.x;
       var y = point.y;
+
+      if (channelSetting.isLogScale) {
+        if (y <= 0) {
+          // For log scale, skip non-positive values.
+          continue;
+        }
+        // Use natural logarithm (base e)
+        y = log(y);
+      }
 
       // Skip points based on the calculated skip count for data logger
       if (skipIndexCount != null && skipIndexCount > 1) {
@@ -153,19 +169,23 @@ class FlchartCache {
 
     if (minXPairIndex != null) {
       spotsToInsert.add(
-          MapEntry(minXPairIndex, PlottingFlSpot(minXPair!.x, minXPair.y)));
+        MapEntry(minXPairIndex, PlottingFlSpot(minXPair!.x, minXPair.y)),
+      );
     }
     if (maxXPairIndex != null) {
       spotsToInsert.add(
-          MapEntry(maxXPairIndex, PlottingFlSpot(maxXPair!.x, maxXPair.y)));
+        MapEntry(maxXPairIndex, PlottingFlSpot(maxXPair!.x, maxXPair.y)),
+      );
     }
     if (minYPairIndex != null) {
       spotsToInsert.add(
-          MapEntry(minYPairIndex, PlottingFlSpot(minYPair!.x, minYPair.y)));
+        MapEntry(minYPairIndex, PlottingFlSpot(minYPair!.x, minYPair.y)),
+      );
     }
     if (maxYPairIndex != null) {
       spotsToInsert.add(
-          MapEntry(maxYPairIndex, PlottingFlSpot(maxYPair!.x, maxYPair.y)));
+        MapEntry(maxYPairIndex, PlottingFlSpot(maxYPair!.x, maxYPair.y)),
+      );
     }
 
     // Sort the list by indices in descending order
@@ -198,8 +218,12 @@ class FlchartCache {
       var channelSetting = channels[channelName]!;
       for (var segmentSpots in channelSpots) {
         for (var spot in segmentSpots) {
-          var normalizedY = _normalizeY(spot.originalY,
-              channelSetting: channelSetting, minY: minY, maxY: maxY);
+          var normalizedY = _normalizeY(
+            spot.originalY,
+            channelSetting: channelSetting,
+            minY: minY,
+            maxY: maxY,
+          );
           spot.normalizedY = normalizedY;
         }
       }
@@ -252,9 +276,10 @@ class FlchartCache {
     return (min == null || value >= min) && (max == null || value <= max);
   }
 
-  int? reduceSpots(
-      {int minimumPointsNeeded = minimumNumberOfReducedPoints,
-      int maxiumumPointsDisplayed = 10000}) {
+  int? reduceSpots({
+    int minimumPointsNeeded = minimumNumberOfReducedPoints,
+    int maxiumumPointsDisplayed = 10000,
+  }) {
     int numberOfPoints = 0;
     for (var channelSpots in spots.values) {
       for (var segmentSpots in channelSpots) {
@@ -289,8 +314,10 @@ class FlchartCache {
     return reducedPoints;
   }
 
-  List<PlottingFlSpot> __reduceSpots(
-      {required List<PlottingFlSpot> spots, required int maxPoints}) {
+  List<PlottingFlSpot> __reduceSpots({
+    required List<PlottingFlSpot> spots,
+    required int maxPoints,
+  }) {
     if (spots.length <= maxPoints) {
       return spots;
     }
@@ -372,8 +399,8 @@ class FlchartCache {
     if (estimatedPoints <= minimumNumberOfReducedPoints) {
       __dLoggerPointSkipCount = 1;
     } else {
-      __dLoggerPointSkipCount =
-          (estimatedPoints / minimumNumberOfReducedPoints).ceil();
+      __dLoggerPointSkipCount = (estimatedPoints / minimumNumberOfReducedPoints)
+          .ceil();
     }
 
     return __dLoggerPointSkipCount;
