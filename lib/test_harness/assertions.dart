@@ -293,6 +293,18 @@ void assertNormalizedFlSpots(WidgetTester tester, List<List<double>> shouldBe) {
   }
 }
 
+void assertPlotYAxisLimitsLabel(WidgetTester tester,
+    {required Color color, required String min, required String max}) {
+  final allYAxisLabels = find.byType(PlotYAxisLabelWidget);
+  final yAxisMax = allYAxisLabels.last;
+  final yAxisMin = allYAxisLabels.first;
+
+  expect(find.descendant(of: yAxisMax, matching: findTextWithColor(max, color)),
+      findsOneWidget);
+  expect(find.descendant(of: yAxisMin, matching: findTextWithColor(min, color)),
+      findsOneWidget);
+}
+
 Finder findTextWithColor(String text, Color color) {
   return find.byWidgetPredicate(
     (widget) =>
