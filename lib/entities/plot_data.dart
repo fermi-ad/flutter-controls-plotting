@@ -219,14 +219,13 @@ class PlotData {
           }
         } else {
           if (!isTimedScalarData && pointsList.isNotEmpty) {
-            if (!isOneShot) {
-              // New array data, new segment.
-              segments.add([]);
-              // Reload pointsList
-              pointsList = segments.last;
-            } else {
+            if (isOneShot) {
               _clearSegments(segments);
             }
+            // Reload pointsList
+            pointsList = [];
+            // New array data, new segment.
+            segments.add(pointsList);
           }
           var lastIndex = pointsList.length;
           pointsList.insertAll(lastIndex, newPoints);
