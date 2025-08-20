@@ -268,6 +268,8 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     // Timed X axis and no xMax defined will exit upon last out of range value.
     bool exitForScalar = widget.xMax == null && widget.isTimedXAxis;
     var cache = widget.plotData.flchartCache;
+    var arrayNonPersistentData =
+        (!widget.isTimedScalarData && !widget.isPersistent);
 
     plotChannels.asMap().forEach((index, plotChannel) {
       if (_channelHasError(plotChannel) ||
@@ -275,12 +277,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         return;
       }
 
-      var arrayNonPersistentData =
-          (!widget.isTimedScalarData && !widget.isPersistent);
       int nearestSegmentIndex = points[plotChannel.name]!.length - 1;
       if (arrayNonPersistentData) {
         // Array data
-        cache.clearAll();
         var selectedTime = plotData.selectedArrayTime;
         if (selectedTime != null) {
           // Find the segment index nearest to selectedArrayTime
