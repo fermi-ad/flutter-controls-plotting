@@ -266,9 +266,11 @@ void assertNormalizedFlSpots(WidgetTester tester, List<List<double>> shouldBe) {
       find.byType(LineChart).evaluate().first.widget as LineChart;
   final channels = lineChartWidget.data.lineBarsData;
 
-  for (int channelIndex = 0; channelIndex != channels.length; channelIndex++) {
+  for (int channelIndex = 0; channelIndex != shouldBe.length; channelIndex++) {
     final channel = channels[channelIndex];
-    for (int spotIndex = 0; spotIndex != channel.spots.length; spotIndex++) {
+    for (int spotIndex = 0;
+        spotIndex != shouldBe[channelIndex].length;
+        spotIndex++) {
       expect(channel.spots[spotIndex].y,
           moreOrLessEquals(shouldBe[channelIndex][spotIndex], epsilon: 0.01));
     }
