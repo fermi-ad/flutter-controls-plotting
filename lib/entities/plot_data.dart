@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/entities/plotting_point.dart';
 import 'package:flutter_controls_plotting/entities/flchart_cache.dart';
 import 'package:flutter_controls_plotting/entities/plot_metadata.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
@@ -16,10 +17,15 @@ class PlotData {
 
   double? closestSpotX, closestSpotY;
 
+  double? _selectedArrayTime;
+  double? minArrayTime;
+  double? maxArrayTime;
+  double? arrayTimeStep;
+
   int? _lastPlotReplyHash;
 
   // Map of channel name and points split into segments.
-  Map<String, List<List<PlotPoint>>> points = {};
+  Map<String, List<List<PlottingPoint>>> points = {};
 
   PlotMetadata plotMetadata = PlotMetadata();
 
@@ -37,6 +43,47 @@ class PlotData {
     } else {
       purgeDataSize = purgeSize;
     }
+  }
+
+  bool get displayArrayTimeSelectionSlider {
+    return minArrayTime != null &&
+        maxArrayTime != null &&
+        minArrayTime != maxArrayTime;
+  }
+
+  bool get selectedArrayTimeSet {
+    return _selectedArrayTime != null;
+  }
+
+  double? get selectedArrayTime {
+    if (_selectedArrayTime == null) {
+      return maxArrayTime;
+    }
+    return _selectedArrayTime;
+  }
+
+  set selectedArrayTime(double? selectedArrayTime) {
+    _selectedArrayTime = selectedArrayTime;
+  }
+
+  int? get selectedArrayTimeDivisions {
+    if (minArrayTime == null) {
+      return null;
+    }
+    if (maxArrayTime == null) {
+      return null;
+    }
+    if (arrayTimeStep == null) {
+      return null;
+    }
+
+    var timespan = maxArrayTime! - minArrayTime!;
+
+    if (timespan == 0) {
+      return null;
+    }
+
+    return (timespan / arrayTimeStep!).ceil();
   }
 
   double? get minX {
@@ -97,17 +144,50 @@ class PlotData {
     return true;
   }
 
+  List<PlottingPoint> __processDeviceValue(List<PlotPoint> plotPoints) {
+    List<PlottingPoint> points = [];
+    for (var plotPoint in plotPoints) {
+      var deviceValue = plotPoint.value;
+      var time = plotPoint.t;
+
+      if (deviceValue is DevScalarArray) {
+        if (minArrayTime == null) {
+          minArrayTime = time;
+          maxArrayTime = time;
+          arrayTimeStep = 1;
+        } else {
+          var curStep = time - maxArrayTime!;
+          if (curStep > 0) {
+            arrayTimeStep = min(arrayTimeStep!, curStep);
+            maxArrayTime = time;
+          }
+        }
+
+        var array = deviceValue.value;
+        for (var x = 0; x < array.length; x++) {
+          var y = array[x];
+
+          points.add(PlottingPoint(x: x.toDouble(), y: y, t: time));
+        }
+      } else if (deviceValue is DevScalar) {
+        points.add(PlottingPoint(x: time, y: deviceValue.value, t: time));
+      } else {
+        throw Exception(
+            'Unsupported device value type: ${deviceValue.runtimeType}');
+      }
+    }
+
+    return points;
+  }
+
   void filterPoints(
       {required bool isTimedScalarData,
       required bool isPersistent,
+      required bool isOneShot,
       required List<PlotChannelData> plotChannels}) {
-    if (!isTimedScalarData && !isPersistent) {
-      points.clear();
-      plotMetadata.plotDataBytes = 0;
-    }
     for (final plotChannel in plotChannels) {
       if (!channelHasErrorOrNoPoints(plotChannel)) {
-        var newPoints = plotChannel.points;
+        var newPoints = __processDeviceValue(plotChannel.points);
 
         if (!points.containsKey(plotChannel.name)) {
           points[plotChannel.name] = [[]];
@@ -138,6 +218,15 @@ class PlotData {
             pointsList.insert(lastIndex, point);
           }
         } else {
+          if (!isTimedScalarData && pointsList.isNotEmpty) {
+            if (isOneShot) {
+              _clearSegments(segments);
+            }
+            // Reload pointsList
+            pointsList = [];
+            // New array data, new segment.
+            segments.add(pointsList);
+          }
           var lastIndex = pointsList.length;
           pointsList.insertAll(lastIndex, newPoints);
         }
@@ -149,31 +238,30 @@ class PlotData {
         // Update last response time.
         double? t = plotChannel.points.last.t;
 
-        if (t != null &&
-            (plotMetadata.latestDataEpochTime == null ||
-                plotMetadata.latestDataEpochTime! < t)) {
+        if (plotMetadata.latestDataEpochTime == null ||
+            plotMetadata.latestDataEpochTime! < t) {
           plotMetadata.latestDataEpochTime = t;
         }
       }
     }
   }
 
-  void _appendPointsCalculation(List<PlotPoint> points) {
+  void _appendPointsCalculation(List<PlottingPoint> points) {
     plotMetadata.plotDataBytes += points.length * _plotPointsByteSize;
   }
 
-  void _removePointsCalculation(List<PlotPoint> points) {
+  void _removePointsCalculation(List<PlottingPoint> points) {
     plotMetadata.plotDataBytes -= points.length * _plotPointsByteSize;
   }
 
-  void _clearSegments(List<List<PlotPoint>> segments) {
+  void _clearSegments(List<List<PlottingPoint>> segments) {
     for (var pointsList in segments) {
       _removePointsCalculation(pointsList);
     }
     segments.clear();
   }
 
-  int _calculateSizeOfAllSegments(List<List<PlotPoint>> segments) {
+  int _calculateSizeOfAllSegments(List<List<PlottingPoint>> segments) {
     int dataSize = 0;
 
     for (var pointList in segments) {
@@ -268,7 +356,8 @@ class PlotData {
       if (channelHasErrorOrNoPoints(plotChannel)) {
         continue;
       }
-      final points = plotChannel.points;
+
+      final points = __processDeviceValue(plotChannel.points);
       (minY, maxY, minX, maxX) = _getLimitsPerPoints(
           points: points, minY: minY, maxY: maxY, minX: minX, maxX: maxX);
     }
@@ -312,7 +401,7 @@ class PlotData {
   }
 
   (double?, double?, double?, double?) _getLimitsPerPoints(
-      {required List<PlotPoint> points,
+      {required List<PlottingPoint> points,
       required double? minY,
       required double? maxY,
       required double? minX,
@@ -367,7 +456,7 @@ class PlotData {
       // Scalar Reading Mode
       if (!isPersistent) {
         for (var entry in points.entries) {
-          List<List<PlotPoint>> segments = entry.value;
+          List<List<PlottingPoint>> segments = entry.value;
           if (segments.isNotEmpty) {
             segments.removeRange(0, segments.length - 1);
           }
@@ -392,6 +481,11 @@ class PlotData {
     for (var garbageChannel in garbageChannels) {
       points.remove(garbageChannel);
     }
+
+    _selectedArrayTime = null;
+    minArrayTime = null;
+    maxArrayTime = null;
+    arrayTimeStep = null;
 
     if (garbageChannels.isNotEmpty) {
       // Displayed channels changed.

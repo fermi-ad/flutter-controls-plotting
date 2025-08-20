@@ -60,8 +60,11 @@ class FakeACSysService implements ACSysServiceAPI {
                   units: "A",
                   rate: getRate(updateRate),
                   status: 0,
-                  points: List.generate(
-                      500, (i) => PlotPoint(x: i.toDouble(), y: 5.0)))
+                  points: [
+                    PlotPoint(
+                        t: getCurrentAcsysEpochTime(),
+                        value: DevScalarArray(List.generate(500, (i) => 5)))
+                  ])
             ]));
 
       default:

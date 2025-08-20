@@ -79,7 +79,7 @@ jobs:
       - name: Installing chromedriver (needed for acceptance tests)
         uses: nanasess/setup-chromedriver@v2
         with:
-          chromedriver-version: "138.0.7204.15"
+          chromedriver-version: "140.0.7339.5"
 
       - name: Configure Git for private repo access
         run: |
