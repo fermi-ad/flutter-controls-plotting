@@ -469,7 +469,8 @@ class PlotState extends State<PlotWidget> {
         confMaxY: widget.yMax,
         confMinX: widget.xMin,
         confMaxX: widget.xMax,
-        timeDelta: widget.scalarDataOptions?.timeDelta);
+        timeDelta: widget.scalarDataOptions?.timeDelta,
+        triggerTimestamp: _plotReply!.triggerTimestamp);
   }
 
   void _filterPoints() {
@@ -488,7 +489,8 @@ class PlotState extends State<PlotWidget> {
         isTimedScalarData: widget.isTimedScalarData,
         isPersistent: widget.isPersistent,
         isOneShot: widget.nAcquisitions == 1,
-        plotChannels: plotChannels);
+        plotChannels: plotChannels,
+        triggerTimestamp: _plotReply!.triggerTimestamp);
   }
 
   String? _plotReplyHasErrors() {

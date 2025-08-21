@@ -144,7 +144,8 @@ class PlotData {
     return true;
   }
 
-  List<PlottingPoint> __processDeviceValue(List<PlotPoint> plotPoints) {
+  List<PlottingPoint> __processDeviceValue(
+      List<PlotPoint> plotPoints, double? triggerTimestamp) {
     List<PlottingPoint> points = [];
     for (var plotPoint in plotPoints) {
       var deviceValue = plotPoint.value;
@@ -170,7 +171,13 @@ class PlotData {
           points.add(PlottingPoint(x: x.toDouble(), y: y, t: time));
         }
       } else if (deviceValue is DevScalar) {
-        points.add(PlottingPoint(x: time, y: deviceValue.value, t: time));
+        var t = time;
+
+        if (triggerTimestamp != null) {
+          t = triggerTimestamp + t;
+        }
+
+        points.add(PlottingPoint(x: time, y: deviceValue.value, t: t));
       } else {
         throw Exception(
             'Unsupported device value type: ${deviceValue.runtimeType}');
@@ -184,10 +191,12 @@ class PlotData {
       {required bool isTimedScalarData,
       required bool isPersistent,
       required bool isOneShot,
-      required List<PlotChannelData> plotChannels}) {
+      required List<PlotChannelData> plotChannels,
+      required double? triggerTimestamp}) {
     for (final plotChannel in plotChannels) {
       if (!channelHasErrorOrNoPoints(plotChannel)) {
-        var newPoints = __processDeviceValue(plotChannel.points);
+        var newPoints =
+            __processDeviceValue(plotChannel.points, triggerTimestamp);
 
         if (!points.containsKey(plotChannel.name)) {
           points[plotChannel.name] = [[]];
@@ -346,7 +355,8 @@ class PlotData {
       required double? confMaxY,
       required double? confMinX,
       required double? confMaxX,
-      required double? timeDelta}) {
+      required double? timeDelta,
+      required double? triggerTimestamp}) {
     double? minY = _minY;
     double? maxY = _maxY;
     double? minX = _minX;
@@ -357,7 +367,7 @@ class PlotData {
         continue;
       }
 
-      final points = __processDeviceValue(plotChannel.points);
+      final points = __processDeviceValue(plotChannel.points, triggerTimestamp);
       (minY, maxY, minX, maxX) = _getLimitsPerPoints(
           points: points, minY: minY, maxY: maxY, minX: minX, maxX: maxX);
     }
