@@ -145,13 +145,13 @@ class PlotState extends State<PlotWidget> {
             .toList()
       : [];
 
-  double? get minY => widget.plotData.minY;
+  double? get minYAxis => widget.plotData.minY;
 
-  double? get maxY => widget.plotData.maxY;
+  double? get maxYAxis => widget.plotData.maxY;
 
-  double? get minX => widget.plotData.minX;
+  double? get minXAxis => widget.plotData.minX;
 
-  double? get maxX => widget.plotData.maxX;
+  double? get maxXAxis => widget.plotData.maxX;
 
   String get xAxisTitle => _plotReply != null ? _plotReply!.xAxisUnits : "";
 
