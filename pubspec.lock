@@ -218,8 +218,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: main
-      resolved-ref: cad24ab8c4755dafe02fe45e4a4ca5bcbe453714
+      ref: move-ymin-ymax
+      resolved-ref: a3ac94dfc0d8f77ca912cc2b522364b4122f123c
       url: "https://github.com/fermi-ad/flutter-controls-core.git"
     source: git
     version: "0.3.1"
