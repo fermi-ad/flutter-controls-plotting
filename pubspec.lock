@@ -219,7 +219,7 @@ packages:
     description:
       path: "."
       ref: move-ymin-ymax
-      resolved-ref: a3ac94dfc0d8f77ca912cc2b522364b4122f123c
+      resolved-ref: d938cc5244133943b8a9bd742042c216f882ebe6
       url: "https://github.com/fermi-ad/flutter-controls-core.git"
     source: git
     version: "0.3.1"
