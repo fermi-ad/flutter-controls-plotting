@@ -266,7 +266,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     var points = plotData.points;
 
     // Timed X axis and no xMax defined will exit upon last out of range value.
-    bool exitForScalar = widget.xMax == null && widget.isTimedXAxis;
+    bool exitForScalar = widget.confMaxX == null && widget.isTimedXAxis;
     var cache = widget.plotData.flchartCache;
     var arrayNonPersistentData =
         (!widget.isTimedScalarData && !widget.isPersistent);
@@ -315,8 +315,8 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
             channelName: plotChannel.name,
             channelSetting: widget.plotChannels[plotChannel.name]!,
             segmentIndex: segmentIndex,
-            minX: widget.xMin,
-            maxX: widget.xMax,
+            minX: widget.confMinX,
+            maxX: widget.confMaxX,
             exitForScalar: exitForScalar);
 
         lineChartList.add(LineChartBarData(

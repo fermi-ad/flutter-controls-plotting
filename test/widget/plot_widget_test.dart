@@ -1028,8 +1028,8 @@ Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
           body: ACSysProvider.factory(service: service ?? FakeACSysService())(
               child: PlotWidget(
                   plotChannels: channelList,
-                  xMin: xMin,
-                  xMax: xMax,
+                  confMinX: xMin,
+                  confMaxX: xMax,
                   implementation: impl,
                   plotData: PlotData(),
                   updateDelay: updateDelay,
