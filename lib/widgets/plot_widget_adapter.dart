@@ -18,16 +18,16 @@ part 'graphic_plot_widget_adapter.dart';
 part 'fermi_plot_widget_adapter.dart';
 
 abstract class PlotWidgetAdapter {
-  final PlotWidget widget;
+  final PlotWidget plotWidget;
 
   PlotReply? plotReply;
 
-  PlotWidgetAdapter({required this.widget, this.plotReply});
+  PlotWidgetAdapter({required this.plotWidget, this.plotReply});
 
   Widget buildPlot();
 
   Color lineColorForChannel(String channelName) {
-    var plotChannels = widget.plotChannels;
+    var plotChannels = plotWidget.plotChannels;
     ChannelSetting setting = plotChannels[channelName]!;
 
     // Find unique color
@@ -54,14 +54,14 @@ abstract class PlotWidgetAdapter {
       candidateColor ??= PlotColor.blue.color;
       setting.lineColor = candidateColor;
 
-      widget.onInternalChannelSettingChange?.call(channelName);
+      plotWidget.onInternalChannelSettingChange?.call(channelName);
     }
 
     return setting.lineColor!;
   }
 
   int markerIndexForChannel(String channelName) {
-    var plotChannels = widget.plotChannels;
+    var plotChannels = plotWidget.plotChannels;
     ChannelSetting setting = plotChannels[channelName]!;
     return setting.plotMarker.markerIndex;
   }

@@ -365,7 +365,7 @@ class PlotState extends State<PlotWidget> {
     switch (widget.implementation) {
       case PlotImplementation.flCharts:
         _adapter = FlchartsPlotWidgetAdapter(
-          widget: widget,
+          plotWidget: widget,
           isShowLabels: widget.isShowLabels,
           plotReply: _plotStreamMetadata.plotReply,
         );
@@ -373,14 +373,14 @@ class PlotState extends State<PlotWidget> {
 
       case PlotImplementation.graphic:
         _adapter = GraphicPlotWidgetAdapter(
-          widget: widget,
+          plotWidget: widget,
           plotReply: _plotStreamMetadata.plotReply,
         );
         break;
 
       case PlotImplementation.fermi:
         _adapter = FermiPlotWidgetAdapter(
-          widget: widget,
+          plotWidget: widget,
           plotReply: _plotStreamMetadata.plotReply,
         );
         break;
