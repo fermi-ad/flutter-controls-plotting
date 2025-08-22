@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/entities/plotting_point.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
 import 'package:flutter_controls_plotting/entities/plot_metadata.dart';
@@ -161,7 +162,7 @@ class PlotState extends State<PlotWidget> {
       .map((String channelName) => _adapter.markerIndexForChannel(channelName))
       .toList();
 
-  Map<String, List<List<PlotPoint>>> get points => widget.plotData.points;
+  Map<String, List<List<PlottingPoint>>> get points => widget.plotData.points;
   PlotMetadata get plotMetadata => widget.plotMetadata;
 
   @override
@@ -468,7 +469,8 @@ class PlotState extends State<PlotWidget> {
         confMaxY: widget.yMax,
         confMinX: widget.xMin,
         confMaxX: widget.xMax,
-        timeDelta: widget.scalarDataOptions?.timeDelta);
+        timeDelta: widget.scalarDataOptions?.timeDelta,
+        triggerTimestamp: _plotReply!.triggerTimestamp);
   }
 
   void _filterPoints() {
@@ -486,7 +488,9 @@ class PlotState extends State<PlotWidget> {
     widget.plotData.filterPoints(
         isTimedScalarData: widget.isTimedScalarData,
         isPersistent: widget.isPersistent,
-        plotChannels: plotChannels);
+        isOneShot: widget.nAcquisitions == 1,
+        plotChannels: plotChannels,
+        triggerTimestamp: _plotReply!.triggerTimestamp);
   }
 
   String? _plotReplyHasErrors() {

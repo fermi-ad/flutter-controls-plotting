@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/entities/plotting_point.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 import 'package:flutter_controls_plotting/widgets/plot_y_axis_label_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -150,13 +150,25 @@ void assertPlotContainsSineWave(WidgetTester tester,
 }
 
 Future<void> assertPlotPointsDifferent(WidgetTester tester,
-    {required String channelName}) async {
-  final plotPoints = _getPlotPoints(tester, channelName: channelName);
+    {required String channelName, bool isNewSegment = false}) async {
+  int segment = 0;
+  if (isNewSegment) {
+    var segments = _getChannelSegments(tester, channelName: channelName);
+    segment = segments.length - 1;
+  }
+
+  final plotPoints =
+      _getPlotPoints(tester, channelName: channelName, segment: segment);
   var changed = false;
 
   await tester.pumpAndSettle();
 
-  final plotPointsAfter = _getPlotPoints(tester, channelName: channelName);
+  if (isNewSegment) {
+    segment += 1;
+  }
+
+  final plotPointsAfter =
+      _getPlotPoints(tester, channelName: channelName, segment: segment);
 
   expect(plotPoints.length, plotPointsAfter.length);
 
@@ -232,17 +244,23 @@ Future<void> assertPlotIsPaused(WidgetTester tester) async {
 
 void assertPlotContainsNSegments(WidgetTester tester, int numberOfSegments,
     {required String channelName}) {
+  var pointSegments = _getChannelSegments(tester, channelName: channelName);
+  expect(pointSegments.length, numberOfSegments);
+}
+
+List<List<PlottingPoint>> _getChannelSegments(WidgetTester tester,
+    {required String channelName}) {
   final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
   final pointSegments = plotState.points[channelName] ?? [];
 
-  expect(pointSegments.length, numberOfSegments);
+  return pointSegments;
 }
 
 void assertPlotLoadingIndicator({required bool isVisible}) => expect(
     find.byType(LinearProgressIndicator),
     isVisible ? findsOneWidget : findsNothing);
 
-List<PlotPoint> _getPlotPoints(WidgetTester tester,
+List<PlottingPoint> _getPlotPoints(WidgetTester tester,
     {required String channelName, int segment = 0}) {
   final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
 
@@ -266,9 +284,11 @@ void assertNormalizedFlSpots(WidgetTester tester, List<List<double>> shouldBe) {
       find.byType(LineChart).evaluate().first.widget as LineChart;
   final channels = lineChartWidget.data.lineBarsData;
 
-  for (int channelIndex = 0; channelIndex != channels.length; channelIndex++) {
+  for (int channelIndex = 0; channelIndex != shouldBe.length; channelIndex++) {
     final channel = channels[channelIndex];
-    for (int spotIndex = 0; spotIndex != channel.spots.length; spotIndex++) {
+    for (int spotIndex = 0;
+        spotIndex != shouldBe[channelIndex].length;
+        spotIndex++) {
       expect(channel.spots[spotIndex].y,
           moreOrLessEquals(shouldBe[channelIndex][spotIndex], epsilon: 0.01));
     }

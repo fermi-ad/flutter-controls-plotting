@@ -1,4 +1,4 @@
-import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/entities/plotting_point.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plotting_fl_spot.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
@@ -26,7 +26,7 @@ class FlchartCache {
   int? __dLoggerPointSkipCount;
 
   List<PlottingFlSpot> toSpots(
-      {required List<PlotPoint> points,
+      {required List<PlottingPoint> points,
       required channelName,
       required int segmentIndex,
       required ChannelSetting channelSetting,
@@ -78,10 +78,10 @@ class FlchartCache {
       flSpots = [];
     }
 
-    PlotPoint? minXPair;
-    PlotPoint? maxXPair;
-    PlotPoint? minYPair;
-    PlotPoint? maxYPair;
+    PlottingPoint? minXPair;
+    PlottingPoint? maxXPair;
+    PlottingPoint? minYPair;
+    PlottingPoint? maxYPair;
 
     int? minXPairIndex;
     int? maxXPairIndex;
@@ -90,7 +90,7 @@ class FlchartCache {
 
     List<PlottingFlSpot> newSpots = [];
     for (int i = points.length - 1; i >= startIndex; i--) {
-      PlotPoint point = points[i];
+      PlottingPoint point = points[i];
       var x = point.x;
       var y = point.y;
 
@@ -115,11 +115,11 @@ class FlchartCache {
       if (!__isWithinBounds(x, minX, maxX)) {
         if ((maxX != null && x > maxX) &&
             (maxXPair == null || maxXPair.x > x)) {
-          maxXPair = PlotPoint(x: x, y: y);
+          maxXPair = PlottingPoint(x: x, y: y);
           maxXPairIndex = newSpots.length;
         } else if ((minX != null && x < minX) &&
             (minXPair == null || minXPair.x < x)) {
-          minXPair = PlotPoint(x: x, y: y);
+          minXPair = PlottingPoint(x: x, y: y);
           minXPairIndex = newSpots.length;
           if (exitForScalar) {
             // The last relevant time was reached. No need to check rest of points.
@@ -132,11 +132,11 @@ class FlchartCache {
       if (!__isWithinBounds(y, minY, maxY)) {
         if ((maxY != null && y > maxY) &&
             (maxYPair == null || maxYPair.y > y)) {
-          maxYPair = PlotPoint(x: x, y: y);
+          maxYPair = PlottingPoint(x: x, y: y);
           maxYPairIndex = newSpots.length;
         } else if ((minY != null && y < minY) &&
             (minYPair == null || minYPair.y < y)) {
-          minYPair = PlotPoint(x: x, y: y);
+          minYPair = PlottingPoint(x: x, y: y);
           minYPairIndex = newSpots.length;
         }
         addPoint = false;
@@ -381,7 +381,7 @@ class FlchartCache {
 
   void estimateDataLoggerPoints({
     required String channelName,
-    required List<PlotPoint> firstSample,
+    required List<PlottingPoint> firstSample,
   }) {
     if (!isDataLogger) {
       return;
