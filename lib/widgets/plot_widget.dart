@@ -503,6 +503,7 @@ class PlotState extends State<PlotWidget> {
       confMinX: widget.confMinX,
       confMaxX: widget.confMaxX,
       timeDelta: widget.scalarDataOptions?.timeDelta,
+      channelSettings: widget.plotChannels,
       triggerTimestamp: _plotReply!.triggerTimestamp,
     );
   }
@@ -525,6 +526,7 @@ class PlotState extends State<PlotWidget> {
       isOneShot: widget.nAcquisitions == 1,
       plotChannels: plotChannels,
       triggerTimestamp: _plotReply!.triggerTimestamp,
+      channelSettings: widget.plotChannels,
     );
   }
 
