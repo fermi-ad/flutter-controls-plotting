@@ -219,7 +219,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: f0d33c391b5028e92d69c2056e558e93611a1214
+      resolved-ref: "265501ab17097bfd05ca0e00bcdc825257a83332"
       url: "https://github.com/fermi-ad/flutter-controls-core.git"
     source: git
     version: "0.3.1"
@@ -801,10 +801,10 @@ packages:
     dependency: transitive
     description:
       name: watcher
-      sha256: "0b7fd4a0bbc4b92641dbf20adfd7e3fd1398fe17102d94b674234563e110088a"
+      sha256: "5bf046f41320ac97a469d506261797f35254fa61c641741ef32dacda98b7d39c"
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.2"
+    version: "1.1.3"
   web:
     dependency: transitive
     description:
