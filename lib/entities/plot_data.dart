@@ -339,8 +339,8 @@ class PlotData {
   }
 
   void findPointsLimits({
-    double? untilXMin,
-    double? untilXMax,
+    double? xRangeMin,
+    double? xRangeMax,
     Map<String, ChannelSetting>? channelSettings,
   }) {
     double? minY, maxY, minX, maxX;
@@ -359,13 +359,14 @@ class PlotData {
           maxY: maxY,
           minX: minX,
           maxX: maxX,
-          untilXMin: untilXMin,
-          untilXMax: untilXMax,
+          xRangeMin: xRangeMin,
+          xRangeMax: xRangeMax,
+          channelSetting: channelSetting,
         );
       }
     }
 
-    // setLimits(minX: minX, maxX: maxX, minY: minY, maxY: maxY);
+    setLimits(minX: minX, maxX: maxX, minY: minY, maxY: maxY);
   }
 
   void findLimits({
@@ -400,6 +401,7 @@ class PlotData {
         maxY: maxY,
         minX: minX,
         maxX: maxX,
+        channelSetting: channelSetting,
       );
     }
     if (timeDelta == null) {
@@ -425,8 +427,8 @@ class PlotData {
         // Calculate y based on points displayed.
         if (confMinY == null && confMaxY == null) {
           findPointsLimits(
-            untilXMin: minX,
-            untilXMax: maxX,
+            xRangeMin: minX,
+            xRangeMax: maxX,
             channelSettings: channelSettings,
           );
           minY = _minY;
@@ -446,13 +448,14 @@ class PlotData {
   }
 
   (double?, double?, double?, double?) _getLimitsPerPoints({
-    required List<PlottingPoint> points,
+    required List<PlotPoint> points,
     required double? minY,
     required double? maxY,
     required double? minX,
     required double? maxX,
-    double? untilXMin,
-    double? untilXMax,
+    double? xRangeMin,
+    double? xRangeMax,
+    ChannelSetting? channelSetting,
   }) {
     for (int i = points.length - 1; i >= 0; i--) {
       final point = points[i];
@@ -460,7 +463,7 @@ class PlotData {
       double xPoint = point.x;
 
       // Skip updating Y limits for points where X is larger than untilXMax.
-      if (untilXMax != null && xPoint > untilXMax) {
+      if (xRangeMax != null && xPoint > xRangeMax) {
         continue;
       }
 
@@ -486,11 +489,24 @@ class PlotData {
         maxX = max(xPoint, maxX);
       }
       // stop processing further points once minX is less than or equal to untilXMin.
-      if (untilXMin != null && minX <= untilXMin) {
+      if (xRangeMin != null && minX <= xRangeMin) {
         break;
       }
     }
 
+    if (channelSetting != null && channelSetting.isLogScale) {
+      if (minY != null && minY > 0) {
+        channelSetting.minY = log(minY);
+      } else if (minY != null && minY <= 0) {
+        channelSetting.minY = log(0.001);
+      }
+
+      if (maxY != null && maxY > 0) {
+        channelSetting.maxY = log(maxY);
+      } else if (maxY != null && maxY <= 0) {
+        channelSetting.maxY = log(0.001);
+      }
+    }
     return (minY, maxY, minX, maxX);
   }
 
