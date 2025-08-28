@@ -34,7 +34,11 @@ jobs:
 
       - name: Configure Git for private repo access
         run: |
-          git config --global url."https://${{ secrets.READ_ALL_REPOS }}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://${{ secrets.FLUTTER_PLOTTING_SECRET }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Configure Git for private repo access
+        run: |
+          git config --global url."https://${{ secrets.FLUTTER_CORE_SECRET }}@github.com/".insteadOf "https://github.com/"
 
       - name: Resolving dependencies
         run: flutter pub get --no-offline
