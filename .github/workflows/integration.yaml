@@ -35,7 +35,7 @@ jobs:
           git config --global url."https://${{ secrets.READ_ALL_REPOS }}@github.com/".insteadOf "https://github.com/"
 
       - name: Resolving dependencies
-        run: flutter pub get
+        run: flutter pub get --no-offline
 
       - name: Linting
         run: flutter analyze .
