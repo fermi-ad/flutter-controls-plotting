@@ -819,13 +819,13 @@ void main() {
         final channelList = {
           "PLOT TEST CONSTANT": ChannelSetting(
             lineColor: PlotColor.red.color,
-            minY: 0.00,
-            maxY: 10.00,
+            finalMinY: 0.00,
+            finalMaxY: 10.00,
           ),
           "PLOT TEST RAMP": ChannelSetting(
             lineColor: PlotColor.blue.color,
-            minY: -5.00,
-            maxY: 5.00,
+            finalMinY: -5.00,
+            finalMaxY: 5.00,
           ),
         };
 
@@ -885,8 +885,8 @@ void main() {
         final channelList = {
           "PLOT TEST CONSTANT": ChannelSetting(
             lineColor: PlotColor.blue.color,
-            minY: 4.9,
-            maxY: 5.1,
+            finalMinY: 4.9,
+            finalMaxY: 5.1,
           ),
         };
 

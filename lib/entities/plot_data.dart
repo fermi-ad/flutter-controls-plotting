@@ -494,17 +494,30 @@ class PlotData {
       }
     }
 
-    if (channelSetting != null && channelSetting.isLogScale) {
-      if (minY != null && minY > 0) {
-        channelSetting.minY = log(minY);
-      } else if (minY != null && minY <= 0) {
-        channelSetting.minY = log(0.001);
+    if (channelSetting != null) {
+      // Priority: user-defined confMinY/confMaxY > calculated values
+      if (channelSetting.confMinY != null) {
+        channelSetting.finalMinY = channelSetting.confMinY;
+      } else if (channelSetting.isLogScale) {
+        if (minY != null && minY > 0) {
+          channelSetting.finalMinY = log(minY);
+        } else if (minY != null && minY <= 0) {
+          channelSetting.finalMinY = log(0.001);
+        }
+      } else {
+        channelSetting.finalMinY = minY;
       }
 
-      if (maxY != null && maxY > 0) {
-        channelSetting.maxY = log(maxY);
-      } else if (maxY != null && maxY <= 0) {
-        channelSetting.maxY = log(0.001);
+      if (channelSetting.confMaxY != null) {
+        channelSetting.finalMaxY = channelSetting.confMaxY;
+      } else if (channelSetting.isLogScale) {
+        if (maxY != null && maxY > 0) {
+          channelSetting.finalMaxY = log(maxY);
+        } else if (maxY != null && maxY <= 0) {
+          channelSetting.finalMaxY = log(0.001);
+        }
+      } else {
+        channelSetting.finalMaxY = maxY;
       }
     }
     return (minY, maxY, minX, maxX);
