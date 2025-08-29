@@ -32,6 +32,15 @@ jobs:
           private-key: ${{ secrets.ACTION_SETTINGS_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
 
+      - name: Get GitHub App User ID
+        id: get-user-id
+        run: echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+      - run: |
+          git config --global user.name '${{ steps.app-token.outputs.app-slug }}[bot]'
+          git config --global user.email '${{ steps.get-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com'
+
       - name: Add GitHub token to pub
         run: dart pub token add https://github.com/ --env-var GITHUB_TOKEN
         env:
@@ -90,6 +99,15 @@ jobs:
           app-id: ${{ vars.ACTION_SETTINGS_APP_ID }}
           private-key: ${{ secrets.ACTION_SETTINGS_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
+
+      - name: Get GitHub App User ID
+        id: get-user-id
+        run: echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+      - run: |
+          git config --global user.name '${{ steps.app-token.outputs.app-slug }}[bot]'
+          git config --global user.email '${{ steps.get-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com'
 
       - name: Add GitHub token to pub
         run: dart pub token add https://github.com/ --env-var GITHUB_TOKEN
