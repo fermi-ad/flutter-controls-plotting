@@ -12,6 +12,8 @@ concurrency:
 jobs:
   Lint-Test-Build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checking out source code
@@ -32,7 +34,7 @@ jobs:
 
       - name: Configure Git for private repo access
         run: |
-          git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
 
       - name: Resolving dependencies
         run: flutter pub get
@@ -51,6 +53,9 @@ jobs:
 
   Acceptance-Tests:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     strategy:
       fail-fast: false
       matrix:
@@ -77,9 +82,17 @@ jobs:
         with:
           chromedriver-version: "140.0.7339.5"
 
+      - name: Generate a token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.ACTION_SETTINGS_APP_ID }}
+          private-key: ${{ secrets.ACTION_SETTINGS_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
       - name: Configure Git for private repo access
         run: |
-          git config --global url."https://${{ secrets.FLUTTER_PLOTTING_SECRET }}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
 
       - name: Starting chromedriver and executing acceptance tests
         run: |
