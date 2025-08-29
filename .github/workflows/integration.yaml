@@ -53,6 +53,9 @@ jobs:
 
   Acceptance-Tests:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     strategy:
       fail-fast: false
       matrix:
@@ -73,6 +76,18 @@ jobs:
         uses: browser-actions/setup-chrome@v1
         with:
           chrome-version: beta
+
+      - name: Generate a token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.ACTION_SETTINGS_APP_ID }}
+          private-key: ${{ secrets.ACTION_SETTINGS_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Configure Git for private repo access
+        run: |
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       
       - name: Installing chromedriver (needed for acceptance tests)
         uses: nanasess/setup-chromedriver@v2
