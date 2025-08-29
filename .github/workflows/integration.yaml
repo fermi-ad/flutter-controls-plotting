@@ -32,9 +32,10 @@ jobs:
           private-key: ${{ secrets.ACTION_SETTINGS_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
 
-      - name: Configure Git for private repo access
-        run: |
-          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+      - name: Add GitHub token to pub
+        run: dart pub token add https://github.com/ --env-var GITHUB_TOKEN
+        env:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
       - name: Resolving dependencies
         run: flutter pub get --no-offline
@@ -90,9 +91,10 @@ jobs:
           private-key: ${{ secrets.ACTION_SETTINGS_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
 
-      - name: Configure Git for private repo access
-        run: |
-          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+      - name: Add GitHub token to pub
+        run: dart pub token add https://github.com/ --env-var GITHUB_TOKEN
+        env:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
       - name: Starting chromedriver and executing acceptance tests
         run: |
