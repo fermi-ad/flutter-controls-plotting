@@ -37,7 +37,7 @@ jobs:
           git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
 
       - name: Resolving dependencies
-        run: flutter pub get
+        run: flutter pub get --no-offline
 
       - name: Linting
         run: flutter analyze .
