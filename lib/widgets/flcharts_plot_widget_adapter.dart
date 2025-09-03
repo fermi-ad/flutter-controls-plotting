@@ -290,7 +290,10 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     var arrayNonPersistentData =
         (!widget.isTimedScalarData && !widget.isPersistent);
 
-    if (arrayNonPersistentData) {
+    var arrayPersistentData =
+        (!widget.isTimedScalarData && widget.isPersistent);
+
+    if (arrayNonPersistentData || arrayPersistentData) {
       cache.totalPoints = 0;
       cache.reducedPoints = null;
     }
@@ -302,7 +305,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       }
 
       int nearestSegmentIndex = points[plotChannel.name]!.length - 1;
-      if (arrayNonPersistentData) {
+      if (arrayNonPersistentData || arrayPersistentData) {
         // Array data
         var selectedTime = plotData.selectedArrayTime;
         if (selectedTime != null) {
@@ -333,6 +336,15 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
           widget.plotMetadata.displayedArrayTime = pointSegment.first.t;
         }
 
+        if (arrayPersistentData) {
+          if (nearestSegmentIndex < segmentIndex) {
+            // All done, index is larger
+            break;
+          }
+
+          widget.plotMetadata.displayedArrayTime = pointSegment.first.t;
+        }
+
         // min and max y is not passed in for limiting points. This can cause behavior where poitns in the middle of axis are dropped.
         var spots = cache.toSpots(
           points: pointSegment,
@@ -342,7 +354,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
           minX: widget.xMin,
           maxX: widget.xMax,
           exitForScalar: exitForScalar,
-          appendExistingPoints: arrayNonPersistentData,
+          appendExistingPoints: arrayNonPersistentData || arrayPersistentData,
         );
 
         lineChartList.add(
