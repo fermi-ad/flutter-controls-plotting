@@ -12,6 +12,7 @@ import 'package:flutter_controls_plotting/entities/plot_stream_metadata.dart';
 import 'package:flutter_controls_plotting/entities/scalar_data_options.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget_adapter.dart';
+import 'package:opentelemetry/api.dart' show Attribute;
 
 enum PlotImplementation { flCharts, graphic, fermi }
 
@@ -25,6 +26,9 @@ class PlotWidget extends StatefulWidget {
   final double? yMax;
   final double? xMin;
   final double? xMax;
+
+  final double? dataLoggerStartTime;
+  final double? dataLoggerEndTime;
 
   final int updateDelay;
 
@@ -61,6 +65,8 @@ class PlotWidget extends StatefulWidget {
       this.yMax,
       this.xMin,
       this.xMax,
+      this.dataLoggerStartTime,
+      this.dataLoggerEndTime,
       this.updateDelay = 0,
       this.nAcquisitions = 0,
       this.triggerEvent,
@@ -86,6 +92,24 @@ class PlotWidget extends StatefulWidget {
     }
     return false;
   }
+
+  Duration get plotAnimationDuration {
+    if (isTimedScalarData) {
+      // No animation for scrolling data.
+      return isTimedXAxis ? Duration.zero : const Duration(milliseconds: 150);
+    }
+
+    // No animation for frequency over 15Hz.
+    if (updateDelay < 66666) {
+      return Duration.zero;
+    }
+
+    // 50ms for frequency over 1Hz. 150 for 1Hz or slower.
+    int animationMs = updateDelay < 1000000 ? 50 : 150;
+    return Duration(milliseconds: animationMs);
+  }
+
+  PlotMetadata get plotMetadata => plotData.plotMetadata;
 }
 
 class PlotState extends State<PlotWidget> {
@@ -139,7 +163,7 @@ class PlotState extends State<PlotWidget> {
       .toList();
 
   Map<String, List<List<PlotPoint>>> get points => widget.plotData.points;
-  PlotMetadata get plotMetadata => widget.plotData.plotMetadata;
+  PlotMetadata get plotMetadata => widget.plotMetadata;
 
   @override
   void didChangeDependencies() {
@@ -227,7 +251,7 @@ class PlotState extends State<PlotWidget> {
       final errorOnChannel = _plotReplyHasErrors();
       if (errorOnChannel != null) {
         return _buildWithErrorMessage(
-            "An error occured when attempting to acquire data for $errorOnChannel",
+            "An error occurred when attempting to acquire data for $errorOnChannel",
             child: _buildPlotFromSnapshot());
       }
 
@@ -341,6 +365,9 @@ class PlotState extends State<PlotWidget> {
     _updateDelay = widget.updateDelay;
     _triggerEvent = widget.triggerEvent;
     _nAcquisitions = widget.nAcquisitions;
+    var apiAcquisitions = _nAcquisitions;
+    _dataLoggerStartTime = widget.dataLoggerStartTime;
+    _dataLoggerEndTime = widget.dataLoggerEndTime;
 
     _updateStreamConnectionChanged(ConnectionState.none);
 
@@ -356,21 +383,42 @@ class PlotState extends State<PlotWidget> {
         // Number of seconds
         pointLimitCalc = pointLimitCalc * timeDelta!;
         // Round up to ensure number of acquisitions include full timeframe.
-        _nAcquisitions = pointLimitCalc.ceil();
+        apiAcquisitions = pointLimitCalc.ceil();
       }
     }
 
     widget.plotData.scalarEventMode =
         widget.isTimedScalarData && !widget.isTimedXAxis;
 
+    if (widget.implementation == PlotImplementation.flCharts) {
+      widget.plotData.flchartCache.prepareDataLoggerAcquisition(
+          startTime: _dataLoggerStartTime, endTime: _dataLoggerEndTime);
+    }
+
     if (widget.plotChannels.isNotEmpty) {
       _errorsDismissed = false;
 
+      // Add OpenTelemetry trace span for plotStream
+      final plotStreamSpan =
+          otelTracer.startSpan('plotStream.retrievePlot', attributes: [
+        Attribute.fromString('channels', _channels.keys.toString()),
+        Attribute.fromInt('updateDelay', _updateDelay ?? 0),
+        Attribute.fromString(
+            'triggerEvent', _triggerEvent?.toString() ?? 'null'),
+        Attribute.fromInt('nAcquisitions', apiAcquisitions ?? 0),
+        Attribute.fromString(
+            'startTime', _dataLoggerStartTime?.toString() ?? 'null'),
+        Attribute.fromString(
+            'endTime', _dataLoggerEndTime?.toString() ?? 'null'),
+      ]);
       _plotStream = widget.daqService.retrievePlot(context,
           forChannels: _channels.keys.toSet(),
           updateDelay: _updateDelay,
           triggerEvent: _triggerEvent,
-          nAcquisitions: _nAcquisitions);
+          nAcquisitions: apiAcquisitions,
+          startTime: _dataLoggerStartTime,
+          endTime: _dataLoggerEndTime);
+      plotStreamSpan.end();
     }
   }
 
@@ -513,6 +561,9 @@ class PlotState extends State<PlotWidget> {
   int? _triggerEvent = 0;
 
   int _nAcquisitions = 0;
+
+  double? _dataLoggerStartTime;
+  double? _dataLoggerEndTime;
 
   bool _errorsDismissed = false;
 
