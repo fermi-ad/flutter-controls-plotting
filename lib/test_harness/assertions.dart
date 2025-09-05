@@ -358,8 +358,6 @@ Future<void> assertFlSpotsDifferent(
   await action();
   await tester.pumpAndSettle();
 
-  await Future.delayed(const Duration(seconds: 1));
-
   final afterSpots = _getFlSpots(tester, channelIndex: channelIndex);
   expect(afterSpots.isNotEmpty, true);
 
