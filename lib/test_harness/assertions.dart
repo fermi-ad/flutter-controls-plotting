@@ -297,11 +297,15 @@ Future<void> assertPlotIsPaused(WidgetTester tester) async {
 
 void assertPlotContainsNSegments(
   WidgetTester tester,
-  int numberOfSegments, {
+  dynamic numberOfSegments, {
   required String channelName,
 }) {
   var pointSegments = _getChannelSegments(tester, channelName: channelName);
   expect(pointSegments.length, numberOfSegments);
+}
+
+int getSegmentCount(WidgetTester tester, {required String channelName}) {
+  return _getChannelSegments(tester, channelName: channelName).length;
 }
 
 List<List<PlottingPoint>> _getChannelSegments(
@@ -329,7 +333,7 @@ List<PlottingPoint> _getPlotPoints(
   return plotState.points[channelName]?[segment] ?? [];
 }
 
-void assertFlSpotsDisplayed(WidgetTester tester, {required int nPoints}) {
+void assertFlSpotsDisplayed(WidgetTester tester, {required dynamic nPoints}) {
   final lineChartWidget =
       find.byType(LineChart).evaluate().first.widget as LineChart;
   final channels = lineChartWidget.data.lineBarsData;
