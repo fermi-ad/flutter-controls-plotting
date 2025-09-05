@@ -333,6 +333,59 @@ List<PlottingPoint> _getPlotPoints(
   return plotState.points[channelName]?[segment] ?? [];
 }
 
+List<FlSpot> _getFlSpots(WidgetTester tester, {int channelIndex = 0}) {
+  final lineChartWidget =
+      find.byType(LineChart).evaluate().first.widget as LineChart;
+  final channels = lineChartWidget.data.lineBarsData;
+
+  if (channelIndex >= channels.length) {
+    return [];
+  }
+
+  return channels[channelIndex].spots;
+}
+
+Future<void> assertFlSpotsDifferent(
+  WidgetTester tester, {
+  required Future<void> Function() action,
+  int channelIndex = 0,
+}) async {
+  final beforeSpots = _getFlSpots(tester, channelIndex: channelIndex);
+  expect(beforeSpots.isNotEmpty, true);
+
+  final beforeValues = beforeSpots.map((spot) => (spot.x, spot.y)).toList();
+
+  await action();
+  await tester.pumpAndSettle();
+
+  await Future.delayed(const Duration(seconds: 1));
+
+  final afterSpots = _getFlSpots(tester, channelIndex: channelIndex);
+  expect(afterSpots.isNotEmpty, true);
+
+  final afterValues = afterSpots.map((spot) => (spot.x, spot.y)).toList();
+
+  bool foundDifference = false;
+
+  if (beforeValues.length != afterValues.length) {
+    foundDifference = true;
+  } else {
+    for (int i = 0; i < beforeValues.length; i++) {
+      if (beforeValues[i].$1 != afterValues[i].$1 ||
+          beforeValues[i].$2 != afterValues[i].$2) {
+        foundDifference = true;
+        break;
+      }
+    }
+  }
+
+  expect(
+    foundDifference,
+    true,
+    reason: 'Expected FlSpots to be different after action',
+  );
+}
+
 void assertFlSpotsDisplayed(WidgetTester tester, {required dynamic nPoints}) {
   final lineChartWidget =
       find.byType(LineChart).evaluate().first.widget as LineChart;
