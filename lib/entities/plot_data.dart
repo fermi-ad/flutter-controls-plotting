@@ -347,7 +347,7 @@ class PlotData {
 
     for (var entry in points.entries) {
       String channelName = entry.key;
-      List<List<PlotPoint>> segments = entry.value;
+      List<List<PlottingPoint>> segments = entry.value;
 
       // Access channel setting for this channel
       ChannelSetting? channelSetting = channelSettings?[channelName];

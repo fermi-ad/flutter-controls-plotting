@@ -293,7 +293,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     bool exitForScalar = plotWidget.confMaxX == null && plotWidget.isTimedXAxis;
     var cache = plotWidget.plotData.flchartCache;
     var arrayNonPersistentData =
-        (!widget.isTimedScalarData && !widget.isPersistent);
+        (!plotWidget.isTimedScalarData && !plotWidget.isPersistent);
 
     plotChannels.asMap().forEach((index, plotChannel) {
       if (_channelHasError(plotChannel) ||
@@ -330,7 +330,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
             continue;
           }
 
-          widget.plotMetadata.displayedArrayTime = pointSegment.first.t;
+          plotWidget.plotMetadata.displayedArrayTime = pointSegment.first.t;
         }
 
         // min and max y is not passed in for limiting points. This can cause behavior where poitns in the middle of axis are dropped.
