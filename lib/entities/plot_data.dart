@@ -448,7 +448,7 @@ class PlotData {
   }
 
   (double?, double?, double?, double?) _getLimitsPerPoints({
-    required List<PlotPoint> points,
+    required List<PlottingPoint> points,
     required double? minY,
     required double? maxY,
     required double? minX,
