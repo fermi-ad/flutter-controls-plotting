@@ -13,8 +13,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group("Stream handling", () {
-    testWidgets("Plot API TEST CONSTANT, startPlot is called once",
-        (WidgetTester tester) async {
+    testWidgets("Plot API TEST CONSTANT, startPlot is called once", (
+      WidgetTester tester,
+    ) async {
       // Given a FakeAcsysService
       final service = FakeACSysService();
 
@@ -30,165 +31,194 @@ void main() {
     });
 
     testWidgets(
-        "Plot API TEST CONSTANT and then add API TEST RAMP, startPlot is called twice",
-        (WidgetTester tester) async {
-      // Given a FakeAcsysService
-      final service = FakeACSysService();
+      "Plot API TEST CONSTANT and then add API TEST RAMP, startPlot is called twice",
+      (WidgetTester tester) async {
+        // Given a FakeAcsysService
+        final service = FakeACSysService();
 
-      // ... and a channel list containing API TEST CONSTANT
-      final channelList = {"API TEST CONSTANT": ChannelSetting()};
+        // ... and a channel list containing API TEST CONSTANT
+        final channelList = {"API TEST CONSTANT": ChannelSetting()};
 
-      // ... and I have built the PlotWidget one time
-      await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
-      await waitForPlotDataToLoad(tester);
+        // ... and I have built the PlotWidget one time
+        await tester.pumpWidget(
+          _buildPlotWidget(channelList, service: service),
+        );
+        await waitForPlotDataToLoad(tester);
 
-      // When I add a channel
-      channelList["API TEST RAMP"] = ChannelSetting();
+        // When I add a channel
+        channelList["API TEST RAMP"] = ChannelSetting();
 
-      // ... amd rebuild the PlotWidget
-      await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
-      await waitForPlotDataToLoad(tester);
+        // ... amd rebuild the PlotWidget
+        await tester.pumpWidget(
+          _buildPlotWidget(channelList, service: service),
+        );
+        await waitForPlotDataToLoad(tester);
 
-      // Then startPlot was called only once
-      expect(service.startPlotCount, 2);
-    });
-
-    testWidgets(
-        "Plot API TEST CONSTANT and then rebuild, startPlot is called only once",
-        (WidgetTester tester) async {
-      // Given a FakeAcsysService
-      final service = FakeACSysService();
-
-      // ... and a channel list containing API TEST CONSTANT
-      final channelList = {"API TEST CONSTANT": ChannelSetting()};
-
-      // ... and I have built the PlotWidget one time
-      await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
-      await waitForPlotDataToLoad(tester);
-
-      // When I rebuild the PlotWidget
-      await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
-      await waitForPlotDataToLoad(tester);
-
-      // Then startPlot was called only once
-      expect(service.startPlotCount, 1);
-    });
+        // Then startPlot was called only once
+        expect(service.startPlotCount, 2);
+      },
+    );
 
     testWidgets(
-        "Change updateDelay and then rebuild PlotWidget, startPlot is called again",
-        (WidgetTester tester) async {
-      // Given a FakeAcsysService
-      final service = FakeACSysService();
+      "Plot API TEST CONSTANT and then rebuild, startPlot is called only once",
+      (WidgetTester tester) async {
+        // Given a FakeAcsysService
+        final service = FakeACSysService();
 
-      // ... and a channel list containing API TEST CONSTANT
-      final channelList = {"API TEST CONSTANT": ChannelSetting()};
+        // ... and a channel list containing API TEST CONSTANT
+        final channelList = {"API TEST CONSTANT": ChannelSetting()};
 
-      // ... and I have built the PlotWidget one time
-      await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
-      await waitForPlotDataToLoad(tester);
+        // ... and I have built the PlotWidget one time
+        await tester.pumpWidget(
+          _buildPlotWidget(channelList, service: service),
+        );
+        await waitForPlotDataToLoad(tester);
 
-      // When I change the DAQ settings and rebuild the PlotWidget
-      await tester.pumpWidget(
-          _buildPlotWidget(channelList, service: service, updateDelay: 50));
-      await waitForPlotDataToLoad(tester);
+        // When I rebuild the PlotWidget
+        await tester.pumpWidget(
+          _buildPlotWidget(channelList, service: service),
+        );
+        await waitForPlotDataToLoad(tester);
 
-      // Then startPlot was called only once
-      expect(service.startPlotCount, 2);
-    });
-
-    testWidgets(
-        "Build PlotWidget without passing nAcquisitions, startPlot is called with nAcquisitions set to null",
-        (WidgetTester tester) async {
-      // Given a FakeAcsysService
-      final service = FakeACSysService();
-
-      // ... and a channel list containing API TEST CONSTANT
-      final channelList = {"API TEST CONSTANT": ChannelSetting()};
-
-      // When I build PlotWidget without specifying nAcquisitions
-      await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
-      await waitForPlotDataToLoad(tester);
-
-      // Then nAcquistions = null is passed to the API
-      expect(service.startPlotnAcquistions, null);
-    });
+        // Then startPlot was called only once
+        expect(service.startPlotCount, 1);
+      },
+    );
 
     testWidgets(
-        "Pass nAcquisitions = 1 to PlotWidget, startPlot is called with nAcquisitions = 1",
-        (WidgetTester tester) async {
-      // Given a FakeAcsysService
-      final service = FakeACSysService();
+      "Change updateDelay and then rebuild PlotWidget, startPlot is called again",
+      (WidgetTester tester) async {
+        // Given a FakeAcsysService
+        final service = FakeACSysService();
 
-      // ... and a channel list containing API TEST CONSTANT
-      final channelList = {"API TEST CONSTANT": ChannelSetting()};
+        // ... and a channel list containing API TEST CONSTANT
+        final channelList = {"API TEST CONSTANT": ChannelSetting()};
 
-      // When I build PlotWidget with nAcquisitions = 1
-      await tester.pumpWidget(
-          _buildPlotWidget(channelList, service: service, nAcquisitions: 1));
-      await waitForPlotDataToLoad(tester);
+        // ... and I have built the PlotWidget one time
+        await tester.pumpWidget(
+          _buildPlotWidget(channelList, service: service),
+        );
+        await waitForPlotDataToLoad(tester);
 
-      // Then nAcquistions = 0 is passed to the API
-      expect(service.startPlotnAcquistions, 1);
-    });
+        // When I change the DAQ settings and rebuild the PlotWidget
+        await tester.pumpWidget(
+          _buildPlotWidget(channelList, service: service, updateDelay: 50),
+        );
+        await waitForPlotDataToLoad(tester);
 
-    testWidgets(
-        "Change nAcquisitions and then rebuild PlotWidget, startPlot is called again",
-        (WidgetTester tester) async {
-      // Given a FakeAcsysService
-      final service = FakeACSysService();
-
-      // ... and a channel list containing API TEST CONSTANT
-      final channelList = {"API TEST CONSTANT": ChannelSetting()};
-
-      // ... and I have built the PlotWidget one time
-      await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
-      await waitForPlotDataToLoad(tester);
-
-      // When I change the nAcquisitions and rebuild the PlotWidget
-      await tester.pumpWidget(
-          _buildPlotWidget(channelList, service: service, nAcquisitions: 1));
-      await waitForPlotDataToLoad(tester);
-
-      // Then startPlot was called twiced
-      expect(service.startPlotCount, 2);
-      expect(service.startPlotnAcquistions, 1);
-    });
+        // Then startPlot was called only once
+        expect(service.startPlotCount, 2);
+      },
+    );
 
     testWidgets(
-        "Supply an onPlotUpdate handler, receive a PlotReply when data is plotted",
-        (WidgetTester tester) async {
-      // Given a FakeAcsysService and an empty PlotReply
-      final service = FakeACSysService();
-      PlotReply? lastUpdate;
+      "Build PlotWidget without passing nAcquisitions, startPlot is called with nAcquisitions set to null",
+      (WidgetTester tester) async {
+        // Given a FakeAcsysService
+        final service = FakeACSysService();
 
-      // ... and a channel list containing API TEST CONSTANT
-      final channelList = {"API TEST CONSTANT": ChannelSetting()};
+        // ... and a channel list containing API TEST CONSTANT
+        final channelList = {"API TEST CONSTANT": ChannelSetting()};
 
-      // ... and I have built the PlotWidget supplying it with an onPlotUpdate handler
-      await tester.pumpWidget(_buildPlotWidget(channelList,
-          service: service,
-          onPlotUpdate: (PlotReply update) => lastUpdate = update));
+        // When I build PlotWidget without specifying nAcquisitions
+        await tester.pumpWidget(
+          _buildPlotWidget(channelList, service: service),
+        );
+        await waitForPlotDataToLoad(tester);
 
-      // When I wait for data to load
-      await waitForPlotDataToLoad(tester);
+        // Then nAcquistions = null is passed to the API
+        expect(service.startPlotnAcquistions, null);
+      },
+    );
 
-      // Then a PlotReply was received
-      expect(lastUpdate, isNotNull);
+    testWidgets(
+      "Pass nAcquisitions = 1 to PlotWidget, startPlot is called with nAcquisitions = 1",
+      (WidgetTester tester) async {
+        // Given a FakeAcsysService
+        final service = FakeACSysService();
 
-      // We get a single scalar device response.
-      expect(lastUpdate!.data.first.points.length, 1);
+        // ... and a channel list containing API TEST CONSTANT
+        final channelList = {"API TEST CONSTANT": ChannelSetting()};
 
-      var deviceValue =
-          lastUpdate!.data.first.points.first.value as DevScalarArray;
+        // When I build PlotWidget with nAcquisitions = 1
+        await tester.pumpWidget(
+          _buildPlotWidget(channelList, service: service, nAcquisitions: 1),
+        );
+        await waitForPlotDataToLoad(tester);
 
-      // ... and the PlotReply contains 500 samples of data
-      expect(deviceValue.value.length, 500);
-    });
+        // Then nAcquistions = 0 is passed to the API
+        expect(service.startPlotnAcquistions, 1);
+      },
+    );
+
+    testWidgets(
+      "Change nAcquisitions and then rebuild PlotWidget, startPlot is called again",
+      (WidgetTester tester) async {
+        // Given a FakeAcsysService
+        final service = FakeACSysService();
+
+        // ... and a channel list containing API TEST CONSTANT
+        final channelList = {"API TEST CONSTANT": ChannelSetting()};
+
+        // ... and I have built the PlotWidget one time
+        await tester.pumpWidget(
+          _buildPlotWidget(channelList, service: service),
+        );
+        await waitForPlotDataToLoad(tester);
+
+        // When I change the nAcquisitions and rebuild the PlotWidget
+        await tester.pumpWidget(
+          _buildPlotWidget(channelList, service: service, nAcquisitions: 1),
+        );
+        await waitForPlotDataToLoad(tester);
+
+        // Then startPlot was called twiced
+        expect(service.startPlotCount, 2);
+        expect(service.startPlotnAcquistions, 1);
+      },
+    );
+
+    testWidgets(
+      "Supply an onPlotUpdate handler, receive a PlotReply when data is plotted",
+      (WidgetTester tester) async {
+        // Given a FakeAcsysService and an empty PlotReply
+        final service = FakeACSysService();
+        PlotReply? lastUpdate;
+
+        // ... and a channel list containing API TEST CONSTANT
+        final channelList = {"API TEST CONSTANT": ChannelSetting()};
+
+        // ... and I have built the PlotWidget supplying it with an onPlotUpdate handler
+        await tester.pumpWidget(
+          _buildPlotWidget(
+            channelList,
+            service: service,
+            onPlotUpdate: (PlotReply update) => lastUpdate = update,
+          ),
+        );
+
+        // When I wait for data to load
+        await waitForPlotDataToLoad(tester);
+
+        // Then a PlotReply was received
+        expect(lastUpdate, isNotNull);
+
+        // We get a single scalar device response.
+        expect(lastUpdate!.data.first.points.length, 1);
+
+        var deviceValue =
+            lastUpdate!.data.first.points.first.value as DevScalarArray;
+
+        // ... and the PlotReply contains 500 samples of data
+        expect(deviceValue.value.length, 500);
+      },
+    );
   });
 
   group("Error handling", () {
-    testWidgets("Dismiss error message, error banner goes away",
-        (WidgetTester tester) async {
+    testWidgets("Dismiss error message, error banner goes away", (
+      WidgetTester tester,
+    ) async {
       // Given I tried to plot a channel that had an error
       final channelList = {"PLOT TEST DOESN'T EXIST": ChannelSetting()};
       await tester.pumpWidget(_buildPlotWidget(channelList));
@@ -200,106 +230,124 @@ void main() {
 
       // Then the error message is no longer visible
       expect(
-          find.text(
-              "An error occured when attempting to acquire data for PLOT TEST DOESN'T EXIST"),
-          findsNothing);
+        find.text(
+          "An error occured when attempting to acquire data for PLOT TEST DOESN'T EXIST",
+        ),
+        findsNothing,
+      );
     });
 
     testWidgets(
-        "Dismiss error message, error banner goes away, can appear again",
-        (WidgetTester tester) async {
-      // Given I tried to plot a channel that had an error
-      const errorChannel = "PLOT TEST DOESN'T EXIST";
-      const errorMessage =
-          "An error occured when attempting to acquire data for $errorChannel";
-      Map<String, ChannelSetting> channelList = {
-        errorChannel: ChannelSetting()
-      };
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
+      "Dismiss error message, error banner goes away, can appear again",
+      (WidgetTester tester) async {
+        // Given I tried to plot a channel that had an error
+        const errorChannel = "PLOT TEST DOESN'T EXIST";
+        const errorMessage =
+            "An error occured when attempting to acquire data for $errorChannel";
+        Map<String, ChannelSetting> channelList = {
+          errorChannel: ChannelSetting(),
+        };
+        await tester.pumpWidget(_buildPlotWidget(channelList));
+        await waitForPlotDataToLoad(tester);
 
-      // When I dismiss the error banner
-      expect(find.text(errorMessage), findsOneWidget);
-      await tester.tap(find.text("Dismiss"));
-      await tester.pumpAndSettle();
+        // When I dismiss the error banner
+        expect(find.text(errorMessage), findsOneWidget);
+        await tester.tap(find.text("Dismiss"));
+        await tester.pumpAndSettle();
 
-      // Then the error message is no longer visible
-      expect(find.text(errorMessage), findsNothing);
+        // Then the error message is no longer visible
+        expect(find.text(errorMessage), findsNothing);
 
-      channelList.clear();
-      channelList = {errorChannel: ChannelSetting()};
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
+        channelList.clear();
+        channelList = {errorChannel: ChannelSetting()};
+        await tester.pumpWidget(_buildPlotWidget(channelList));
+        await waitForPlotDataToLoad(tester);
 
-      expect(find.text(errorMessage), findsOneWidget);
-    });
+        expect(find.text(errorMessage), findsOneWidget);
+      },
+    );
 
     testWidgets(
-        "Plot a channel with error and channel without, see one channel plotted and an error message",
-        (WidgetTester tester) async {
-      // Given a channel list with one channel name that doesn't exist
-      final channelList = {
-        "PLOT TEST CONSTANT": ChannelSetting(),
-        "PLOT TEST DOESN'T EXIST": ChannelSetting()
-      };
+      "Plot a channel with error and channel without, see one channel plotted and an error message",
+      (WidgetTester tester) async {
+        // Given a channel list with one channel name that doesn't exist
+        final channelList = {
+          "PLOT TEST CONSTANT": ChannelSetting(),
+          "PLOT TEST DOESN'T EXIST": ChannelSetting(),
+        };
 
-      // When I try to plot both channels
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
+        // When I try to plot both channels
+        await tester.pumpWidget(_buildPlotWidget(channelList));
+        await waitForPlotDataToLoad(tester);
 
-      // Then I should the first channel plotted
-      assertPlotContainsHorizontalLine(tester,
-          numberOfPoints: 500, atY: 5.0, channelName: "PLOT TEST CONSTANT");
+        // Then I should the first channel plotted
+        assertPlotContainsHorizontalLine(
+          tester,
+          numberOfPoints: 500,
+          atY: 5.0,
+          channelName: "PLOT TEST CONSTANT",
+        );
 
-      // ... and an error message
-      expect(
+        // ... and an error message
+        expect(
           find.text(
-              "An error occured when attempting to acquire data for PLOT TEST DOESN'T EXIST"),
-          findsOneWidget);
-    });
+            "An error occured when attempting to acquire data for PLOT TEST DOESN'T EXIST",
+          ),
+          findsOneWidget,
+        );
+      },
+    );
   });
 
   group("PlotWidget (implementation = FlCharts) widget tests", () {
     testWidgets(
-        "Verify plot scalar timed data for 10 points. Verify 10 appended points.",
-        (WidgetTester tester) async {
-      // Given a scalar ramp channel
-      var channelName = "PLOT TEST SCALAR RAMP";
-      final channelList = {
-        channelName: ChannelSetting(lineColor: PlotColor.blue.color)
-      };
+      "Verify plot scalar timed data for 10 points. Verify 10 appended points.",
+      (WidgetTester tester) async {
+        // Given a scalar ramp channel
+        var channelName = "PLOT TEST SCALAR RAMP";
+        final channelList = {
+          channelName: ChannelSetting(lineColor: PlotColor.blue.color),
+        };
 
-      // And daq service with scalar ramp point count limit of 10 points.
-      StandardPlotDAQ daqService = StandardPlotDAQ();
-      daqService.scalarRampCountLimit = 10;
+        // And daq service with scalar ramp point count limit of 10 points.
+        StandardPlotDAQ daqService = StandardPlotDAQ();
+        daqService.scalarRampCountLimit = 10;
 
-      ConnectionState connectionState = ConnectionState.none;
+        ConnectionState connectionState = ConnectionState.none;
 
-      // And a update fequency of 10hz with timedScalar option to append to plot.
-      await tester.pumpWidget(_buildPlotWidget(channelList,
-          updateDelay: 100000,
-          scalarDataOptions:
-              ScalarDataOptions(isOneShot: false, timeDelta: null),
-          daqService: daqService,
-          onStreamConnectionStateChange: (streamConnectionState) =>
-              connectionState = streamConnectionState));
+        // And a update fequency of 10hz with timedScalar option to append to plot.
+        await tester.pumpWidget(
+          _buildPlotWidget(
+            channelList,
+            updateDelay: 100000,
+            scalarDataOptions: ScalarDataOptions(
+              isOneShot: false,
+              timeDelta: null,
+            ),
+            daqService: daqService,
+            onStreamConnectionStateChange: (streamConnectionState) =>
+                connectionState = streamConnectionState,
+          ),
+        );
 
-      // Wait for points to load.
-      await waitForPlotDataToLoad(tester);
-      // Wait until connection is done.
-      while (connectionState != ConnectionState.done) {
-        await tester.pump(const Duration(milliseconds: 10));
-      }
+        // Wait for points to load.
+        await waitForPlotDataToLoad(tester);
+        // Wait until connection is done.
+        while (connectionState != ConnectionState.done) {
+          await tester.pump(const Duration(milliseconds: 10));
+        }
 
-      // Once done plotting verify that all 10 points were plotted.
-      assertPlotContainsNPoints(tester, 10, channelName: channelName);
+        // Once done plotting verify that all 10 points were plotted.
+        assertPlotContainsNPoints(tester, 10, channelName: channelName);
 
-      // Ensure all timers finish
-      await tester.pumpAndSettle();
-    });
+        // Ensure all timers finish
+        await tester.pumpAndSettle();
+      },
+    );
 
-    testWidgets("Verify support of the panning plot behaviour",
-        (WidgetTester tester) async {
+    testWidgets("Verify support of the panning plot behaviour", (
+      WidgetTester tester,
+    ) async {
       // Given a mockAdjustXAxisLimits function
       double? lastDeltaX, lastDeltaY;
       void mockAdjustXAxisLimits(double deltaX) {
@@ -313,7 +361,7 @@ void main() {
       // And a channel list containing "PLOT TEST SCALAR RAMP".
       String channelName = "PLOT TEST SCALAR RAMP";
       final channelList = {
-        channelName: ChannelSetting(lineColor: PlotColor.blue.color)
+        channelName: ChannelSetting(lineColor: PlotColor.blue.color),
       };
 
       // And daq service with scalar ramp point count limit of 10 points.
@@ -321,13 +369,19 @@ void main() {
       daqService.scalarRampCountLimit = 10;
 
       // And a update fequency of 10hz with timedScalar option to append to plot.
-      await tester.pumpWidget(_buildPlotWidget(channelList,
+      await tester.pumpWidget(
+        _buildPlotWidget(
+          channelList,
           updateDelay: 100000,
           adjustXAxisLimits: mockAdjustXAxisLimits,
           adjustYAxisLimits: mockAdjustYAxisLimits,
-          scalarDataOptions:
-              ScalarDataOptions(isOneShot: false, timeDelta: null),
-          daqService: daqService));
+          scalarDataOptions: ScalarDataOptions(
+            isOneShot: false,
+            timeDelta: null,
+          ),
+          daqService: daqService,
+        ),
+      );
 
       // Wait for points to load.
       await waitForPlotDataToLoad(tester);
@@ -347,54 +401,71 @@ void main() {
     });
 
     testWidgets(
-        "Verify plot scalar on-event 42 points 21 per event. Verify point segments and points.",
-        (WidgetTester tester) async {
-      // Given a scalar ramp channel
-      var channelName = "PLOT TEST SCALAR RAMP";
-      final channelList = {
-        channelName: ChannelSetting(lineColor: PlotColor.blue.color)
-      };
+      "Verify plot scalar on-event 42 points 21 per event. Verify point segments and points.",
+      (WidgetTester tester) async {
+        // Given a scalar ramp channel
+        var channelName = "PLOT TEST SCALAR RAMP";
+        final channelList = {
+          channelName: ChannelSetting(lineColor: PlotColor.blue.color),
+        };
 
-      // And daq service with scalar ramp point count limit of 10 points.
-      StandardPlotDAQ daqService = StandardPlotDAQ();
-      daqService.scalarRampCountLimit = 42;
-      daqService.scalarRampEventDuration = 2;
+        // And daq service with scalar ramp point count limit of 10 points.
+        StandardPlotDAQ daqService = StandardPlotDAQ();
+        daqService.scalarRampCountLimit = 42;
+        daqService.scalarRampEventDuration = 2;
 
-      ConnectionState connectionState = ConnectionState.none;
+        ConnectionState connectionState = ConnectionState.none;
 
-      // And a update fequency of 10hz with timedScalar option to append to plot.
-      await tester.pumpWidget(_buildPlotWidget(channelList,
-          updateDelay: 100000,
-          triggerEvent: 16,
-          isPersistent: true,
-          scalarDataOptions: ScalarDataOptions(isOneShot: false, timeDelta: 4),
-          daqService: daqService,
-          onStreamConnectionStateChange: (streamConnectionState) =>
-              connectionState = streamConnectionState));
+        // And a update fequency of 10hz with timedScalar option to append to plot.
+        await tester.pumpWidget(
+          _buildPlotWidget(
+            channelList,
+            updateDelay: 100000,
+            triggerEvent: 16,
+            isPersistent: true,
+            scalarDataOptions: ScalarDataOptions(
+              isOneShot: false,
+              timeDelta: 4,
+            ),
+            daqService: daqService,
+            onStreamConnectionStateChange: (streamConnectionState) =>
+                connectionState = streamConnectionState,
+          ),
+        );
 
-      // Wait for points to load.
-      await waitForPlotDataToLoad(tester);
-      // Wait until connection is done.
-      while (connectionState != ConnectionState.done) {
-        await tester.pump(const Duration(milliseconds: 10));
-      }
+        // Wait for points to load.
+        await waitForPlotDataToLoad(tester);
+        // Wait until connection is done.
+        while (connectionState != ConnectionState.done) {
+          await tester.pump(const Duration(milliseconds: 10));
+        }
 
-      // await tester.pumpAndSettle(const Duration(milliseconds: 1600));
+        // await tester.pumpAndSettle(const Duration(milliseconds: 1600));
 
-      // Once done plotting verify that all 41 points were plotted.
-      assertPlotContainsNPoints(tester, 21,
-          channelName: channelName, segment: 0);
-      assertPlotContainsNPoints(tester, 21,
-          channelName: channelName, segment: 1);
+        // Once done plotting verify that all 41 points were plotted.
+        assertPlotContainsNPoints(
+          tester,
+          21,
+          channelName: channelName,
+          segment: 0,
+        );
+        assertPlotContainsNPoints(
+          tester,
+          21,
+          channelName: channelName,
+          segment: 1,
+        );
 
-      assertPlotContainsNSegments(tester, 2, channelName: channelName);
+        assertPlotContainsNSegments(tester, 2, channelName: channelName);
 
-      // Ensure all timers finish
-      await tester.pumpAndSettle();
-    });
+        // Ensure all timers finish
+        await tester.pumpAndSettle();
+      },
+    );
 
-    testWidgets("Plot channel list is empty, plot is empty",
-        (WidgetTester tester) async {
+    testWidgets("Plot channel list is empty, plot is empty", (
+      WidgetTester tester,
+    ) async {
       // Given nothing
       // When I build the PlotWidget with an empty channel list
       await tester.pumpWidget(_buildPlotWidget(const {}));
@@ -410,8 +481,9 @@ void main() {
       assertPlotXAxisLimits(tester, min: 0, max: 3);
     });
 
-    testWidgets("Plot PLOT TEST CONSTANT, get a horizontal line at y=5.0",
-        (WidgetTester tester) async {
+    testWidgets("Plot PLOT TEST CONSTANT, get a horizontal line at y=5.0", (
+      WidgetTester tester,
+    ) async {
       // Given a channel list containing "PLOT TEST CONSTANT"
       final channelList = {"PLOT TEST CONSTANT": ChannelSetting()};
 
@@ -420,202 +492,260 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Then the plot contains 500 points with y = 5.0
-      assertPlotContainsHorizontalLine(tester,
-          numberOfPoints: 500, atY: 5.0, channelName: "PLOT TEST CONSTANT");
+      assertPlotContainsHorizontalLine(
+        tester,
+        numberOfPoints: 500,
+        atY: 5.0,
+        channelName: "PLOT TEST CONSTANT",
+      );
 
       // ... and the Y axis is labeled...
-      assertPlotYAxisTitles(tester,
-          titles: ["PLOT TEST CONSTANT"], units: ["V"]);
+      assertPlotYAxisTitles(
+        tester,
+        titles: ["PLOT TEST CONSTANT"],
+        units: ["V"],
+      );
 
       // ... and the Y-axis has limits of...
       assertPlotYAxisLimits(tester, min: 5, max: 5);
       assertPlotYAxisLabel(
-          isVisible: true, color: Colors.red, withText: "5.00");
+        isVisible: true,
+        color: Colors.red,
+        withText: "5.00",
+      );
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
     });
 
     testWidgets(
-        "Plot PLOT TEST RAMP, get a ramp starting at Y=0.0 and ending at y = 500.0",
-        (WidgetTester tester) async {
-      // Given a channel list containing "PLOT TEST RAMP"
-      final channelList = {"PLOT TEST RAMP": ChannelSetting()};
+      "Plot PLOT TEST RAMP, get a ramp starting at Y=0.0 and ending at y = 500.0",
+      (WidgetTester tester) async {
+        // Given a channel list containing "PLOT TEST RAMP"
+        final channelList = {"PLOT TEST RAMP": ChannelSetting()};
 
-      // When I build the PlotWidget
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
+        // When I build the PlotWidget
+        await tester.pumpWidget(_buildPlotWidget(channelList));
+        await waitForPlotDataToLoad(tester);
 
-      // Then the plot contains a ramp with 500 points starting at Y=0.0
-      assertPlotContainsRamp(tester,
-          numberOfPoints: 500, startingAtY: 0.0, channelName: "PLOT TEST RAMP");
+        // Then the plot contains a ramp with 500 points starting at Y=0.0
+        assertPlotContainsRamp(
+          tester,
+          numberOfPoints: 500,
+          startingAtY: 0.0,
+          channelName: "PLOT TEST RAMP",
+        );
 
-      // ... and the Y-axis is labeled
-      assertPlotYAxisTitles(tester, titles: ["PLOT TEST RAMP"], units: ["V"]);
+        // ... and the Y-axis is labeled
+        assertPlotYAxisTitles(tester, titles: ["PLOT TEST RAMP"], units: ["V"]);
 
-      // ... and the limits for the Y-axis are 0 to 500
-      assertPlotYAxisLimits(tester, min: 0, max: 499);
-      assertPlotYAxisLabel(
-          isVisible: true, color: Colors.red, withText: "0.00");
-      assertPlotYAxisLabel(
-          isVisible: true, color: Colors.red, withText: "499.00");
+        // ... and the limits for the Y-axis are 0 to 500
+        assertPlotYAxisLimits(tester, min: 0, max: 499);
+        assertPlotYAxisLabel(
+          isVisible: true,
+          color: Colors.red,
+          withText: "0.00",
+        );
+        assertPlotYAxisLabel(
+          isVisible: true,
+          color: Colors.red,
+          withText: "499.00",
+        );
 
-      // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(tester, title: "Index");
-    });
-
-    testWidgets(
-        "Plot multiple plots and ensure that the Y and X axis limits are adjusted",
-        (WidgetTester tester) async {
-      final channelList = {"PLOT TEST SINE": ChannelSetting()};
-      // When I build the PlotWidget
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
-
-      // Ensure that the axis limits accomodate the sine plot test.
-      assertPlotXAxisLimits(tester, min: 0, max: 500.0);
-      assertPlotYAxisLimits(tester, min: -1, max: 1);
-      assertPlotYAxisLabel(
-          isVisible: true, color: Colors.red, withText: "-1.00");
-      assertPlotYAxisLabel(
-          isVisible: true, color: Colors.red, withText: "1.00");
-
-      // Plot a second channel.
-      channelList["PLOT TEST CONSTANT"] = ChannelSetting();
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
-
-      // Ensure that the axis limits changed to accomodate the new plot.
-      assertPlotXAxisLimits(tester, min: 0, max: 500);
-      assertPlotYAxisLimits(tester, min: -1, max: 5);
-      assertPlotYAxisLabel(
-          isVisible: true, color: Colors.red, withText: "-1.00");
-      assertPlotYAxisLabel(
-          isVisible: true, color: Colors.red, withText: "5.00");
-    });
+        // ... and the X-axis is labeled...
+        assertPlotXAxisTitle(tester, title: "Index");
+      },
+    );
 
     testWidgets(
-        "Plot PLOT TEST PARABOLA, get a parabola starting at X=-50 and ending at X=50",
-        (WidgetTester tester) async {
-      // Given a channel list containing "PLOT TEST PARABOLA"
-      final channelList = {"PLOT TEST PARABOLA": ChannelSetting()};
+      "Plot multiple plots and ensure that the Y and X axis limits are adjusted",
+      (WidgetTester tester) async {
+        final channelList = {"PLOT TEST SINE": ChannelSetting()};
+        // When I build the PlotWidget
+        await tester.pumpWidget(_buildPlotWidget(channelList));
+        await waitForPlotDataToLoad(tester);
 
-      // When I build the PlotWidget
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
+        // Ensure that the axis limits accomodate the sine plot test.
+        assertPlotXAxisLimits(tester, min: 0, max: 500.0);
+        assertPlotYAxisLimits(tester, min: -1, max: 1);
+        assertPlotYAxisLabel(
+          isVisible: true,
+          color: Colors.red,
+          withText: "-1.00",
+        );
+        assertPlotYAxisLabel(
+          isVisible: true,
+          color: Colors.red,
+          withText: "1.00",
+        );
 
-      // Then the plot contains a parabola with 500 points starting at X=-250
-      assertPlotContainsParabola(tester,
+        // Plot a second channel.
+        channelList["PLOT TEST CONSTANT"] = ChannelSetting();
+        await tester.pumpWidget(_buildPlotWidget(channelList));
+        await waitForPlotDataToLoad(tester);
+
+        // Ensure that the axis limits changed to accomodate the new plot.
+        assertPlotXAxisLimits(tester, min: 0, max: 500);
+        assertPlotYAxisLimits(tester, min: -1, max: 5);
+        assertPlotYAxisLabel(
+          isVisible: true,
+          color: Colors.red,
+          withText: "-1.00",
+        );
+        assertPlotYAxisLabel(
+          isVisible: true,
+          color: Colors.red,
+          withText: "5.00",
+        );
+      },
+    );
+
+    testWidgets(
+      "Plot PLOT TEST PARABOLA, get a parabola starting at X=-50 and ending at X=50",
+      (WidgetTester tester) async {
+        // Given a channel list containing "PLOT TEST PARABOLA"
+        final channelList = {"PLOT TEST PARABOLA": ChannelSetting()};
+
+        // When I build the PlotWidget
+        await tester.pumpWidget(_buildPlotWidget(channelList));
+        await waitForPlotDataToLoad(tester);
+
+        // Then the plot contains a parabola with 500 points starting at X=-250
+        assertPlotContainsParabola(
+          tester,
           numberOfPoints: 501,
           startingAtX: -250,
-          channelName: "PLOT TEST PARABOLA");
+          channelName: "PLOT TEST PARABOLA",
+        );
 
-      // ... and the Y-axis is labeled
-      assertPlotYAxisTitles(tester,
-          titles: ["PLOT TEST PARABOLA"], units: ["V"]);
+        // ... and the Y-axis is labeled
+        assertPlotYAxisTitles(
+          tester,
+          titles: ["PLOT TEST PARABOLA"],
+          units: ["V"],
+        );
 
-      // ... and the limits for the X-axis are -250 to 250
-      assertPlotXAxisLimits(tester, min: 0, max: 500.0);
+        // ... and the limits for the X-axis are -250 to 250
+        assertPlotXAxisLimits(tester, min: 0, max: 500.0);
 
-      // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(tester, title: "Index");
-    });
+        // ... and the X-axis is labeled...
+        assertPlotXAxisTitle(tester, title: "Index");
+      },
+    );
 
     testWidgets(
-        "Plot PLOT TEST SINE, get a sine wave starting at X=-250 and ending at X=250",
-        (WidgetTester tester) async {
-      // Given a channel list containing "PLOT TEST SINE"
-      final channelList = {"PLOT TEST SINE": ChannelSetting()};
+      "Plot PLOT TEST SINE, get a sine wave starting at X=-250 and ending at X=250",
+      (WidgetTester tester) async {
+        // Given a channel list containing "PLOT TEST SINE"
+        final channelList = {"PLOT TEST SINE": ChannelSetting()};
 
-      // When I build the PlotWidget
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
+        // When I build the PlotWidget
+        await tester.pumpWidget(_buildPlotWidget(channelList));
+        await waitForPlotDataToLoad(tester);
 
-      // Then the plot contains a parabola with 500 points starting at X=-250
-      assertPlotContainsSineWave(tester,
+        // Then the plot contains a parabola with 500 points starting at X=-250
+        assertPlotContainsSineWave(
+          tester,
           numberOfPoints: 501,
           startingAtX: -250,
-          channelName: "PLOT TEST SINE");
+          channelName: "PLOT TEST SINE",
+        );
 
-      // ... and the Y-axis is labeled
-      assertPlotYAxisTitles(tester, titles: ["PLOT TEST SINE"], units: ["V"]);
+        // ... and the Y-axis is labeled
+        assertPlotYAxisTitles(tester, titles: ["PLOT TEST SINE"], units: ["V"]);
 
-      // ... and the limits for the X-axis are 0 to 500
-      assertPlotXAxisLimits(tester, min: 0, max: 500.0);
+        // ... and the limits for the X-axis are 0 to 500
+        assertPlotXAxisLimits(tester, min: 0, max: 500.0);
 
-      // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(tester, title: "Index");
-    });
-
-    testWidgets(
-        "Plot PLOT TEST SINE, get a progress indicator while data is fetched",
-        (WidgetTester tester) async {
-      // Given a channel list containing "PLOT TEST SINE"
-      final channelList = {"PLOT TEST SINE": ChannelSetting()};
-
-      // When I build the PlotWidget
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-
-      // Then I should see the progress indicator
-      assertPlotLoadingIndicator(isVisible: true);
-      await waitForPlotDataToLoad(tester);
-    });
+        // ... and the X-axis is labeled...
+        assertPlotXAxisTitle(tester, title: "Index");
+      },
+    );
 
     testWidgets(
-        "Plot PLOT TEST PARABOLA 64K, get a parabola starting at X=-32767 and ending at X=32767",
-        (WidgetTester tester) async {
-      // Given a channel list containing "PLOT TEST PARABOLA"
-      final channelList = {"PLOT TEST PARABOLA 64K": ChannelSetting()};
+      "Plot PLOT TEST SINE, get a progress indicator while data is fetched",
+      (WidgetTester tester) async {
+        // Given a channel list containing "PLOT TEST SINE"
+        final channelList = {"PLOT TEST SINE": ChannelSetting()};
 
-      // When I build the PlotWidget
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
+        // When I build the PlotWidget
+        await tester.pumpWidget(_buildPlotWidget(channelList));
 
-      // Then the plot contains a parabola with 500 points starting at X=-250
-      assertPlotContainsParabola(tester,
+        // Then I should see the progress indicator
+        assertPlotLoadingIndicator(isVisible: true);
+        await waitForPlotDataToLoad(tester);
+      },
+    );
+
+    testWidgets(
+      "Plot PLOT TEST PARABOLA 64K, get a parabola starting at X=-32767 and ending at X=32767",
+      (WidgetTester tester) async {
+        // Given a channel list containing "PLOT TEST PARABOLA"
+        final channelList = {"PLOT TEST PARABOLA 64K": ChannelSetting()};
+
+        // When I build the PlotWidget
+        await tester.pumpWidget(_buildPlotWidget(channelList));
+        await waitForPlotDataToLoad(tester);
+
+        // Then the plot contains a parabola with 500 points starting at X=-250
+        assertPlotContainsParabola(
+          tester,
           numberOfPoints: 65535,
           startingAtX: -32767,
-          channelName: "PLOT TEST PARABOLA 64K");
+          channelName: "PLOT TEST PARABOLA 64K",
+        );
 
-      // ... and the Y-axis is labeled
-      assertPlotYAxisTitles(tester,
-          titles: ["PLOT TEST PARABOLA 64K"], units: ["V"]);
+        // ... and the Y-axis is labeled
+        assertPlotYAxisTitles(
+          tester,
+          titles: ["PLOT TEST PARABOLA 64K"],
+          units: ["V"],
+        );
 
-      // ... and the limits for the X-axis are -250 to 250
-      assertPlotXAxisLimits(tester, min: 0, max: 65534);
+        // ... and the limits for the X-axis are -250 to 250
+        assertPlotXAxisLimits(tester, min: 0, max: 65534);
 
-      // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(tester, title: "Index");
-    });
+        // ... and the X-axis is labeled...
+        assertPlotXAxisTitle(tester, title: "Index");
+      },
+    );
 
     testWidgets(
-        "Plot PLOT TEST NORMAL, get a normal distribution centered around 250",
-        (WidgetTester tester) async {
-      // Given a channel list containing "PLOT TEST PARABOLA"
-      final channelList = {"PLOT TEST NORMAL": ChannelSetting()};
+      "Plot PLOT TEST NORMAL, get a normal distribution centered around 250",
+      (WidgetTester tester) async {
+        // Given a channel list containing "PLOT TEST PARABOLA"
+        final channelList = {"PLOT TEST NORMAL": ChannelSetting()};
 
-      // When I build the PlotWidget
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
+        // When I build the PlotWidget
+        await tester.pumpWidget(_buildPlotWidget(channelList));
+        await waitForPlotDataToLoad(tester);
 
-      // Then the plot contains a normal distribution around x=250
-      assertPlotContainsNormalDistribution(tester,
+        // Then the plot contains a normal distribution around x=250
+        assertPlotContainsNormalDistribution(
+          tester,
           numberOfPoints: 500,
           centeredAtX: 250,
-          channelName: "PLOT TEST NORMAL");
+          channelName: "PLOT TEST NORMAL",
+        );
 
-      // ... and the Y-axis is labeled
-      assertPlotYAxisTitles(tester, titles: ["PLOT TEST NORMAL"], units: ["V"]);
+        // ... and the Y-axis is labeled
+        assertPlotYAxisTitles(
+          tester,
+          titles: ["PLOT TEST NORMAL"],
+          units: ["V"],
+        );
 
-      // ... and the limits for the X-axis are 0 to 499
-      assertPlotXAxisLimits(tester, min: 0.0, max: 499.0);
+        // ... and the limits for the X-axis are 0 to 499
+        assertPlotXAxisLimits(tester, min: 0.0, max: 499.0);
 
-      // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(tester, title: "Index");
-    });
+        // ... and the X-axis is labeled...
+        assertPlotXAxisTitle(tester, title: "Index");
+      },
+    );
 
-    testWidgets("Plot API TEST CONST, get a horizontal line at y=5.0",
-        (WidgetTester tester) async {
+    testWidgets("Plot API TEST CONST, get a horizontal line at y=5.0", (
+      WidgetTester tester,
+    ) async {
       // Given a channel list containing "PLOT TEST PARABOLA"
       final channelList = {"API TEST CONSTANT": ChannelSetting()};
 
@@ -624,12 +754,19 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Then the plot contains a parabola with 500 points starting at X=-250
-      assertPlotContainsHorizontalLine(tester,
-          numberOfPoints: 500, atY: 5.0, channelName: "API TEST CONSTANT");
+      assertPlotContainsHorizontalLine(
+        tester,
+        numberOfPoints: 500,
+        atY: 5.0,
+        channelName: "API TEST CONSTANT",
+      );
 
       // ... and the Y-axis is labeled
-      assertPlotYAxisTitles(tester,
-          titles: ["API TEST CONSTANT"], units: ["A"]);
+      assertPlotYAxisTitles(
+        tester,
+        titles: ["API TEST CONSTANT"],
+        units: ["A"],
+      );
 
       // ... and the limits for the X-axis are -250 to 250
       assertPlotXAxisLimits(tester, min: 0, max: 499);
@@ -638,8 +775,9 @@ void main() {
       assertPlotXAxisTitle(tester, title: "Index");
     });
 
-    testWidgets("Small screen, y-axis labels are on top",
-        (WidgetTester tester) async {
+    testWidgets("Small screen, y-axis labels are on top", (
+      WidgetTester tester,
+    ) async {
       // Given a channel list containing "PLOT TEST PARABOLA"
       final channelList = {"PLOT TEST CONSTANT": ChannelSetting()};
 
@@ -651,15 +789,19 @@ void main() {
       await waitForPlotDataToLoad(tester);
 
       // Then the y-axis labels are located on the top of the plot
-      assertPlotYAxisTitles(tester,
-          titles: ["PLOT TEST CONSTANT"], units: ["V"]);
+      assertPlotYAxisTitles(
+        tester,
+        titles: ["PLOT TEST CONSTANT"],
+        units: ["V"],
+      );
     });
 
-    testWidgets("Verify plot color applied to newly added channel.",
-        (WidgetTester tester) async {
+    testWidgets("Verify plot color applied to newly added channel.", (
+      WidgetTester tester,
+    ) async {
       // Given a channel list containing "PLOT TEST PARABOLA"
       final channelList = {
-        "PLOT TEST CONSTANT": ChannelSetting(lineColor: PlotColor.blue.color)
+        "PLOT TEST CONSTANT": ChannelSetting(lineColor: PlotColor.blue.color),
       };
 
       // When I build the PlotWidget
@@ -671,80 +813,109 @@ void main() {
     });
 
     testWidgets(
-        "Plot two channels with independent y-scales, scales are labeled correctly",
-        (WidgetTester tester) async {
-      // Given a channel list with two channels and independent y-scales
-      final channelList = {
-        "PLOT TEST CONSTANT": ChannelSetting(
-            lineColor: PlotColor.red.color, min: 0.00, max: 10.00),
-        "PLOT TEST RAMP": ChannelSetting(
-            lineColor: PlotColor.blue.color, min: -5.00, max: 5.00)
-      };
+      "Plot two channels with independent y-scales, scales are labeled correctly",
+      (WidgetTester tester) async {
+        // Given a channel list with two channels and independent y-scales
+        final channelList = {
+          "PLOT TEST CONSTANT": ChannelSetting(
+            lineColor: PlotColor.red.color,
+            min: 0.00,
+            max: 10.00,
+          ),
+          "PLOT TEST RAMP": ChannelSetting(
+            lineColor: PlotColor.blue.color,
+            min: -5.00,
+            max: 5.00,
+          ),
+        };
 
-      // When I plot both channels
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
+        // When I plot both channels
+        await tester.pumpWidget(_buildPlotWidget(channelList));
+        await waitForPlotDataToLoad(tester);
 
-      // Verify that the correct min/max values for the two scales are displayed
-      assertPlotYAxisLabel(
-          isVisible: true, color: Colors.red, withText: "0.00");
-      assertPlotYAxisLabel(
-          isVisible: true, color: Colors.blue, withText: "-5.00");
+        // Verify that the correct min/max values for the two scales are displayed
+        assertPlotYAxisLabel(
+          isVisible: true,
+          color: Colors.red,
+          withText: "0.00",
+        );
+        assertPlotYAxisLabel(
+          isVisible: true,
+          color: Colors.blue,
+          withText: "-5.00",
+        );
 
-      assertPlotYAxisLabel(
-          isVisible: true, color: Colors.red, withText: "10.00");
-      assertPlotYAxisLabel(
-          isVisible: true, color: Colors.blue, withText: "5.00");
-    });
+        assertPlotYAxisLabel(
+          isVisible: true,
+          color: Colors.red,
+          withText: "10.00",
+        );
+        assertPlotYAxisLabel(
+          isVisible: true,
+          color: Colors.blue,
+          withText: "5.00",
+        );
+      },
+    );
 
     testWidgets(
-        "Set x-min and x-max to fractional values, all points are normalized properly",
-        (WidgetTester tester) async {
-      // Given a channel list containing "PLOT TEST PARABOLA"
-      final channelList = {
-        "PLOT TEST PARABOLA": ChannelSetting(lineColor: PlotColor.blue.color)
-      };
+      "Set x-min and x-max to fractional values, all points are normalized properly",
+      (WidgetTester tester) async {
+        // Given a channel list containing "PLOT TEST PARABOLA"
+        final channelList = {
+          "PLOT TEST PARABOLA": ChannelSetting(lineColor: PlotColor.blue.color),
+        };
 
-      // When I build the PlotWidget with xMin = -249.1 and xMax = 249.1
-      await tester
-          .pumpWidget(_buildPlotWidget(channelList, xMin: -249.1, xMax: 249.1));
-      await waitForPlotDataToLoad(tester);
+        // When I build the PlotWidget with xMin = -249.1 and xMax = 249.1
+        await tester.pumpWidget(
+          _buildPlotWidget(channelList, xMin: -249.1, xMax: 249.1),
+        );
+        await waitForPlotDataToLoad(tester);
 
-      // Then all of the spots are between 0 and 1
-      assertAllFlSpotsAreNormal(tester);
-    });
+        // Then all of the spots are between 0 and 1
+        assertAllFlSpotsAreNormal(tester);
+      },
+    );
 
     testWidgets(
-        "Set y-min and y-max to a range less than 1, all points are normalized properly",
-        (WidgetTester tester) async {
-      // Given a channel list containing "PLOT TEST CONTANT"
-      //   ... and y-min and y-max set to a range of 0.2
-      final channelList = {
-        "PLOT TEST CONSTANT":
-            ChannelSetting(lineColor: PlotColor.blue.color, min: 4.9, max: 5.1)
-      };
+      "Set y-min and y-max to a range less than 1, all points are normalized properly",
+      (WidgetTester tester) async {
+        // Given a channel list containing "PLOT TEST CONTANT"
+        //   ... and y-min and y-max set to a range of 0.2
+        final channelList = {
+          "PLOT TEST CONSTANT": ChannelSetting(
+            lineColor: PlotColor.blue.color,
+            min: 4.9,
+            max: 5.1,
+          ),
+        };
 
-      // When I build the PlotWidget
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
+        // When I build the PlotWidget
+        await tester.pumpWidget(_buildPlotWidget(channelList));
+        await waitForPlotDataToLoad(tester);
 
-      // Then all of the spots are between 0 and 1
-      assertAllFlSpotsAreNormal(tester);
-    });
+        // Then all of the spots are between 0 and 1
+        assertAllFlSpotsAreNormal(tester);
+      },
+    );
   });
 
   group("PlotWidget (implementation = Graphic) widget tests", () {
-    testWidgets("Plot channel list is empty, plot is empty",
-        (WidgetTester tester) async {
+    testWidgets("Plot channel list is empty, plot is empty", (
+      WidgetTester tester,
+    ) async {
       // Given an empty channel list
       // When I build the PlotWidget with implementation = eCharts
       await tester.pumpWidget(
-          _buildPlotWidget(const {}, impl: PlotImplementation.graphic));
+        _buildPlotWidget(const {}, impl: PlotImplementation.graphic),
+      );
       await waitForPlotDataToLoad(tester);
 
       // Then plot was built using Flutter eCharts
       assertPlotImplementationIs(
-          find.byType(PlotWidget), PlotImplementation.graphic);
+        find.byType(PlotWidget),
+        PlotImplementation.graphic,
+      );
 
       // ... and the plot is empty
       assertEmptyPlot(tester, isVisible: true);
@@ -756,23 +927,32 @@ void main() {
       // assertPlotXAxisLimits(tester, min: 0, max: 1);
     });
 
-    testWidgets("Plot PLOT TEST CONSTANT, get a horizontal line at y=5.0",
-        (WidgetTester tester) async {
+    testWidgets("Plot PLOT TEST CONSTANT, get a horizontal line at y=5.0", (
+      WidgetTester tester,
+    ) async {
       // Given a channel list containing "PLOT TEST CONSTANT"
       final channelList = {"PLOT TEST CONSTANT": ChannelSetting()};
 
       // When I build the PlotWidget with the Graphic implementation
       await tester.pumpWidget(
-          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
+        _buildPlotWidget(channelList, impl: PlotImplementation.graphic),
+      );
       await waitForPlotDataToLoad(tester);
 
       // Then the plot contains 500 points with y = 5.0
-      assertPlotContainsHorizontalLine(tester,
-          numberOfPoints: 500, atY: 5.0, channelName: "PLOT TEST CONSTANT");
+      assertPlotContainsHorizontalLine(
+        tester,
+        numberOfPoints: 500,
+        atY: 5.0,
+        channelName: "PLOT TEST CONSTANT",
+      );
 
       // ... and the Y axis is labeled...
-      assertPlotYAxisTitles(tester,
-          titles: ["PLOT TEST CONSTANT"], units: ["V"]);
+      assertPlotYAxisTitles(
+        tester,
+        titles: ["PLOT TEST CONSTANT"],
+        units: ["V"],
+      );
 
       // ... and the Y-axis has limits of...
       assertPlotYAxisLimits(tester, min: 5, max: 5);
@@ -782,196 +962,241 @@ void main() {
     });
 
     testWidgets(
-        "Plot PLOT TEST RAMP, get a ramp starting at Y=0.0 and ending at y = 500.0",
-        (WidgetTester tester) async {
-      // Given a channel list containing "PLOT TEST RAMP"
-      final channelList = {"PLOT TEST RAMP": ChannelSetting()};
+      "Plot PLOT TEST RAMP, get a ramp starting at Y=0.0 and ending at y = 500.0",
+      (WidgetTester tester) async {
+        // Given a channel list containing "PLOT TEST RAMP"
+        final channelList = {"PLOT TEST RAMP": ChannelSetting()};
 
-      // When I build the PlotWidget with implementation = Graphic
-      await tester.pumpWidget(
-          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
-      await waitForPlotDataToLoad(tester);
+        // When I build the PlotWidget with implementation = Graphic
+        await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic),
+        );
+        await waitForPlotDataToLoad(tester);
 
-      // Then the plot contains a ramp with 500 points starting at Y=0.0
-      assertPlotContainsRamp(tester,
-          numberOfPoints: 500, startingAtY: 0.0, channelName: "PLOT TEST RAMP");
+        // Then the plot contains a ramp with 500 points starting at Y=0.0
+        assertPlotContainsRamp(
+          tester,
+          numberOfPoints: 500,
+          startingAtY: 0.0,
+          channelName: "PLOT TEST RAMP",
+        );
 
-      // ... and the Y-axis is labeled
-      assertPlotYAxisTitles(tester, titles: ["PLOT TEST RAMP"], units: ["V"]);
+        // ... and the Y-axis is labeled
+        assertPlotYAxisTitles(tester, titles: ["PLOT TEST RAMP"], units: ["V"]);
 
-      // ... and the limits for the Y-axis are 0 to 500
-      assertPlotYAxisLimits(tester, min: 0, max: 499);
+        // ... and the limits for the Y-axis are 0 to 500
+        assertPlotYAxisLimits(tester, min: 0, max: 499);
 
-      // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(tester, title: "Index");
-    });
-
-    testWidgets(
-        "Plot multiple plots and ensure that the Y and X axis limits are adjusted",
-        (WidgetTester tester) async {
-      final channelList = {"PLOT TEST SINE": ChannelSetting()};
-
-      // When I build the PlotWidget
-      await tester.pumpWidget(
-          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
-      await waitForPlotDataToLoad(tester);
-
-      // Ensure that the axis limits accomodate the sine plot test.
-      assertPlotXAxisLimits(tester, min: 0, max: 500);
-      assertPlotYAxisLimits(tester, min: -1, max: 1);
-
-      // Plot a second channel.
-      channelList["PLOT TEST CONSTANT"] = ChannelSetting();
-      await tester.pumpWidget(_buildPlotWidget(channelList));
-      await waitForPlotDataToLoad(tester);
-
-      // Ensure that the axis limits changed to accomodate the new plot.
-      assertPlotXAxisLimits(tester, min: 0, max: 500);
-      assertPlotYAxisLimits(tester, min: -1, max: 5);
-    });
+        // ... and the X-axis is labeled...
+        assertPlotXAxisTitle(tester, title: "Index");
+      },
+    );
 
     testWidgets(
-        "Plot PLOT TEST PARABOLA, get a parabola starting at X=-50 and ending at X=50",
-        (WidgetTester tester) async {
-      // Given a channel list containing "PLOT TEST PARABOLA"
-      final channelList = {"PLOT TEST PARABOLA": ChannelSetting()};
+      "Plot multiple plots and ensure that the Y and X axis limits are adjusted",
+      (WidgetTester tester) async {
+        final channelList = {"PLOT TEST SINE": ChannelSetting()};
 
-      // When I build the PlotWidget
-      await tester.pumpWidget(
-          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
-      await waitForPlotDataToLoad(tester);
+        // When I build the PlotWidget
+        await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic),
+        );
+        await waitForPlotDataToLoad(tester);
 
-      // Then the plot contains a parabola with 500 points starting at X=-250
-      assertPlotContainsParabola(tester,
+        // Ensure that the axis limits accomodate the sine plot test.
+        assertPlotXAxisLimits(tester, min: 0, max: 500);
+        assertPlotYAxisLimits(tester, min: -1, max: 1);
+
+        // Plot a second channel.
+        channelList["PLOT TEST CONSTANT"] = ChannelSetting();
+        await tester.pumpWidget(_buildPlotWidget(channelList));
+        await waitForPlotDataToLoad(tester);
+
+        // Ensure that the axis limits changed to accomodate the new plot.
+        assertPlotXAxisLimits(tester, min: 0, max: 500);
+        assertPlotYAxisLimits(tester, min: -1, max: 5);
+      },
+    );
+
+    testWidgets(
+      "Plot PLOT TEST PARABOLA, get a parabola starting at X=-50 and ending at X=50",
+      (WidgetTester tester) async {
+        // Given a channel list containing "PLOT TEST PARABOLA"
+        final channelList = {"PLOT TEST PARABOLA": ChannelSetting()};
+
+        // When I build the PlotWidget
+        await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic),
+        );
+        await waitForPlotDataToLoad(tester);
+
+        // Then the plot contains a parabola with 500 points starting at X=-250
+        assertPlotContainsParabola(
+          tester,
           numberOfPoints: 501,
           startingAtX: -250,
-          channelName: "PLOT TEST PARABOLA");
+          channelName: "PLOT TEST PARABOLA",
+        );
 
-      // ... and the Y-axis is labeled
-      assertPlotYAxisTitles(tester,
-          titles: ["PLOT TEST PARABOLA"], units: ["V"]);
+        // ... and the Y-axis is labeled
+        assertPlotYAxisTitles(
+          tester,
+          titles: ["PLOT TEST PARABOLA"],
+          units: ["V"],
+        );
 
-      // ... and the limits for the X-axis are 0 to 500
-      assertPlotXAxisLimits(tester, min: 0, max: 500);
+        // ... and the limits for the X-axis are 0 to 500
+        assertPlotXAxisLimits(tester, min: 0, max: 500);
 
-      // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(tester, title: "Index");
-    });
+        // ... and the X-axis is labeled...
+        assertPlotXAxisTitle(tester, title: "Index");
+      },
+    );
 
     testWidgets(
-        "Plot PLOT TEST SINE, get a sine wave starting at X=-250 and ending at X=250",
-        (WidgetTester tester) async {
-      // Given a channel list containing "PLOT TEST SINE"
-      final channelList = {"PLOT TEST SINE": ChannelSetting()};
+      "Plot PLOT TEST SINE, get a sine wave starting at X=-250 and ending at X=250",
+      (WidgetTester tester) async {
+        // Given a channel list containing "PLOT TEST SINE"
+        final channelList = {"PLOT TEST SINE": ChannelSetting()};
 
-      // When I build the PlotWidget
-      await tester.pumpWidget(
-          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
-      await waitForPlotDataToLoad(tester);
+        // When I build the PlotWidget
+        await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic),
+        );
+        await waitForPlotDataToLoad(tester);
 
-      // Then the plot contains a parabola with 500 points starting at X=-250
-      assertPlotContainsSineWave(tester,
+        // Then the plot contains a parabola with 500 points starting at X=-250
+        assertPlotContainsSineWave(
+          tester,
           numberOfPoints: 501,
           startingAtX: -250,
-          channelName: "PLOT TEST SINE");
+          channelName: "PLOT TEST SINE",
+        );
 
-      // ... and the Y-axis is labeled
-      assertPlotYAxisTitles(tester, titles: ["PLOT TEST SINE"], units: ["V"]);
+        // ... and the Y-axis is labeled
+        assertPlotYAxisTitles(tester, titles: ["PLOT TEST SINE"], units: ["V"]);
 
-      // ... and the limits for the X-axis are 0 to 500
-      assertPlotXAxisLimits(tester, min: 0, max: 500);
+        // ... and the limits for the X-axis are 0 to 500
+        assertPlotXAxisLimits(tester, min: 0, max: 500);
 
-      // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(tester, title: "Index");
-    });
-
-    testWidgets(
-        "Plot PLOT TEST SINE, get a progress indicator while data is fetched",
-        (WidgetTester tester) async {
-      // Given a channel list containing "PLOT TEST SINE"
-      final channelList = {"PLOT TEST SINE": ChannelSetting()};
-
-      // When I build the PlotWidget
-      await tester.pumpWidget(
-          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
-
-      // Then I should see the progress indicator
-      assertPlotLoadingIndicator(isVisible: true);
-      await waitForPlotDataToLoad(tester);
-    });
+        // ... and the X-axis is labeled...
+        assertPlotXAxisTitle(tester, title: "Index");
+      },
+    );
 
     testWidgets(
-        "Plot PLOT TEST PARABOLA 64K, get a parabola starting at X=-32767 and ending at X=32767",
-        (WidgetTester tester) async {
-      // Given a channel list containing "PLOT TEST PARABOLA"
-      final channelList = {"PLOT TEST PARABOLA 64K": ChannelSetting()};
+      "Plot PLOT TEST SINE, get a progress indicator while data is fetched",
+      (WidgetTester tester) async {
+        // Given a channel list containing "PLOT TEST SINE"
+        final channelList = {"PLOT TEST SINE": ChannelSetting()};
 
-      // When I build the PlotWidget
-      await tester.pumpWidget(
-          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
-      await waitForPlotDataToLoad(tester);
+        // When I build the PlotWidget
+        await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic),
+        );
 
-      // Then the plot contains a parabola with 500 points starting at X=-250
-      assertPlotContainsParabola(tester,
+        // Then I should see the progress indicator
+        assertPlotLoadingIndicator(isVisible: true);
+        await waitForPlotDataToLoad(tester);
+      },
+    );
+
+    testWidgets(
+      "Plot PLOT TEST PARABOLA 64K, get a parabola starting at X=-32767 and ending at X=32767",
+      (WidgetTester tester) async {
+        // Given a channel list containing "PLOT TEST PARABOLA"
+        final channelList = {"PLOT TEST PARABOLA 64K": ChannelSetting()};
+
+        // When I build the PlotWidget
+        await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic),
+        );
+        await waitForPlotDataToLoad(tester);
+
+        // Then the plot contains a parabola with 500 points starting at X=-250
+        assertPlotContainsParabola(
+          tester,
           numberOfPoints: 65535,
           startingAtX: -32767,
-          channelName: "PLOT TEST PARABOLA 64K");
+          channelName: "PLOT TEST PARABOLA 64K",
+        );
 
-      // ... and the Y-axis is labeled
-      assertPlotYAxisTitles(tester,
-          titles: ["PLOT TEST PARABOLA 64K"], units: ["V"]);
+        // ... and the Y-axis is labeled
+        assertPlotYAxisTitles(
+          tester,
+          titles: ["PLOT TEST PARABOLA 64K"],
+          units: ["V"],
+        );
 
-      // ... and the limits for the X-axis are -250 to 250
-      assertPlotXAxisLimits(tester, min: 0, max: 65534);
+        // ... and the limits for the X-axis are -250 to 250
+        assertPlotXAxisLimits(tester, min: 0, max: 65534);
 
-      // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(tester, title: "Index");
-    });
+        // ... and the X-axis is labeled...
+        assertPlotXAxisTitle(tester, title: "Index");
+      },
+    );
 
     testWidgets(
-        "Plot PLOT TEST NORMAL, get a normal distribution centered around 250",
-        (WidgetTester tester) async {
-      // Given a channel list containing "PLOT TEST PARABOLA"
-      final channelList = {"PLOT TEST NORMAL": ChannelSetting()};
+      "Plot PLOT TEST NORMAL, get a normal distribution centered around 250",
+      (WidgetTester tester) async {
+        // Given a channel list containing "PLOT TEST PARABOLA"
+        final channelList = {"PLOT TEST NORMAL": ChannelSetting()};
 
-      // When I build the PlotWidget
-      await tester.pumpWidget(
-          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
-      await waitForPlotDataToLoad(tester);
+        // When I build the PlotWidget
+        await tester.pumpWidget(
+          _buildPlotWidget(channelList, impl: PlotImplementation.graphic),
+        );
+        await waitForPlotDataToLoad(tester);
 
-      // Then the plot contains a normal distribution around x=250
-      assertPlotContainsNormalDistribution(tester,
+        // Then the plot contains a normal distribution around x=250
+        assertPlotContainsNormalDistribution(
+          tester,
           numberOfPoints: 500,
           centeredAtX: 250,
-          channelName: "PLOT TEST NORMAL");
+          channelName: "PLOT TEST NORMAL",
+        );
 
-      // ... and the Y-axis is labeled
-      assertPlotYAxisTitles(tester, titles: ["PLOT TEST NORMAL"], units: ["V"]);
+        // ... and the Y-axis is labeled
+        assertPlotYAxisTitles(
+          tester,
+          titles: ["PLOT TEST NORMAL"],
+          units: ["V"],
+        );
 
-      // ... and the limits for the X-axis are 0 to 499
-      assertPlotXAxisLimits(tester, min: 0.0, max: 499.0);
+        // ... and the limits for the X-axis are 0 to 499
+        assertPlotXAxisLimits(tester, min: 0.0, max: 499.0);
 
-      // ... and the X-axis is labeled...
-      assertPlotXAxisTitle(tester, title: "Index");
-    });
+        // ... and the X-axis is labeled...
+        assertPlotXAxisTitle(tester, title: "Index");
+      },
+    );
 
-    testWidgets("Plot API TEST CONST, get a horizontal line at y=5.0",
-        (WidgetTester tester) async {
+    testWidgets("Plot API TEST CONST, get a horizontal line at y=5.0", (
+      WidgetTester tester,
+    ) async {
       // Given a channel list containing "PLOT TEST PARABOLA"
       final channelList = {"API TEST CONSTANT": ChannelSetting()};
 
       // When I build the PlotWidget with an AcsysProvider
       await tester.pumpWidget(
-          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
+        _buildPlotWidget(channelList, impl: PlotImplementation.graphic),
+      );
       await waitForPlotDataToLoad(tester);
 
       // Then the plot contains a parabola with 500 points starting at X=-250
-      assertPlotContainsHorizontalLine(tester,
-          numberOfPoints: 500, atY: 5.0, channelName: "API TEST CONSTANT");
+      assertPlotContainsHorizontalLine(
+        tester,
+        numberOfPoints: 500,
+        atY: 5.0,
+        channelName: "API TEST CONSTANT",
+      );
 
       // ... and the Y-axis is labeled
-      assertPlotYAxisTitles(tester,
-          titles: ["API TEST CONSTANT"], units: ["A"]);
+      assertPlotYAxisTitles(
+        tester,
+        titles: ["API TEST CONSTANT"],
+        units: ["A"],
+      );
 
       // ... and the limits for the X-axis are -250 to 250
       assertPlotXAxisLimits(tester, min: 0, max: 499);
@@ -980,16 +1205,18 @@ void main() {
       assertPlotXAxisTitle(tester, title: "Index");
     });
 
-    testWidgets("Verify plot color applied to newly added channel.",
-        (WidgetTester tester) async {
+    testWidgets("Verify plot color applied to newly added channel.", (
+      WidgetTester tester,
+    ) async {
       // Given a channel list containing "PLOT TEST PARABOLA"
       final channelList = {
-        "PLOT TEST CONSTANT": ChannelSetting(lineColor: PlotColor.blue.color)
+        "PLOT TEST CONSTANT": ChannelSetting(lineColor: PlotColor.blue.color),
       };
 
       // When I build the PlotWidget
       await tester.pumpWidget(
-          _buildPlotWidget(channelList, impl: PlotImplementation.graphic));
+        _buildPlotWidget(channelList, impl: PlotImplementation.graphic),
+      );
       await waitForPlotDataToLoad(tester);
 
       // Verify that color is as expected.
@@ -1001,45 +1228,53 @@ void main() {
 }
 
 void assertPlotImplementationIs(
-    Finder finder, PlotImplementation implementation) {
+  Finder finder,
+  PlotImplementation implementation,
+) {
   final widget = finder.evaluate().first.widget as PlotWidget;
   expect(widget.implementation, implementation);
 }
 
-Widget _buildPlotWidget(Map<String, ChannelSetting> channelList,
-    {PlotImplementation impl = PlotImplementation.flCharts,
-    int updateDelay = 0,
-    int nAcquisitions = 0,
-    int? triggerEvent,
-    ScalarDataOptions? scalarDataOptions,
-    bool isPersistent = false,
-    ACSysServiceAPI? service,
-    StandardPlotDAQ? daqService,
-    Function(double deltaX)? adjustXAxisLimits,
-    Function(double deltaY)? adjustYAxisLimits,
-    Function(PlotReply reply)? onPlotUpdate,
-    Function(ConnectionState streamConnectionState)?
-        onStreamConnectionStateChange,
-    double? xMin,
-    double? xMax}) {
+Widget _buildPlotWidget(
+  Map<String, ChannelSetting> channelList, {
+  PlotImplementation impl = PlotImplementation.flCharts,
+  int updateDelay = 0,
+  int nAcquisitions = 0,
+  int? triggerEvent,
+  ScalarDataOptions? scalarDataOptions,
+  bool isPersistent = false,
+  ACSysServiceAPI? service,
+  StandardPlotDAQ? daqService,
+  Function(double deltaX)? adjustXAxisLimits,
+  Function(double deltaY)? adjustYAxisLimits,
+  Function(PlotReply reply)? onPlotUpdate,
+  Function(ConnectionState streamConnectionState)?
+  onStreamConnectionStateChange,
+  double? xMin,
+  double? xMax,
+}) {
   daqService ??= StandardPlotDAQ();
   return MaterialApp(
-      home: Scaffold(
-          body: ACSysProvider.factory(service: service ?? FakeACSysService())(
-              child: PlotWidget(
-                  plotChannels: channelList,
-                  xMin: xMin,
-                  xMax: xMax,
-                  implementation: impl,
-                  plotData: PlotData(),
-                  updateDelay: updateDelay,
-                  onStreamConnectionStateChange: onStreamConnectionStateChange,
-                  triggerEvent: triggerEvent,
-                  nAcquisitions: nAcquisitions,
-                  onPlotUpdate: onPlotUpdate,
-                  isPersistent: isPersistent,
-                  scalarDataOptions: scalarDataOptions,
-                  adjustXAxisLimits: adjustXAxisLimits,
-                  adjustYAxisLimits: adjustYAxisLimits,
-                  daqService: daqService))));
+    home: Scaffold(
+      body: ACSysProvider.factory(service: service ?? FakeACSysService())(
+        child: PlotWidget(
+          plotChannels: channelList,
+          xMin: xMin,
+          xMax: xMax,
+          implementation: impl,
+          plotData: PlotData(),
+          updateDelay: updateDelay,
+          onStreamConnectionStateChange: onStreamConnectionStateChange,
+          triggerEvent: triggerEvent,
+          nAcquisitions: nAcquisitions,
+          onPlotUpdate: onPlotUpdate,
+          isPersistent: isPersistent,
+          scalarDataOptions: scalarDataOptions,
+          adjustXAxisLimits: adjustXAxisLimits,
+          adjustYAxisLimits: adjustYAxisLimits,
+          daqService: daqService,
+        ),
+      ),
+    ),
+  );
 }

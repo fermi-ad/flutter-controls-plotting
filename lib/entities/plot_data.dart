@@ -145,7 +145,9 @@ class PlotData {
   }
 
   List<List<PlottingPoint>> __processDeviceValue(
-      List<PlotPoint> plotPoints, double? triggerTimestamp) {
+    List<PlotPoint> plotPoints,
+    double? triggerTimestamp,
+  ) {
     List<List<PlottingPoint>> points = [];
 
     if (plotPoints.isNotEmpty && plotPoints.first.value is DevScalar) {
@@ -186,23 +188,27 @@ class PlotData {
         points[0].add(PlottingPoint(x: time, y: deviceValue.value, t: t));
       } else {
         throw Exception(
-            'Unsupported device value type: ${deviceValue.runtimeType}');
+          'Unsupported device value type: ${deviceValue.runtimeType}',
+        );
       }
     }
 
     return points;
   }
 
-  void filterPoints(
-      {required bool isTimedScalarData,
-      required bool isPersistent,
-      required bool isOneShot,
-      required List<PlotChannelData> plotChannels,
-      required double? triggerTimestamp}) {
+  void filterPoints({
+    required bool isTimedScalarData,
+    required bool isPersistent,
+    required bool isOneShot,
+    required List<PlotChannelData> plotChannels,
+    required double? triggerTimestamp,
+  }) {
     for (final plotChannel in plotChannels) {
       if (!channelHasErrorOrNoPoints(plotChannel)) {
-        var newSegments =
-            __processDeviceValue(plotChannel.points, triggerTimestamp);
+        var newSegments = __processDeviceValue(
+          plotChannel.points,
+          triggerTimestamp,
+        );
 
         if (!points.containsKey(plotChannel.name)) {
           points[plotChannel.name] = [[]];
@@ -346,27 +352,29 @@ class PlotData {
     for (var segments in points.values) {
       for (var pointList in segments) {
         (minY, maxY, minX, maxX) = _getLimitsPerPoints(
-            points: pointList,
-            minY: minY,
-            maxY: maxY,
-            minX: minX,
-            maxX: maxX,
-            untilXMin: untilXMin,
-            untilXMax: untilXMax);
+          points: pointList,
+          minY: minY,
+          maxY: maxY,
+          minX: minX,
+          maxX: maxX,
+          untilXMin: untilXMin,
+          untilXMax: untilXMax,
+        );
       }
     }
 
     setLimits(minX: minX, maxX: maxX, minY: minY, maxY: maxY);
   }
 
-  void findLimits(
-      {required List<PlotChannelData> plotChannels,
-      required double? confMinY,
-      required double? confMaxY,
-      required double? confMinX,
-      required double? confMaxX,
-      required double? timeDelta,
-      required double? triggerTimestamp}) {
+  void findLimits({
+    required List<PlotChannelData> plotChannels,
+    required double? confMinY,
+    required double? confMaxY,
+    required double? confMinX,
+    required double? confMaxX,
+    required double? timeDelta,
+    required double? triggerTimestamp,
+  }) {
     double? minY = _minY;
     double? maxY = _maxY;
     double? minX = _minX;
@@ -377,11 +385,18 @@ class PlotData {
         continue;
       }
 
-      final segments =
-          __processDeviceValue(plotChannel.points, triggerTimestamp);
+      final segments = __processDeviceValue(
+        plotChannel.points,
+        triggerTimestamp,
+      );
       for (final points in segments) {
         (minY, maxY, minX, maxX) = _getLimitsPerPoints(
-            points: points, minY: minY, maxY: maxY, minX: minX, maxX: maxX);
+          points: points,
+          minY: minY,
+          maxY: maxY,
+          minX: minX,
+          maxX: maxX,
+        );
       }
     }
     if (timeDelta == null) {
@@ -423,14 +438,15 @@ class PlotData {
     setLimits(minX: minX, maxX: maxX, minY: minY, maxY: maxY);
   }
 
-  (double?, double?, double?, double?) _getLimitsPerPoints(
-      {required List<PlottingPoint> points,
-      required double? minY,
-      required double? maxY,
-      required double? minX,
-      required double? maxX,
-      double? untilXMin,
-      double? untilXMax}) {
+  (double?, double?, double?, double?) _getLimitsPerPoints({
+    required List<PlottingPoint> points,
+    required double? minY,
+    required double? maxY,
+    required double? minX,
+    required double? maxX,
+    double? untilXMin,
+    double? untilXMax,
+  }) {
     for (int i = points.length - 1; i >= 0; i--) {
       final point = points[i];
       double yPoint = point.y;
@@ -491,8 +507,9 @@ class PlotData {
     }
   }
 
-  void cleanUpPoints(
-      {Iterable<String> keepChannelList = const Iterable.empty()}) {
+  void cleanUpPoints({
+    Iterable<String> keepChannelList = const Iterable.empty(),
+  }) {
     flchartCache.clearAll();
     List<String> garbageChannels = [];
     for (var channelName in points.keys) {

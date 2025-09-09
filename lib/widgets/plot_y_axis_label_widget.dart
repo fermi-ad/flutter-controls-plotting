@@ -7,12 +7,13 @@ class PlotYAxisLabelWidget extends StatelessWidget {
   final double? defaultMin;
   final double? defaultMax;
 
-  const PlotYAxisLabelWidget(
-      {super.key,
-      required this.normalizedValue,
-      required this.channels,
-      this.defaultMin,
-      this.defaultMax});
+  const PlotYAxisLabelWidget({
+    super.key,
+    required this.normalizedValue,
+    required this.channels,
+    this.defaultMin,
+    this.defaultMax,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,8 +22,9 @@ class PlotYAxisLabelWidget extends StatelessWidget {
     for (final channelName in channels.keys) {
       final label = _calculateValue(channelName).toStringAsFixed(2);
 
-      labels.add(Text(label,
-          style: TextStyle(color: channels[channelName]!.lineColor)));
+      labels.add(
+        Text(label, style: TextStyle(color: channels[channelName]!.lineColor)),
+      );
     }
 
     return Column(children: labels);

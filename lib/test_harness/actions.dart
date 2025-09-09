@@ -42,8 +42,10 @@ Future<void> pumpUntilFound(
 
 Future<void> waitForPlotDataToLoad(WidgetTester tester) async {
   await pumpUntilGone(
-      tester,
-      find.descendant(
-          of: find.byType(PlotWidget),
-          matching: find.byType(LinearProgressIndicator)));
+    tester,
+    find.descendant(
+      of: find.byType(PlotWidget),
+      matching: find.byType(LinearProgressIndicator),
+    ),
+  );
 }
