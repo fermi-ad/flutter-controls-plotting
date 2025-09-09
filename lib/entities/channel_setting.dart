@@ -7,13 +7,19 @@ class ChannelSetting {
   double? min;
   double? max;
 
-  ChannelSetting(
-      {this.lineColor, this.plotMarker = PlotMarker.line, this.min, this.max});
+  ChannelSetting({
+    this.lineColor,
+    this.plotMarker = PlotMarker.line,
+    this.min,
+    this.max,
+  });
 
   // Clone functionality.
   static ChannelSetting from(ChannelSetting setting) {
     var newChannelSetting = ChannelSetting(
-        lineColor: setting.lineColor, plotMarker: setting.plotMarker);
+      lineColor: setting.lineColor,
+      plotMarker: setting.plotMarker,
+    );
     return newChannelSetting;
   }
 }
