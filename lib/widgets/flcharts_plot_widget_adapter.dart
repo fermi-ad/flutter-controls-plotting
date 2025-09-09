@@ -354,7 +354,8 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
           minX: widget.xMin,
           maxX: widget.xMax,
           exitForScalar: exitForScalar,
-          appendExistingPoints: arrayNonPersistentData || arrayPersistentData,
+          appendExistingArrayPoints:
+              arrayNonPersistentData || arrayPersistentData,
         );
 
         lineChartList.add(
