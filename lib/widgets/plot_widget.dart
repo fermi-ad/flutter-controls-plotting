@@ -41,6 +41,8 @@ class PlotWidget extends StatefulWidget {
   final bool isPersistent;
   final ScalarDataOptions? scalarDataOptions;
 
+  final bool forceStreamReset;
+
   final Function(String channelName)? onInternalChannelSettingChange;
 
   final Function(PlotReply update)? onPlotUpdate;
@@ -81,6 +83,7 @@ class PlotWidget extends StatefulWidget {
     this.adjustXAxisLimits,
     this.adjustYAxisLimits,
     this.implementation = PlotImplementation.flCharts,
+    this.forceStreamReset = false,
   });
 
   @override
@@ -552,6 +555,7 @@ class PlotState extends State<PlotWidget> {
   }
 
   bool get _streamShouldReset =>
+      widget.forceStreamReset ||
       !((mapEquals(widget.plotChannels, _channels) &&
           _updateDelay == widget.updateDelay &&
           _nAcquisitions == widget.nAcquisitions &&
