@@ -77,8 +77,12 @@ class CustomDotPainter extends FlDotPainter {
   final String? character;
   final IconData? icon;
 
-  CustomDotPainter(
-      {required this.size, required this.color, this.character, this.icon});
+  CustomDotPainter({
+    required this.size,
+    required this.color,
+    this.character,
+    this.icon,
+  });
 
   @override
   void draw(Canvas canvas, FlSpot spot, Offset offsetInCanvas) {
@@ -96,25 +100,22 @@ class CustomDotPainter extends FlDotPainter {
       );
       textPainter.layout();
       textPainter.paint(
-          canvas,
-          offsetInCanvas -
-              Offset(textPainter.width / 2, textPainter.height / 2));
+        canvas,
+        offsetInCanvas - Offset(textPainter.width / 2, textPainter.height / 2),
+      );
     } else if (character != null) {
       final textPainter = TextPainter(
         text: TextSpan(
           text: character,
-          style: TextStyle(
-            fontSize: size,
-            color: color,
-          ),
+          style: TextStyle(fontSize: size, color: color),
         ),
         textDirection: TextDirection.ltr,
       );
       textPainter.layout();
       textPainter.paint(
-          canvas,
-          offsetInCanvas -
-              Offset(textPainter.width / 2, textPainter.height / 2));
+        canvas,
+        offsetInCanvas - Offset(textPainter.width / 2, textPainter.height / 2),
+      );
     }
   }
 

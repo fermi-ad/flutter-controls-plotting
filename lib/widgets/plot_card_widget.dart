@@ -10,13 +10,19 @@ class PlotCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Card(
-      color: Theme.of(context).colorScheme.primaryContainer,
-      child: Column(children: [
+    color: Theme.of(context).colorScheme.primaryContainer,
+    child: Column(
+      children: [
         title == null
             ? Container()
             : Padding(
                 padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
-                child: Text(title!)),
-        Expanded(child: Padding(padding: const EdgeInsets.all(10), child: plot))
-      ]));
+                child: Text(title!),
+              ),
+        Expanded(
+          child: Padding(padding: const EdgeInsets.all(10), child: plot),
+        ),
+      ],
+    ),
+  );
 }

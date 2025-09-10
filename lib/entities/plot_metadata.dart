@@ -80,6 +80,8 @@ class PlotMetadata with ChangeNotifier {
   }
 
   void cleanUp() {
+    numberOfPoints = 0;
+    reducedPoints = null;
     displayedArrayTime = null;
     _latestDataEpochTime = null;
     _latestRequestEpochTime = null;

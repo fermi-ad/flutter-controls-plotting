@@ -145,11 +145,16 @@ class PlotData {
     return true;
   }
 
-  List<PlottingPoint> __processDeviceValue(
+  List<List<PlottingPoint>> __processDeviceValue(
     List<PlotPoint> plotPoints,
     double? triggerTimestamp,
   ) {
-    List<PlottingPoint> points = [];
+    List<List<PlottingPoint>> points = [];
+
+    if (plotPoints.isNotEmpty && plotPoints.first.value is DevScalar) {
+      points.add([]);
+    }
+
     for (var plotPoint in plotPoints) {
       var deviceValue = plotPoint.value;
       var time = plotPoint.t;
@@ -168,10 +173,11 @@ class PlotData {
         }
 
         var array = deviceValue.value;
+        points.add([]);
         for (var x = 0; x < array.length; x++) {
           var y = array[x];
 
-          points.add(PlottingPoint(x: x.toDouble(), y: y, t: time));
+          points.last.add(PlottingPoint(x: x.toDouble(), y: y, t: time));
         }
       } else if (deviceValue is DevScalar) {
         var t = time;
@@ -180,7 +186,7 @@ class PlotData {
           t = triggerTimestamp + t;
         }
 
-        points.add(PlottingPoint(x: time, y: deviceValue.value, t: t));
+        points[0].add(PlottingPoint(x: time, y: deviceValue.value, t: t));
       } else {
         throw Exception(
           'Unsupported device value type: ${deviceValue.runtimeType}',
@@ -201,7 +207,7 @@ class PlotData {
   }) {
     for (final plotChannel in plotChannels) {
       if (!channelHasErrorOrNoPoints(plotChannel)) {
-        var newPoints = __processDeviceValue(
+        var newSegments = __processDeviceValue(
           plotChannel.points,
           triggerTimestamp,
         );
@@ -212,44 +218,48 @@ class PlotData {
 
         var segments = points[plotChannel.name]!;
         var pointsList = segments.last;
+        bool oneShotCleared = false;
 
-        if (scalarEventMode) {
-          for (var point in newPoints) {
-            // Check if a new event should be started.
-            var lastX = pointsList.isNotEmpty ? pointsList.last.x : null;
-            var newX = point.x;
+        for (final newPoints in newSegments) {
+          if (scalarEventMode) {
+            for (var point in newPoints) {
+              // Check if a new event should be started.
+              var lastX = pointsList.isNotEmpty ? pointsList.last.x : null;
+              var newX = point.x;
 
-            if (lastX != null && newX < lastX) {
-              if (!isPersistent) {
-                // Clear all events.
-                _clearSegments(segments);
+              if (lastX != null && newX < lastX) {
+                if (!isPersistent) {
+                  // Clear all events.
+                  _clearSegments(segments);
+                }
+                // Reset point limits based on the current data since data is being removed.
+                findPointsLimits(channelSettings: channelSettings);
+                // New event
+                segments.add([]);
+                // Reload pointsList
+                pointsList = segments.last;
               }
-              // Reset point limits based on the current data since data is being removed.
-              findPointsLimits(channelSettings: channelSettings);
-              // New event
-              segments.add([]);
+              var lastIndex = pointsList.length;
+              pointsList.insert(lastIndex, point);
+            }
+          } else {
+            if (!isTimedScalarData && pointsList.isNotEmpty) {
+              if (isOneShot && !oneShotCleared) {
+                _clearSegments(segments);
+                oneShotCleared = true;
+              }
               // Reload pointsList
-              pointsList = segments.last;
+              pointsList = [];
+              // New array data, new segment.
+              segments.add(pointsList);
             }
             var lastIndex = pointsList.length;
-            pointsList.insert(lastIndex, point);
+            pointsList.insertAll(lastIndex, newPoints);
           }
-        } else {
-          if (!isTimedScalarData && pointsList.isNotEmpty) {
-            if (isOneShot) {
-              _clearSegments(segments);
-            }
-            // Reload pointsList
-            pointsList = [];
-            // New array data, new segment.
-            segments.add(pointsList);
-          }
-          var lastIndex = pointsList.length;
-          pointsList.insertAll(lastIndex, newPoints);
-        }
 
-        // Add bytes from the points added.
-        _appendPointsCalculation(newPoints);
+          // Add bytes from the points added.
+          _appendPointsCalculation(newPoints);
+        }
         _purgePointsOverData();
 
         // Update last response time.
@@ -389,20 +399,30 @@ class PlotData {
         continue;
       }
 
-      final points = __processDeviceValue(plotChannel.points, triggerTimestamp);
-      final name = plotChannel.name;
-
-      // Access channel setting for this channel
-      ChannelSetting? channelSetting = channelSettings?[name];
-
-      (minY, maxY, minX, maxX) = _getLimitsPerPoints(
-        points: points,
-        minY: minY,
-        maxY: maxY,
-        minX: minX,
-        maxX: maxX,
-        channelSetting: channelSetting,
+      final segments = __processDeviceValue(
+        plotChannel.points,
+        triggerTimestamp,
       );
+      for (final points in segments) {
+        final name = plotChannel.name;
+
+        // Access channel setting for this channel
+        ChannelSetting? channelSetting = channelSettings?[name];
+
+        (minY, maxY, minX, maxX) = _getLimitsPerPoints(
+          points: points,
+
+          minY: minY,
+
+          maxY: maxY,
+
+          minX: minX,
+
+          maxX: maxX,
+
+          channelSetting: channelSetting,
+        );
+      }
     }
     if (timeDelta == null) {
       if (confMinX != null) {

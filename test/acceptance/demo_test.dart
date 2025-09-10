@@ -10,8 +10,9 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('Smoke tests', () {
-    testWidgets("Start app, title should be displayed",
-        (WidgetTester tester) async {
+    testWidgets("Start app, title should be displayed", (
+      WidgetTester tester,
+    ) async {
       // Given nothing
       // When I launch the plotting application
       await startDemoApp(tester);
@@ -22,18 +23,21 @@ void main() {
   });
 
   group("Implementation control", () {
-    testWidgets("Start app, Fl_Charts is the selected implementation",
-        (WidgetTester tester) async {
+    testWidgets("Start app, Fl_Charts is the selected implementation", (
+      WidgetTester tester,
+    ) async {
       // Given nothing
       // When I launch the plotting application
       await startDemoApp(tester);
 
       // Then Fl_Charts is the selected implementation
       expect(
-          find.descendant(
-              of: find.byType(DropdownMenu<String>),
-              matching: find.text("Fl_Charts")),
-          findsNWidgets(2));
+        find.descendant(
+          of: find.byType(DropdownMenu<String>),
+          matching: find.text("Fl_Charts"),
+        ),
+        findsNWidgets(2),
+      );
 
       // ... and flCharts widgets are being displayed
       expect(find.byType(LineChart), findsAtLeast(1));
@@ -42,8 +46,9 @@ void main() {
       expect(find.byType(Chart), findsNothing);
     });
 
-    testWidgets("Select Graphic, Plot Widgets change to Graphic implementation",
-        (WidgetTester tester) async {
+    testWidgets("Select Graphic, Plot Widgets change to Graphic implementation", (
+      WidgetTester tester,
+    ) async {
       // Given the application is running with Plot Implementation set to Fl_Charts
       await startDemoApp(tester);
 

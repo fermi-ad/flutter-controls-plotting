@@ -37,6 +37,7 @@ class FlchartCache {
     double? minY,
     double? maxY,
     bool exitForScalar = false,
+    bool appendExistingArrayPoints = false,
   }) {
     if (!_resetCache) {
       _resetCache = shouldResetCache(
@@ -79,6 +80,17 @@ class FlchartCache {
       startIndex = lastProcessedIndex[channelName]![segmentIndex] + 1;
 
       if (startIndex >= points.length) {
+        if (appendExistingArrayPoints) {
+          totalPoints += ((maxX ?? points.length - 1) - (minX ?? 0) + 1)
+              .toInt();
+
+          if (minX != null && minX > 0) {
+            totalPoints += 1;
+          }
+          if (maxX != null && maxX < points.length - 1) {
+            totalPoints += 1;
+          }
+        }
         return flSpots;
       }
     } else {
