@@ -457,6 +457,8 @@ class PlotData {
     double? xRangeMax,
     ChannelSetting? channelSetting,
   }) {
+    minY = null;
+    maxY = null;
     for (int i = points.length - 1; i >= 0; i--) {
       final point = points[i];
       double yPoint = point.y;
@@ -466,16 +468,31 @@ class PlotData {
       if (xRangeMax != null && xPoint > xRangeMax) {
         continue;
       }
-
-      if (minY == null) {
-        minY = yPoint;
+      if (channelSetting != null && channelSetting.isLogScale) {
+        if (yPoint > 0) {
+          double logY = log(yPoint);
+          if (minY == null) {
+            minY = logY;
+          } else {
+            minY = min(logY, minY);
+          }
+          if (maxY == null) {
+            maxY = logY;
+          } else {
+            maxY = max(logY, maxY);
+          }
+        }
       } else {
-        minY = min(yPoint, minY);
-      }
-      if (maxY == null) {
-        maxY = yPoint;
-      } else {
-        maxY = max(yPoint, maxY);
+        if (minY == null) {
+          minY = yPoint;
+        } else {
+          minY = min(yPoint, minY);
+        }
+        if (maxY == null) {
+          maxY = yPoint;
+        } else {
+          maxY = max(yPoint, maxY);
+        }
       }
 
       if (minX == null) {
@@ -495,29 +512,37 @@ class PlotData {
     }
 
     if (channelSetting != null) {
+      // Handle constant data by adding a small gap for visibility
+      double? adjustedMinY = minY;
+      double? adjustedMaxY = maxY;
+
+      if (minY != null && maxY != null && minY == maxY) {
+        // Constant data detected - add a small gap for visibility
+        double constantValue = minY;
+        double gap;
+
+        if (constantValue == 0) {
+          // For zero values, use a fixed small gap
+          gap = 0.1;
+        } else {
+          // For non-zero values, use 10% of the absolute value as gap
+          gap = constantValue.abs() * 0.1;
+        }
+
+        adjustedMinY = constantValue - gap;
+        adjustedMaxY = constantValue + gap;
+      }
+
       // Priority: user-defined confMinY/confMaxY > calculated values
       if (channelSetting.confMinY != null) {
         channelSetting.finalMinY = channelSetting.confMinY;
-      } else if (channelSetting.isLogScale) {
-        if (minY != null && minY > 0) {
-          channelSetting.finalMinY = log(minY);
-        } else if (minY != null && minY <= 0) {
-          channelSetting.finalMinY = log(0.001);
-        }
       } else {
-        channelSetting.finalMinY = minY;
+        channelSetting.finalMinY = adjustedMinY;
       }
-
       if (channelSetting.confMaxY != null) {
         channelSetting.finalMaxY = channelSetting.confMaxY;
-      } else if (channelSetting.isLogScale) {
-        if (maxY != null && maxY > 0) {
-          channelSetting.finalMaxY = log(maxY);
-        } else if (maxY != null && maxY <= 0) {
-          channelSetting.finalMaxY = log(0.001);
-        }
       } else {
-        channelSetting.finalMaxY = maxY;
+        channelSetting.finalMaxY = adjustedMaxY;
       }
     }
     return (minY, maxY, minX, maxX);
