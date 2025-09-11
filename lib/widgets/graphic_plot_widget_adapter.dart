@@ -1,7 +1,7 @@
 part of plotadapter;
 
 class GraphicPlotWidgetAdapter extends PlotWidgetAdapter {
-  GraphicPlotWidgetAdapter({required super.widget, super.plotReply});
+  GraphicPlotWidgetAdapter({required super.plotWidget, super.plotReply});
 
   @override
   Widget buildPlot() {
@@ -50,7 +50,9 @@ class GraphicPlotWidgetAdapter extends PlotWidgetAdapter {
     marks: [
       LineMark(
         position: Varset('Index') * Varset('Value') / Varset('Channel'),
-        color: (widget.plotChannels.isEmpty || widget.plotChannels.length == 1)
+        color:
+            (plotWidget.plotChannels.isEmpty ||
+                plotWidget.plotChannels.length == 1)
             ? ColorEncode(value: _channelColorList.first)
             : ColorEncode(variable: "Channel", values: _channelColorList),
       ),
@@ -104,9 +106,9 @@ class GraphicPlotWidgetAdapter extends PlotWidgetAdapter {
     return data;
   }
 
-  List<Color> get _channelColorList => widget.plotChannels.isEmpty
+  List<Color> get _channelColorList => plotWidget.plotChannels.isEmpty
       ? [Colors.red]
-      : widget.plotChannels.keys
+      : plotWidget.plotChannels.keys
             .map((String channelName) => lineColorForChannel(channelName))
             .toList();
 }

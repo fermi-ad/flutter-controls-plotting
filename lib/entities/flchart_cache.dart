@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_controls_plotting/entities/plotting_point.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plotting_fl_spot.dart';
@@ -110,6 +112,15 @@ class FlchartCache {
       PlottingPoint point = points[i];
       var x = point.x;
       var y = point.y;
+
+      if (channelSetting.isLogScale) {
+        if (y <= 0) {
+          // For log scale, skip non-positive values.
+          continue;
+        }
+        // Use natural logarithm (base e)
+        y = log(y);
+      }
 
       // Skip points based on the calculated skip count for data logger
       if (skipIndexCount != null && skipIndexCount > 1) {
@@ -237,8 +248,8 @@ class FlchartCache {
     required double? minY,
     required double? maxY,
   }) {
-    final max = channelSetting.max ?? maxY ?? 1;
-    final min = channelSetting.min ?? minY ?? 0;
+    final max = channelSetting.finalMaxY ?? maxY ?? 1;
+    final min = channelSetting.finalMinY ?? minY ?? 0;
 
     if (min == max) {
       return 0;
