@@ -73,8 +73,8 @@ void assertPlotXAxisLimits(
   required double max,
 }) {
   final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
-  expect(plotState.minX, closeTo(min, 0.01));
-  expect(plotState.maxX, closeTo(max, 0.01));
+  expect(plotState.minXAxis, closeTo(min, 0.01));
+  expect(plotState.maxXAxis, closeTo(max, 0.01));
 }
 
 void assertConfigTimeLimits(
@@ -105,8 +105,8 @@ void assertPlotYAxisLimits(
 }) {
   final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
 
-  expect(plotState.minY, closeTo(min, 0.01));
-  expect(plotState.maxY, closeTo(max, 0.01));
+  expect(plotState.minYAxis, closeTo(min, 0.01));
+  expect(plotState.maxYAxis, closeTo(max, 0.01));
 }
 
 void assertPlotYAxisLabel({

@@ -22,10 +22,10 @@ class PlotWidget extends StatefulWidget {
   final PlotDAQService daqService;
   final PlotData plotData;
 
-  final double? yMin;
-  final double? yMax;
-  final double? xMin;
-  final double? xMax;
+  final double? confMinY;
+  final double? confMaxY;
+  final double? confMinX;
+  final double? confMaxX;
 
   final double? dataLoggerStartTime;
   final double? dataLoggerEndTime;
@@ -61,10 +61,10 @@ class PlotWidget extends StatefulWidget {
     this.plotChannels = const <String, ChannelSetting>{},
     required this.daqService,
     required this.plotData,
-    this.yMin,
-    this.yMax,
-    this.xMin,
-    this.xMax,
+    this.confMinY,
+    this.confMaxY,
+    this.confMinX,
+    this.confMaxX,
     this.dataLoggerStartTime,
     this.dataLoggerEndTime,
     this.updateDelay = 0,
@@ -145,13 +145,13 @@ class PlotState extends State<PlotWidget> {
             .toList()
       : [];
 
-  double? get minY => widget.plotData.minY;
+  double? get minYAxis => widget.plotData.minY;
 
-  double? get maxY => widget.plotData.maxY;
+  double? get maxYAxis => widget.plotData.maxY;
 
-  double? get minX => widget.plotData.minX;
+  double? get minXAxis => widget.plotData.minX;
 
-  double? get maxX => widget.plotData.maxX;
+  double? get maxXAxis => widget.plotData.maxX;
 
   String get xAxisTitle => _plotReply != null ? _plotReply!.xAxisUnits : "";
 
@@ -365,7 +365,7 @@ class PlotState extends State<PlotWidget> {
     switch (widget.implementation) {
       case PlotImplementation.flCharts:
         _adapter = FlchartsPlotWidgetAdapter(
-          widget: widget,
+          plotWidget: widget,
           isShowLabels: widget.isShowLabels,
           plotReply: _plotStreamMetadata.plotReply,
         );
@@ -373,14 +373,14 @@ class PlotState extends State<PlotWidget> {
 
       case PlotImplementation.graphic:
         _adapter = GraphicPlotWidgetAdapter(
-          widget: widget,
+          plotWidget: widget,
           plotReply: _plotStreamMetadata.plotReply,
         );
         break;
 
       case PlotImplementation.fermi:
         _adapter = FermiPlotWidgetAdapter(
-          widget: widget,
+          plotWidget: widget,
           plotReply: _plotStreamMetadata.plotReply,
         );
         break;
@@ -498,11 +498,12 @@ class PlotState extends State<PlotWidget> {
 
     widget.plotData.findLimits(
       plotChannels: plotChannels,
-      confMinY: widget.yMin,
-      confMaxY: widget.yMax,
-      confMinX: widget.xMin,
-      confMaxX: widget.xMax,
+      confMinY: widget.confMinY,
+      confMaxY: widget.confMaxY,
+      confMinX: widget.confMinX,
+      confMaxX: widget.confMaxX,
       timeDelta: widget.scalarDataOptions?.timeDelta,
+      channelSettings: widget.plotChannels,
       triggerTimestamp: _plotReply!.triggerTimestamp,
     );
   }
@@ -525,6 +526,7 @@ class PlotState extends State<PlotWidget> {
       isOneShot: widget.nAcquisitions == 1,
       plotChannels: plotChannels,
       triggerTimestamp: _plotReply!.triggerTimestamp,
+      channelSettings: widget.plotChannels,
     );
   }
 

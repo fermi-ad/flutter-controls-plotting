@@ -36,7 +36,11 @@ void main() {
         // Given a set of PlotYAxisLabelWidgets with min: 0 and max: 10
         // When I build the PlotYAxisLabelWidget with a normalizedValue of 0, 0.1, 0.5 and 1
         final channels = {
-          "Test": ChannelSetting(min: 0, max: 10, lineColor: Colors.red),
+          "Test": ChannelSetting(
+            finalMinY: 0,
+            finalMaxY: 10,
+            lineColor: Colors.red,
+          ),
         };
         await tester.pumpWidget(
           MaterialApp(
@@ -95,7 +99,11 @@ void main() {
         // Given a set of PlotYAxisLabelWidgets with min: -10 and max: 10
         // When I build the PlotYAxisLabelWidget with a normalizedValue of 0, 0.1, 0.5 and 1
         final channels = {
-          "Test": ChannelSetting(min: -10, max: 10, lineColor: Colors.red),
+          "Test": ChannelSetting(
+            finalMinY: -10,
+            finalMaxY: 10,
+            lineColor: Colors.red,
+          ),
         };
         await tester.pumpWidget(
           MaterialApp(
@@ -162,7 +170,11 @@ void main() {
       (WidgetTester tester) async {
         // Given a list of channels with varying y-scales
         final channels = {
-          "Test1": ChannelSetting(lineColor: Colors.red, min: -10, max: 10),
+          "Test1": ChannelSetting(
+            lineColor: Colors.red,
+            finalMinY: -10,
+            finalMaxY: 10,
+          ),
           "Test3": ChannelSetting(lineColor: Colors.green),
         };
 

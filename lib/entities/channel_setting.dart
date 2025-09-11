@@ -4,14 +4,20 @@ import 'package:flutter/material.dart';
 class ChannelSetting {
   Color? lineColor;
   PlotMarker plotMarker;
-  double? min;
-  double? max;
+  double? finalMinY;
+  double? finalMaxY;
+  double? confMinY;
+  double? confMaxY;
+  bool isLogScale;
 
   ChannelSetting({
     this.lineColor,
     this.plotMarker = PlotMarker.line,
-    this.min,
-    this.max,
+    this.finalMinY,
+    this.finalMaxY,
+    this.confMinY,
+    this.confMaxY,
+    this.isLogScale = false,
   });
 
   // Clone functionality.
