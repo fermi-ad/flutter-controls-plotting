@@ -889,8 +889,8 @@ void main() {
         final channelList = {
           "PLOT TEST CONSTANT": ChannelSetting(
             lineColor: PlotColor.blue.color,
-            finalMinY: 4.9,
-            finalMaxY: 5.1,
+            displayedMinY: 4.9,
+            displayedMaxY: 5.1,
           ),
         };
 
