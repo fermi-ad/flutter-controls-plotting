@@ -255,11 +255,11 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       final channelIndex = touchedSpots.indexOf(touchedSpot);
       final channelName = plotWidget.plotChannels.keys.toList()[channelIndex];
       final min =
-          plotWidget.plotChannels[channelName]?.finalMinY ??
+          plotWidget.plotChannels[channelName]?.labelMinY ??
           plotWidget.plotData.minY ??
           0;
       final max =
-          plotWidget.plotChannels[channelName]?.finalMaxY ??
+          plotWidget.plotChannels[channelName]?.labelMaxY ??
           plotWidget.plotData.maxY ??
           1;
       final yValue = _scaleY(y, min: min, max: max);

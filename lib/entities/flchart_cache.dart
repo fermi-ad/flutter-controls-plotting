@@ -248,8 +248,8 @@ class FlchartCache {
     required double? minY,
     required double? maxY,
   }) {
-    final max = channelSetting.finalMaxY ?? maxY ?? 1;
-    final min = channelSetting.finalMinY ?? minY ?? 0;
+    final max = channelSetting.displayedMaxY ?? maxY ?? 1;
+    final min = channelSetting.displayedMinY ?? minY ?? 0;
 
     if (min == max) {
       return 0;
