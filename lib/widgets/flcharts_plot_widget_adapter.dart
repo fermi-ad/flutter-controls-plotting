@@ -289,11 +289,15 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     var cache = widget.plotData.flchartCache;
     var arrayNonPersistentData =
         (!widget.isTimedScalarData && !widget.isPersistent);
-
     var arrayPersistentData =
         (!widget.isTimedScalarData && widget.isPersistent);
 
-    if (arrayNonPersistentData || arrayPersistentData) {
+    Map<String, List<int>> displayedSegments = {};
+
+    bool possibleSkippedSegments =
+        (arrayNonPersistentData || arrayPersistentData);
+
+    if (possibleSkippedSegments) {
       cache.totalPoints = 0;
       cache.reducedPoints = null;
     }
@@ -327,22 +331,27 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
 
       for (var (segmentIndex, pointSegment)
           in points[plotChannel.name]!.indexed) {
-        if (arrayNonPersistentData) {
-          // Array data
-          if (nearestSegmentIndex != segmentIndex) {
-            continue;
+        if (possibleSkippedSegments) {
+          if (arrayNonPersistentData) {
+            // Array data
+            if (nearestSegmentIndex != segmentIndex) {
+              continue;
+            }
+
+            widget.plotMetadata.displayedArrayTime = pointSegment.first.t;
           }
 
-          widget.plotMetadata.displayedArrayTime = pointSegment.first.t;
-        }
+          if (arrayPersistentData) {
+            if (nearestSegmentIndex < segmentIndex) {
+              // All done, index is larger
+              break;
+            }
 
-        if (arrayPersistentData) {
-          if (nearestSegmentIndex < segmentIndex) {
-            // All done, index is larger
-            break;
+            widget.plotMetadata.displayedArrayTime = pointSegment.first.t;
           }
 
-          widget.plotMetadata.displayedArrayTime = pointSegment.first.t;
+          displayedSegments[plotChannel.name] ??= [];
+          displayedSegments[plotChannel.name]!.add(segmentIndex);
         }
 
         // min and max y is not passed in for limiting points. This can cause behavior where poitns in the middle of axis are dropped.
@@ -385,7 +394,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     });
 
     // Verify if points reduction should be performed.
-    int? reducedPoints = cache.reduceSpots();
+    int? reducedPoints = cache.reduceSpots(
+      displayedSegments: displayedSegments,
+    );
     cache.normalizeCacheSpots(
       channels: widget.plotChannels,
       minY: widget.plotData.minY,

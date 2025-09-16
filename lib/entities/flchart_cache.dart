@@ -280,10 +280,23 @@ class FlchartCache {
   int? reduceSpots({
     int minimumPointsNeeded = minimumNumberOfReducedPoints,
     int maxiumumPointsDisplayed = 10000,
+    Map<String, List<int>> displayedSegments = const {},
   }) {
     int numberOfPoints = 0;
-    for (var channelSpots in spots.values) {
-      for (var segmentSpots in channelSpots) {
+    for (var entry in spots.entries) {
+      var channelName = entry.key;
+      var channelSpots = entry.value;
+      var segmentsToDisplay = displayedSegments[channelName] ?? [];
+      for (
+        var segmentIndex = 0;
+        segmentIndex < channelSpots.length;
+        segmentIndex++
+      ) {
+        if (segmentsToDisplay.isNotEmpty &&
+            !segmentsToDisplay.contains(segmentIndex)) {
+          continue;
+        }
+        var segmentSpots = channelSpots[segmentIndex];
         numberOfPoints += segmentSpots.length;
       }
     }
@@ -296,8 +309,20 @@ class FlchartCache {
         return reducedPoints;
       }
       reducedPoints ??= 0;
-      for (var channelSpots in spots.values) {
-        for (var spots in channelSpots) {
+      for (var entry in spots.entries) {
+        var channelName = entry.key;
+        var channelSpots = entry.value;
+        var segmentsToDisplay = displayedSegments[channelName] ?? [];
+        for (
+          var segmentIndex = 0;
+          segmentIndex < channelSpots.length;
+          segmentIndex++
+        ) {
+          if (segmentsToDisplay.isNotEmpty &&
+              !segmentsToDisplay.contains(segmentIndex)) {
+            continue;
+          }
+          var spots = channelSpots[segmentIndex];
           var spotsPercentage = spots.length / numberOfPoints;
           var maxSpots = minimumPointsNeeded * spotsPercentage;
           __reduceSpots(spots: spots, maxPoints: maxSpots.ceil());
