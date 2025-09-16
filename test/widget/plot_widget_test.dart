@@ -507,7 +507,7 @@ void main() {
       );
 
       // ... and the Y-axis has limits of...
-      assertPlotYAxisLimits(tester, min: 5, max: 5);
+      assertPlotYAxisLimits(tester, min: 4.5, max: 5.5);
       assertPlotYAxisLabel(
         isVisible: true,
         color: Colors.red,
@@ -590,7 +590,7 @@ void main() {
 
         // Ensure that the axis limits changed to accomodate the new plot.
         assertPlotXAxisLimits(tester, min: 0, max: 500);
-        assertPlotYAxisLimits(tester, min: 5, max: 5);
+        assertPlotYAxisLimits(tester, min: 4.5, max: 5.5);
         assertPlotYAxisLabel(
           isVisible: true,
           color: Colors.red,
@@ -959,7 +959,7 @@ void main() {
       );
 
       // ... and the Y-axis has limits of...
-      assertPlotYAxisLimits(tester, min: 5, max: 5);
+      assertPlotYAxisLimits(tester, min: 4.5, max: 5.5);
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
@@ -1018,7 +1018,7 @@ void main() {
 
         // Ensure that the axis limits changed to accomodate the new plot.
         assertPlotXAxisLimits(tester, min: 0, max: 500);
-        assertPlotYAxisLimits(tester, min: 5, max: 5);
+        assertPlotYAxisLimits(tester, min: 4.5, max: 5.5);
       },
     );
 
