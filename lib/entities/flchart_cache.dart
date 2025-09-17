@@ -362,13 +362,7 @@ class FlchartCache {
       return spots;
     }
 
-    print(
-      'Reducing spots: original length = ${spots.length}, maxPoints = $maxPoints',
-    );
-
     double step = (spots.length - 1) / (maxPoints - 1).toDouble();
-
-    print('Step size = $step');
 
     for (int i = 0; i < maxPoints; i++) {
       int index = (i * step).round();
