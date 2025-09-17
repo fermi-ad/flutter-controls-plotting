@@ -293,9 +293,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     bool exitForScalar = plotWidget.confMaxX == null && plotWidget.isTimedXAxis;
     var cache = plotWidget.plotData.flchartCache;
     var arrayNonPersistentData =
-        (!widget.isTimedScalarData && !widget.isPersistent);
+        (!plotWidget.isTimedScalarData && !plotWidget.isPersistent);
     var arrayPersistentData =
-        (!widget.isTimedScalarData && widget.isPersistent);
+        (!plotWidget.isTimedScalarData && plotWidget.isPersistent);
 
     Map<String, List<int>> displayedSegments = {};
 
@@ -343,7 +343,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
               continue;
             }
 
-            widget.plotMetadata.displayedArrayTime = pointSegment.first.t;
+            plotWidget.plotMetadata.displayedArrayTime = pointSegment.first.t;
           }
 
           if (arrayPersistentData) {
@@ -352,7 +352,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
               break;
             }
 
-            widget.plotMetadata.displayedArrayTime = pointSegment.first.t;
+            plotWidget.plotMetadata.displayedArrayTime = pointSegment.first.t;
           }
 
           displayedSegments[plotChannel.name] ??= [];
