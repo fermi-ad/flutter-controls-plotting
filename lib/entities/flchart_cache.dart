@@ -291,6 +291,7 @@ class FlchartCache {
   int? reduceSpots({
     int minimumPointsNeeded = minimumNumberOfReducedPoints,
     int maxiumumPointsDisplayed = 10000,
+    int minimumPointsPerSegment = 50,
     Map<String, List<int>> displayedSegments = const {},
   }) {
     int numberOfPoints = 0;
@@ -335,8 +336,10 @@ class FlchartCache {
           }
           var spots = channelSpots[segmentIndex];
           var spotsPercentage = spots.length / numberOfPoints;
-          var maxSpots = minimumPointsNeeded * spotsPercentage;
-          __reduceSpots(spots: spots, maxPoints: maxSpots.ceil());
+          var maxSpots = (minimumPointsNeeded * spotsPercentage).ceil();
+          // The reduction should never be less than specified points per segment.
+          maxSpots = max(minimumPointsPerSegment, maxSpots);
+          __reduceSpots(spots: spots, maxPoints: maxSpots);
           reducedPoints = reducedPoints! + spots.length;
         }
       }
@@ -359,7 +362,13 @@ class FlchartCache {
       return spots;
     }
 
+    print(
+      'Reducing spots: original length = ${spots.length}, maxPoints = $maxPoints',
+    );
+
     double step = (spots.length - 1) / (maxPoints - 1).toDouble();
+
+    print('Step size = $step');
 
     for (int i = 0; i < maxPoints; i++) {
       int index = (i * step).round();
