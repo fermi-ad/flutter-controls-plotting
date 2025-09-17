@@ -1,7 +1,7 @@
 part of plotadapter;
 
 class FermiPlotWidgetAdapter extends PlotWidgetAdapter {
-  FermiPlotWidgetAdapter({required super.widget, super.plotReply});
+  FermiPlotWidgetAdapter({required super.plotWidget, super.plotReply});
 
   @override
   Widget buildPlot() => Container();

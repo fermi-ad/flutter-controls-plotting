@@ -507,7 +507,7 @@ void main() {
       );
 
       // ... and the Y-axis has limits of...
-      assertPlotYAxisLimits(tester, min: 5, max: 5);
+      assertPlotYAxisLimits(tester, min: 4.5, max: 5.5);
       assertPlotYAxisLabel(
         isVisible: true,
         color: Colors.red,
@@ -560,7 +560,9 @@ void main() {
     testWidgets(
       "Plot multiple plots and ensure that the Y and X axis limits are adjusted",
       (WidgetTester tester) async {
-        final channelList = {"PLOT TEST SINE": ChannelSetting()};
+        final channelList = {
+          "PLOT TEST SINE": ChannelSetting(lineColor: Colors.blue),
+        };
         // When I build the PlotWidget
         await tester.pumpWidget(_buildPlotWidget(channelList));
         await waitForPlotDataToLoad(tester);
@@ -570,32 +572,34 @@ void main() {
         assertPlotYAxisLimits(tester, min: -1, max: 1);
         assertPlotYAxisLabel(
           isVisible: true,
-          color: Colors.red,
+          color: Colors.blue,
           withText: "-1.00",
         );
         assertPlotYAxisLabel(
           isVisible: true,
-          color: Colors.red,
+          color: Colors.blue,
           withText: "1.00",
         );
 
         // Plot a second channel.
-        channelList["PLOT TEST CONSTANT"] = ChannelSetting();
+        channelList["PLOT TEST CONSTANT"] = ChannelSetting(
+          lineColor: Colors.red,
+        );
         await tester.pumpWidget(_buildPlotWidget(channelList));
         await waitForPlotDataToLoad(tester);
 
         // Ensure that the axis limits changed to accomodate the new plot.
         assertPlotXAxisLimits(tester, min: 0, max: 500);
-        assertPlotYAxisLimits(tester, min: -1, max: 5);
+        assertPlotYAxisLimits(tester, min: 4.5, max: 5.5);
         assertPlotYAxisLabel(
           isVisible: true,
           color: Colors.red,
-          withText: "-1.00",
+          withText: "4.50",
         );
         assertPlotYAxisLabel(
           isVisible: true,
           color: Colors.red,
-          withText: "5.00",
+          withText: "5.50",
         );
       },
     );
@@ -819,13 +823,13 @@ void main() {
         final channelList = {
           "PLOT TEST CONSTANT": ChannelSetting(
             lineColor: PlotColor.red.color,
-            min: 0.00,
-            max: 10.00,
+            confMinY: 0.00,
+            confMaxY: 10.00,
           ),
           "PLOT TEST RAMP": ChannelSetting(
             lineColor: PlotColor.blue.color,
-            min: -5.00,
-            max: 5.00,
+            confMinY: -5.00,
+            confMaxY: 5.00,
           ),
         };
 
@@ -885,8 +889,8 @@ void main() {
         final channelList = {
           "PLOT TEST CONSTANT": ChannelSetting(
             lineColor: PlotColor.blue.color,
-            min: 4.9,
-            max: 5.1,
+            displayedMinY: 4.9,
+            displayedMaxY: 5.1,
           ),
         };
 
@@ -955,7 +959,7 @@ void main() {
       );
 
       // ... and the Y-axis has limits of...
-      assertPlotYAxisLimits(tester, min: 5, max: 5);
+      assertPlotYAxisLimits(tester, min: 4.5, max: 5.5);
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
@@ -1014,7 +1018,7 @@ void main() {
 
         // Ensure that the axis limits changed to accomodate the new plot.
         assertPlotXAxisLimits(tester, min: 0, max: 500);
-        assertPlotYAxisLimits(tester, min: -1, max: 5);
+        assertPlotYAxisLimits(tester, min: 4.5, max: 5.5);
       },
     );
 
@@ -1259,8 +1263,8 @@ Widget _buildPlotWidget(
       body: ACSysProvider.factory(service: service ?? FakeACSysService())(
         child: PlotWidget(
           plotChannels: channelList,
-          xMin: xMin,
-          xMax: xMax,
+          confMinX: xMin,
+          confMaxX: xMax,
           implementation: impl,
           plotData: PlotData(),
           updateDelay: updateDelay,

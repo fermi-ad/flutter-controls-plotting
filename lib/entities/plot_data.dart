@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/entities/plotting_point.dart';
+import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/flchart_cache.dart';
 import 'package:flutter_controls_plotting/entities/plot_metadata.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
@@ -201,6 +202,7 @@ class PlotData {
     required bool isPersistent,
     required bool isOneShot,
     required List<PlotChannelData> plotChannels,
+    Map<String, ChannelSetting>? channelSettings,
     required double? triggerTimestamp,
   }) {
     for (final plotChannel in plotChannels) {
@@ -231,7 +233,7 @@ class PlotData {
                   _clearSegments(segments);
                 }
                 // Reset point limits based on the current data since data is being removed.
-                findPointsLimits();
+                findPointsLimits(channelSettings: channelSettings);
                 // New event
                 segments.add([]);
                 // Reload pointsList
@@ -346,10 +348,20 @@ class PlotData {
     _recalculateDataForAllPoints();
   }
 
-  void findPointsLimits({double? untilXMin, double? untilXMax}) {
+  void findPointsLimits({
+    double? xRangeMin,
+    double? xRangeMax,
+    Map<String, ChannelSetting>? channelSettings,
+  }) {
     double? minY, maxY, minX, maxX;
 
-    for (var segments in points.values) {
+    for (var entry in points.entries) {
+      String channelName = entry.key;
+      List<List<PlottingPoint>> segments = entry.value;
+
+      // Access channel setting for this channel
+      ChannelSetting? channelSetting = channelSettings?[channelName];
+
       for (var pointList in segments) {
         (minY, maxY, minX, maxX) = _getLimitsPerPoints(
           points: pointList,
@@ -357,8 +369,9 @@ class PlotData {
           maxY: maxY,
           minX: minX,
           maxX: maxX,
-          untilXMin: untilXMin,
-          untilXMax: untilXMax,
+          xRangeMin: xRangeMin,
+          xRangeMax: xRangeMax,
+          channelSetting: channelSetting,
         );
       }
     }
@@ -374,6 +387,7 @@ class PlotData {
     required double? confMaxX,
     required double? timeDelta,
     required double? triggerTimestamp,
+    Map<String, ChannelSetting>? channelSettings,
   }) {
     double? minY = _minY;
     double? maxY = _maxY;
@@ -390,12 +404,23 @@ class PlotData {
         triggerTimestamp,
       );
       for (final points in segments) {
+        final name = plotChannel.name;
+
+        // Access channel setting for this channel
+        ChannelSetting? channelSetting = channelSettings?[name];
+
         (minY, maxY, minX, maxX) = _getLimitsPerPoints(
           points: points,
+
           minY: minY,
+
           maxY: maxY,
+
           minX: minX,
+
           maxX: maxX,
+
+          channelSetting: channelSetting,
         );
       }
     }
@@ -421,7 +446,11 @@ class PlotData {
         minX = maxX! - timeDelta;
         // Calculate y based on points displayed.
         if (confMinY == null && confMaxY == null) {
-          findPointsLimits(untilXMin: minX, untilXMax: maxX);
+          findPointsLimits(
+            xRangeMin: minX,
+            xRangeMax: maxX,
+            channelSettings: channelSettings,
+          );
           minY = _minY;
           maxY = _maxY;
         }
@@ -444,17 +473,40 @@ class PlotData {
     required double? maxY,
     required double? minX,
     required double? maxX,
-    double? untilXMin,
-    double? untilXMax,
+    double? xRangeMin,
+    double? xRangeMax,
+    ChannelSetting? channelSetting,
   }) {
+    minY = null;
+    maxY = null;
+    double? logMinY;
+    double? logMaxY;
+
     for (int i = points.length - 1; i >= 0; i--) {
       final point = points[i];
       double yPoint = point.y;
       double xPoint = point.x;
 
       // Skip updating Y limits for points where X is larger than untilXMax.
-      if (untilXMax != null && xPoint > untilXMax) {
+      if (xRangeMax != null && xPoint > xRangeMax) {
         continue;
+      }
+
+      // calculate the minY, maxY in logScale.
+      if (channelSetting != null && channelSetting.isLogScale) {
+        if (yPoint > 0) {
+          double logY = log(yPoint);
+          if (logMinY == null) {
+            logMinY = logY;
+          } else {
+            logMinY = min(logY, logMinY);
+          }
+          if (logMaxY == null) {
+            logMaxY = logY;
+          } else {
+            logMaxY = max(logY, logMaxY);
+          }
+        }
       }
 
       if (minY == null) {
@@ -479,12 +531,50 @@ class PlotData {
         maxX = max(xPoint, maxX);
       }
       // stop processing further points once minX is less than or equal to untilXMin.
-      if (untilXMin != null && minX <= untilXMin) {
+      if (xRangeMin != null && minX <= xRangeMin) {
         break;
       }
     }
 
+    if (channelSetting != null) {
+      // Handle the y limits for constant data.
+      if (minY != null && maxY != null && minY == maxY) {
+        (minY, maxY) = adjustMinMaxForConstant(minY);
+        if (channelSetting.isLogScale) {
+          (logMinY, logMaxY) = adjustMinMaxForConstant(logMinY!);
+        }
+      }
+
+      // Priority: user-defined confMinY/confMaxY > calculated values
+      if (channelSetting.confMinY != null) {
+        channelSetting.displayedMinY = channelSetting.confMinY;
+        channelSetting.labelMinY = channelSetting.confMinY;
+      } else {
+        channelSetting.displayedMinY = logMinY ?? minY;
+        channelSetting.labelMinY = minY;
+      }
+
+      if (channelSetting.confMaxY != null) {
+        channelSetting.displayedMaxY = channelSetting.confMaxY;
+        channelSetting.labelMaxY = channelSetting.confMaxY;
+      } else {
+        channelSetting.displayedMaxY = logMaxY ?? maxY;
+        channelSetting.labelMaxY = maxY;
+      }
+    }
     return (minY, maxY, minX, maxX);
+  }
+
+  (double, double) adjustMinMaxForConstant(double constantValue) {
+    double gap;
+    if (constantValue == 0) {
+      gap = 0.1;
+    } else {
+      gap = constantValue.abs() * 0.1;
+    }
+    double adjustedMinY = constantValue - gap;
+    double adjustedMaxY = constantValue + gap;
+    return (adjustedMinY, adjustedMaxY);
   }
 
   void persistenceCleanUp({
