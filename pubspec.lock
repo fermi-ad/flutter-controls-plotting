@@ -466,7 +466,7 @@ packages:
     source: hosted
     version: "0.4.9"
   opentelemetry:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: opentelemetry
       sha256: a942fe0e7fbf4f7370b92f1226354158779fd404197e1ff8153c1612b3e24c58

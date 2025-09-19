@@ -31,9 +31,6 @@ class PlotWidget extends StatefulWidget {
   final double? dataLoggerStartTime;
   final double? dataLoggerEndTime;
 
-  final double? dataLoggerStartTime;
-  final double? dataLoggerEndTime;
-
   final int updateDelay;
 
   final int? triggerEvent;
@@ -62,33 +59,6 @@ class PlotWidget extends StatefulWidget {
 
   final Function(double deltaY)? adjustYAxisLimits;
 
-<<<<<<< HEAD
-  const PlotWidget(
-      {super.key,
-      this.plotChannels = const <String, ChannelSetting>{},
-      required this.daqService,
-      required this.plotData,
-      this.yMin,
-      this.yMax,
-      this.xMin,
-      this.xMax,
-      this.dataLoggerStartTime,
-      this.dataLoggerEndTime,
-      this.updateDelay = 0,
-      this.nAcquisitions = 0,
-      this.triggerEvent,
-      this.isShowLabels = true,
-      this.isPaused = false,
-      this.isPersistent = false,
-      this.scalarDataOptions,
-      this.onInternalChannelSettingChange,
-      this.onPlotUpdate,
-      this.onStreamConnectionStateChange,
-      this.onZoom,
-      this.adjustXAxisLimits,
-      this.adjustYAxisLimits,
-      this.implementation = PlotImplementation.flCharts});
-=======
   const PlotWidget({
     super.key,
     this.plotChannels = const <String, ChannelSetting>{},
@@ -116,7 +86,6 @@ class PlotWidget extends StatefulWidget {
     this.implementation = PlotImplementation.flCharts,
     this.forceStreamReset = false,
   });
->>>>>>> 5248c644ea45c08665ab2aef54e9859fb712311b
 
   @override
   State<StatefulWidget> createState() => PlotState();
@@ -198,11 +167,7 @@ class PlotState extends State<PlotWidget> {
       .map((String channelName) => _adapter.markerIndexForChannel(channelName))
       .toList();
 
-<<<<<<< HEAD
-  Map<String, List<List<PlotPoint>>> get points => widget.plotData.points;
-=======
   Map<String, List<List<PlottingPoint>>> get points => widget.plotData.points;
->>>>>>> 5248c644ea45c08665ab2aef54e9859fb712311b
   PlotMetadata get plotMetadata => widget.plotMetadata;
 
   @override
@@ -219,7 +184,7 @@ class PlotState extends State<PlotWidget> {
     if (_streamShouldReset) {
       _initializeStream();
     } else if (_plotStreamMetadata.plotReply != null) {
-      // Simulate last plot reply to reload plot data with potntially new configuration.
+      // Simulate last plot reply to reload plot data with potentially new configuration.
       // This mimics the behavior of stream builder.
       _receiveData(_plotStreamMetadata.plotReply!);
     }
@@ -295,14 +260,9 @@ class PlotState extends State<PlotWidget> {
       final errorOnChannel = _plotReplyHasErrors();
       if (errorOnChannel != null) {
         return _buildWithErrorMessage(
-<<<<<<< HEAD
-            "An error occurred when attempting to acquire data for $errorOnChannel",
-            child: _buildPlotFromSnapshot());
-=======
-          "An error occured when attempting to acquire data for $errorOnChannel",
+          "An error occurred when attempting to acquire data for $errorOnChannel",
           child: _buildPlotFromSnapshot(),
         );
->>>>>>> 5248c644ea45c08665ab2aef54e9859fb712311b
       }
 
       if (_plotReply == null) {
@@ -465,41 +425,35 @@ class PlotState extends State<PlotWidget> {
 
     if (widget.implementation == PlotImplementation.flCharts) {
       widget.plotData.flchartCache.prepareDataLoggerAcquisition(
-<<<<<<< HEAD
-          startTime: _dataLoggerStartTime, endTime: _dataLoggerEndTime);
-=======
         startTime: _dataLoggerStartTime,
         endTime: _dataLoggerEndTime,
       );
->>>>>>> 5248c644ea45c08665ab2aef54e9859fb712311b
     }
 
     if (widget.plotChannels.isNotEmpty) {
       _errorsDismissed = false;
 
-<<<<<<< HEAD
       // Add OpenTelemetry trace span for plotStream
-      final plotStreamSpan =
-          otelTracer.startSpan('plotStream.retrievePlot', attributes: [
-        Attribute.fromString('channels', _channels.keys.toString()),
-        Attribute.fromInt('updateDelay', _updateDelay ?? 0),
-        Attribute.fromString(
-            'triggerEvent', _triggerEvent?.toString() ?? 'null'),
-        Attribute.fromInt('nAcquisitions', apiAcquisitions ?? 0),
-        Attribute.fromString(
-            'startTime', _dataLoggerStartTime?.toString() ?? 'null'),
-        Attribute.fromString(
-            'endTime', _dataLoggerEndTime?.toString() ?? 'null'),
-      ]);
-      _plotStream = widget.daqService.retrievePlot(context,
-          forChannels: _channels.keys.toSet(),
-          updateDelay: _updateDelay,
-          triggerEvent: _triggerEvent,
-          nAcquisitions: apiAcquisitions,
-          startTime: _dataLoggerStartTime,
-          endTime: _dataLoggerEndTime);
-      plotStreamSpan.end();
-=======
+      final plotStreamSpan = otelTracer.startSpan(
+        'plotStream.retrievePlot',
+        attributes: [
+          Attribute.fromString('channels', _channels.keys.toString()),
+          Attribute.fromInt('updateDelay', _updateDelay),
+          Attribute.fromString(
+            'triggerEvent',
+            _triggerEvent?.toString() ?? 'null',
+          ),
+          Attribute.fromInt('nAcquisitions', apiAcquisitions),
+          Attribute.fromString(
+            'startTime',
+            _dataLoggerStartTime?.toString() ?? 'null',
+          ),
+          Attribute.fromString(
+            'endTime',
+            _dataLoggerEndTime?.toString() ?? 'null',
+          ),
+        ],
+      );
       _plotStream = widget.daqService.retrievePlot(
         context,
         forChannels: _channels.keys.toSet(),
@@ -509,7 +463,16 @@ class PlotState extends State<PlotWidget> {
         startTime: _dataLoggerStartTime,
         endTime: _dataLoggerEndTime,
       );
->>>>>>> 5248c644ea45c08665ab2aef54e9859fb712311b
+      plotStreamSpan.end();
+      _plotStream = widget.daqService.retrievePlot(
+        context,
+        forChannels: _channels.keys.toSet(),
+        updateDelay: _updateDelay,
+        triggerEvent: _triggerEvent,
+        nAcquisitions: apiAcquisitions,
+        startTime: _dataLoggerStartTime,
+        endTime: _dataLoggerEndTime,
+      );
     }
   }
 
