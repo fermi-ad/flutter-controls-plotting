@@ -5,11 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 
 abstract class PlotDAQService {
-  Stream<PlotReply> retrievePlot(BuildContext context,
-      {required Set<String> forChannels,
-      int updateDelay = 0,
-      int nAcquisitions = 0,
-      int? triggerEvent});
+  Stream<PlotReply> retrievePlot(
+    BuildContext context, {
+    required Set<String> forChannels,
+    int updateDelay = 0,
+    int nAcquisitions = 0,
+    double? startTime,
+    double? endTime,
+    int? triggerEvent,
+  });
 }
 
 class StandardPlotDAQ implements PlotDAQService {
@@ -31,11 +35,15 @@ class StandardPlotDAQ implements PlotDAQService {
   int? limitAcquisitionMs;
 
   @override
-  Stream<PlotReply> retrievePlot(BuildContext context,
-      {required Set<String> forChannels,
-      int updateDelay = 0,
-      int nAcquisitions = 0,
-      int? triggerEvent}) {
+  Stream<PlotReply> retrievePlot(
+    BuildContext context, {
+    required Set<String> forChannels,
+    int updateDelay = 0,
+    int nAcquisitions = 0,
+    double? startTime,
+    double? endTime,
+    int? triggerEvent,
+  }) {
     var containsGenPlots = false;
     var plotArgs = _PlotArgs(xMin: 0, xMax: 499, windowSize: 500);
     for (var genChannel in GenPlots.values) {
@@ -46,38 +54,51 @@ class StandardPlotDAQ implements PlotDAQService {
     }
 
     if (containsGenPlots) {
-      return _retrieveInternalPlot(context,
-          forChannels: forChannels,
-          args: plotArgs,
-          updateDelay: updateDelay,
-          triggerEvent: triggerEvent,
-          nAcquisitions: nAcquisitions == 0 ? null : nAcquisitions);
+      return _retrieveInternalPlot(
+        context,
+        forChannels: forChannels,
+        args: plotArgs,
+        updateDelay: updateDelay,
+        startTime: startTime,
+        endTime: endTime,
+        triggerEvent: triggerEvent,
+        nAcquisitions: nAcquisitions == 0 ? null : nAcquisitions,
+      );
     } else {
       // API only
-      return ACSys.api(context).startPlot(forChannels.toList(),
-          xMin: plotArgs.xMin,
-          xMax: plotArgs.xMax,
-          windowSize: plotArgs.windowSize,
-          updateRate: updateDelay,
-          triggerEvent: triggerEvent,
-          nAcquisitions: nAcquisitions == 0 ? null : nAcquisitions);
+      return ACSys.api(context).startPlot(
+        forChannels.toList(),
+        xMin: plotArgs.xMin,
+        xMax: plotArgs.xMax,
+        startTime: startTime,
+        endTime: endTime,
+        windowSize: plotArgs.windowSize,
+        updateRate: updateDelay,
+        triggerEvent: triggerEvent,
+        nAcquisitions: nAcquisitions == 0 ? null : nAcquisitions,
+      );
     }
   }
 
-  Stream<PlotReply> _retrieveInternalPlot(BuildContext context,
-      {required Set<String> forChannels,
-      required _PlotArgs args,
-      int updateDelay = 0,
-      int? nAcquisitions,
-      int? triggerEvent}) async* {
+  Stream<PlotReply> _retrieveInternalPlot(
+    BuildContext context, {
+    required Set<String> forChannels,
+    required _PlotArgs args,
+    int updateDelay = 0,
+    int? nAcquisitions,
+    double? startTime,
+    double? endTime,
+    int? triggerEvent,
+  }) async* {
     var requestTime = getCurrentAcsysEpochTime();
     if (updateDelay == 0) {
       // No refresh cycle, attempt to combine gen plots with api results
       var generatePlotFuture = _generatePlot(
-          forChannels: forChannels,
-          args: args,
-          rate: getRate(updateDelay),
-          requestTime: requestTime);
+        forChannels: forChannels,
+        args: args,
+        rate: getRate(updateDelay),
+        requestTime: requestTime,
+      );
 
       // Verify if any apiChannels provided
       List<String> apiChannels = [];
@@ -90,8 +111,12 @@ class StandardPlotDAQ implements PlotDAQService {
 
       if (apiChannels.isNotEmpty) {
         // Internal and API request
-        var apiStream = ACSys.api(context).startPlot(apiChannels,
-            xMin: args.xMin, xMax: args.xMax, windowSize: args.windowSize);
+        var apiStream = ACSys.api(context).startPlot(
+          apiChannels,
+          xMin: args.xMin,
+          xMax: args.xMax,
+          windowSize: args.windowSize,
+        );
 
         var generatePlot = await generatePlotFuture;
 
@@ -105,6 +130,42 @@ class StandardPlotDAQ implements PlotDAQService {
         yield await generatePlotFuture;
       }
     } else {
+      // Verify if archiver request
+      if (startTime != null) {
+        var pointsProcessed = 0;
+        while (true) {
+          var archivedPlotMetadata = await _generateArchivedPlot(
+            forChannels: forChannels,
+            startTime: startTime,
+            endTime: endTime,
+            args: args,
+            pointsProcessed: pointsProcessed,
+            requestTime: requestTime,
+            apiDelay: updateDelay,
+          );
+
+          var reply = archivedPlotMetadata.currentPlotReply;
+          if (reply == null) {
+            break;
+          }
+
+          yield reply;
+
+          pointsProcessed = archivedPlotMetadata.pointsProcessed;
+
+          await Future.delayed(Duration.zero);
+        }
+
+        if (endTime != null && getCurrentAcsysEpochTime() > endTime) {
+          return;
+        }
+
+        // wait for future plot
+        while (getCurrentAcsysEpochTime() < startTime) {
+          await Future.delayed(const Duration(milliseconds: 100));
+        }
+      }
+
       // Refresh cycle only API provided.
       bool validLoop = true;
       int nAcquisitionsInLoop = 0;
@@ -146,7 +207,6 @@ class StandardPlotDAQ implements PlotDAQService {
         acquisitionStopwatch = Stopwatch();
         acquisitionStopwatch.start();
       }
-
       while (validLoop) {
         if (apiDelay == 0) {
           await Future.delayed(Duration(microseconds: updateDelay));
@@ -162,15 +222,20 @@ class StandardPlotDAQ implements PlotDAQService {
         }
 
         List<double>? eventXList;
+        int itrPointCount = pointCount;
 
         for (var i = 0; i < pointCount; i++) {
           if (triggerEvent != null && eventAcquisitionCount != null) {
             eventXList ??= [];
-            eventXList.add((scalarRampEventDuration * eventAcquisitionCount!) /
-                (eventAcquisitionLimit!));
+            eventXList.add(
+              (scalarRampEventDuration * eventAcquisitionCount!) /
+                  (eventAcquisitionLimit!),
+            );
 
             if (eventAcquisitionCount == eventAcquisitionLimit) {
               eventAcquisitionCount = 0;
+              itrPointCount = i + 1;
+              break;
             } else {
               eventAcquisitionCount = eventAcquisitionCount! + 1;
             }
@@ -178,14 +243,15 @@ class StandardPlotDAQ implements PlotDAQService {
         }
 
         var plot = await _generatePlot(
-            forChannels: forChannels,
-            requestTime: requestTime,
-            rate: rate,
-            apiDelay: apiDelay,
-            pointCount: pointCount,
-            args: args,
-            markChannelNameErrors: true,
-            eventXList: eventXList);
+          forChannels: forChannels,
+          requestTime: requestTime,
+          rate: rate,
+          apiDelay: apiDelay,
+          pointCount: itrPointCount,
+          args: args,
+          markChannelNameErrors: true,
+          eventXList: eventXList,
+        );
 
         validLoop = false;
         for (var channel in plot.data) {
@@ -207,9 +273,75 @@ class StandardPlotDAQ implements PlotDAQService {
           }
         }
 
+        // If end time is specified end the acquisition once the end time is reached.
+        if (endTime != null && getCurrentAcsysEpochTime() >= endTime) {
+          validLoop = false;
+        }
+
         yield plot;
       }
     }
+  }
+
+  Future<ArchivedPlotReplyMetadata> _generateArchivedPlot({
+    required Set<String> forChannels,
+    required double startTime,
+    required double? endTime,
+    required _PlotArgs args,
+    required int apiDelay,
+    int pointsPerReply = 1000,
+    int pointsProcessed = 0,
+    required double requestTime,
+  }) async {
+    var rate = getRate(apiDelay);
+
+    endTime ??= getCurrentAcsysEpochTime();
+
+    if (endTime > requestTime) {
+      endTime = requestTime;
+    }
+
+    if (startTime > requestTime) {
+      startTime = requestTime;
+    }
+
+    var totalDuration = endTime - startTime;
+    double secondsPerPoint = apiDelay / 1e6;
+    var pointsPerSecond = 1 / secondsPerPoint;
+
+    var pointsInTotalDuration = (totalDuration * pointsPerSecond).ceil();
+
+    var pointsLeft = (pointsInTotalDuration - pointsProcessed);
+
+    if (pointsLeft == 0) {
+      return ArchivedPlotReplyMetadata(
+        currentPlotReply: null,
+        pointsProcessed: pointsProcessed,
+      );
+    }
+
+    if (pointsLeft < pointsPerReply) {
+      pointsPerReply = pointsLeft;
+    }
+
+    var calulatedStartTime = startTime + (pointsProcessed * secondsPerPoint);
+
+    var result = await _generatePlot(
+      forChannels: forChannels,
+      args: args,
+      apiDelay: apiDelay,
+      requestTime: requestTime,
+      pointCount: pointsPerReply,
+      currentEpochTime: calulatedStartTime,
+      rate: rate,
+      noDelay: true,
+    );
+
+    pointsProcessed += pointsPerReply;
+    return ArchivedPlotReplyMetadata(
+      currentPlotReply: result,
+      pointsProcessed: pointsProcessed,
+    );
   }
 
   Future<PlotReply> _generatePlot({
@@ -221,13 +353,16 @@ class StandardPlotDAQ implements PlotDAQService {
     int pointCount = 1,
     bool markChannelNameErrors = false,
     List<double>? eventXList,
+    // Optional parameter used for fetching "archived" data.
+    double? currentEpochTime,
+    bool noDelay = false,
   }) async {
     var totalDuration = (apiDelay * pointCount);
 
     List<PlotChannelData> internalDaqData = [];
     var xAxisUnits = 'Index';
 
-    var currentEpochTime = getCurrentAcsysEpochTime();
+    currentEpochTime ??= getCurrentAcsysEpochTime();
     double secondsPerPoint = apiDelay / 1e6;
 
     for (var forChannel in forChannels) {
@@ -247,8 +382,8 @@ class StandardPlotDAQ implements PlotDAQService {
 
         if (genPlot.minUpdateDelay != null) {
           // Calculate max number of points for this rate and total duration
-          var maxPointsForRate =
-              (totalDuration / genPlot.minUpdateDelay!).floor();
+          var maxPointsForRate = (totalDuration / genPlot.minUpdateDelay!)
+              .floor();
           if (chPoints > maxPointsForRate) {
             chPoints = maxPointsForRate;
             chSecondsPerPoint = genPlot.minUpdateDelay! / 1e6;
@@ -261,27 +396,38 @@ class StandardPlotDAQ implements PlotDAQService {
       for (int i = 0; i < chPoints; i++) {
         List<PlotPoint>? data;
         (xAxisUnits, data) = _generateData(
-            forChannel: forChannel,
-            currentEpochTime: chEpochTime,
-            xAxisUnits: xAxisUnits,
-            eventX: eventXList?[i]);
+          forChannel: forChannel,
+          currentEpochTime: chEpochTime,
+          xAxisUnits: xAxisUnits,
+          eventX: eventXList?[i],
+        );
 
         // Verify if plotChannelData already exists
         bool newChannelAdded = false;
         var existingChannelData = internalDaqData.firstWhere(
-            (channelData) => channelData.name == forChannel, orElse: () {
-          PlotChannelData newChannel;
-          if (data != null) {
-            newChannel = PlotChannelData(
-                name: forChannel, rate: chRate, units: "V", points: data);
-          } else {
-            newChannel = PlotChannelData(
-                name: forChannel, rate: chRate, units: "", status: -1);
-          }
-          internalDaqData.add(newChannel);
-          newChannelAdded = true;
-          return newChannel;
-        });
+          (channelData) => channelData.name == forChannel,
+          orElse: () {
+            PlotChannelData newChannel;
+            if (data != null) {
+              newChannel = PlotChannelData(
+                name: forChannel,
+                rate: chRate,
+                units: "V",
+                points: data,
+              );
+            } else {
+              newChannel = PlotChannelData(
+                name: forChannel,
+                rate: chRate,
+                units: "",
+                status: -1,
+              );
+            }
+            internalDaqData.add(newChannel);
+            newChannelAdded = true;
+            return newChannel;
+          },
+        );
 
         if (data != null) {
           if (!newChannelAdded) {
@@ -294,50 +440,71 @@ class StandardPlotDAQ implements PlotDAQService {
       }
     }
 
-    Duration duration = Duration(microseconds: totalDuration);
-    await Future.delayed(duration);
+    if (!noDelay) {
+      Duration duration = Duration(microseconds: totalDuration);
+      await Future.delayed(duration);
+    }
+
+    double? triggerTimestamp;
+
+    if (eventXList != null && eventXList.isNotEmpty) {
+      triggerTimestamp = currentEpochTime - eventXList.last;
+    }
 
     var generatedPlotReply = PlotReply(
-        plotId: "Internal",
-        requestTime: requestTime,
-        xAxisUnits: xAxisUnits,
-        xAxisMin: args.xMin + 0.0,
-        xAxisMax: args.xMax + 0.0,
-        windowSize: args.windowSize,
-        data: internalDaqData);
+      plotId: "Internal",
+      triggerTimestamp: triggerTimestamp,
+      requestTime: requestTime,
+      xAxisUnits: xAxisUnits,
+      xAxisMin: args.xMin + 0.0,
+      xAxisMax: args.xMax + 0.0,
+      windowSize: args.windowSize,
+      data: internalDaqData,
+    );
 
     return generatedPlotReply;
   }
 
-  (String, List<PlotPoint>?) _generateData(
-      {required String forChannel,
-      required double currentEpochTime,
-      required String xAxisUnits,
-      required double? eventX}) {
+  (String, List<PlotPoint>?) _generateData({
+    required String forChannel,
+    required double currentEpochTime,
+    required String xAxisUnits,
+    required double? eventX,
+  }) {
     List<PlotPoint>? data;
     if (forChannel == GenPlots.constant.name) {
-      data = List.generate(
-          500, (i) => PlotPoint(x: i.toDouble(), y: 5.0, t: currentEpochTime));
+      data = [
+        PlotPoint(
+          value: DevScalarArray(List.generate(500, (i) => 5)),
+          t: currentEpochTime,
+        ),
+      ];
     } else if (forChannel == GenPlots.randConst.name) {
       var rand = Random();
       var constant = rand.nextInt(25);
-      data = List.generate(
-          500,
-          (i) => PlotPoint(
-              x: i.toDouble(), y: constant.toDouble(), t: currentEpochTime));
+      data = [
+        PlotPoint(
+          value: DevScalarArray(List.generate(500, (i) => constant.toDouble())),
+          t: currentEpochTime,
+        ),
+      ];
     } else if (forChannel == GenPlots.ramp.name) {
-      data = List.generate(
-          500,
-          (i) =>
-              PlotPoint(x: i.toDouble(), y: i.toDouble(), t: currentEpochTime));
+      data = [
+        PlotPoint(
+          value: DevScalarArray(List.generate(500, (i) => i.toDouble())),
+          t: currentEpochTime,
+        ),
+      ];
     } else if (forChannel == GenPlots.randRamp.name) {
       var rand = Random();
-      data = List.generate(
-          500,
-          (i) => PlotPoint(
-              x: i.toDouble(),
-              y: i.toDouble() + (rand.nextInt(50) - 25),
-              t: currentEpochTime));
+      data = [
+        PlotPoint(
+          value: DevScalarArray(
+            List.generate(500, (i) => i + (rand.nextInt(50) - 25)),
+          ),
+          t: currentEpochTime,
+        ),
+      ];
     } else if (forChannel == GenPlots.scalarRamp.name ||
         forChannel == GenPlots.slowScalarRamp.name) {
       firstScalarRampEpochTime ??= currentEpochTime;
@@ -351,7 +518,7 @@ class StandardPlotDAQ implements PlotDAQService {
 
         var x = eventX ?? currentEpochTime;
 
-        data = [PlotPoint(x: x, y: difference, t: currentEpochTime)];
+        data = [PlotPoint(value: DevScalar(difference), t: x)];
       }
     } else if (forChannel == GenPlots.scalarRandRamp.name) {
       var rand = Random();
@@ -365,37 +532,84 @@ class StandardPlotDAQ implements PlotDAQService {
 
       var x = eventX ?? currentEpochTime;
 
-      data = [PlotPoint(x: x, y: value, t: currentEpochTime)];
+      data = [PlotPoint(value: DevScalar(value), t: x)];
     } else if (forChannel == GenPlots.parabola.name) {
-      data = List.generate(
-          501,
-          (i) => PlotPoint(
-              x: (i - 250.0).toDouble(),
-              y: pow(i - 250, 2).toDouble(),
-              t: currentEpochTime));
+      data = [
+        PlotPoint(
+          value: DevScalarArray(
+            List.generate(501, (i) => pow(i - 250, 2).toDouble()),
+          ),
+          t: currentEpochTime,
+        ),
+      ];
     } else if (forChannel == GenPlots.parabola64k.name) {
-      data = List.generate(
-          65535,
-          (i) => PlotPoint(
-              x: (i - 32767.0).toDouble(),
-              y: pow(i - 32767, 2).toDouble(),
-              t: currentEpochTime));
+      data = [
+        PlotPoint(
+          value: DevScalarArray(
+            List.generate(65535, (i) => pow(i - 32767, 2).toDouble()),
+          ),
+          t: currentEpochTime,
+        ),
+      ];
+    } else if (forChannel == GenPlots.parabola32k.name) {
+      data = [
+        PlotPoint(
+          value: DevScalarArray(
+            List.generate(32767, (i) => pow(i - 16383, 2).toDouble()),
+          ),
+          t: currentEpochTime,
+        ),
+      ];
     } else if (forChannel == GenPlots.sine.name) {
-      data = List.generate(
-          501,
-          (i) => PlotPoint(
-              x: (i - 250.0).toDouble(),
-              y: sin((i - 250) / 500 * 6.28).toDouble(),
-              t: currentEpochTime));
+      data = [
+        PlotPoint(
+          value: DevScalarArray(
+            List.generate(501, (i) => sin((i - 250) / 500 * 6.28).toDouble()),
+          ),
+          t: currentEpochTime,
+        ),
+      ];
+    } else if (forChannel == GenPlots.sine64k.name) {
+      data = [
+        PlotPoint(
+          value: DevScalarArray(
+            List.generate(
+              65535,
+              (i) => ((sin((i - 32767) / 65535 * 6.28) + 1) / 2 * 1073676289)
+                  .toDouble(),
+            ),
+          ),
+          t: currentEpochTime,
+        ),
+      ];
+    } else if (forChannel == GenPlots.sine32k.name) {
+      data = [
+        PlotPoint(
+          value: DevScalarArray(
+            List.generate(
+              32767,
+              (i) => ((sin((i - 16383) / 32767 * 6.28) + 1) / 2 * 268402689)
+                  .toDouble(),
+            ),
+          ),
+          t: currentEpochTime,
+        ),
+      ];
     } else if (forChannel == GenPlots.normal.name) {
-      data = List.generate(
-          500,
-          (i) => PlotPoint(
-              x: i.toDouble(),
-              y: (pow(500, 2) / 4) *
+      data = [
+        PlotPoint(
+          value: DevScalarArray(
+            List.generate(
+              500,
+              (i) =>
+                  (pow(500, 2) / 4) *
                   pow(e, -(pow(i - 250, 2) / (2 * pow(50, 2)))).toDouble() /
                   (50 * sqrt(2 * pi)),
-              t: currentEpochTime));
+            ),
+          ),
+          t: currentEpochTime,
+        ),
+      ];
     }
     return (xAxisUnits, data);
   }
@@ -415,6 +629,16 @@ class _PlotArgs {
   _PlotArgs({required this.xMin, required this.xMax, required this.windowSize});
 }
 
+class ArchivedPlotReplyMetadata {
+  PlotReply? currentPlotReply;
+  int pointsProcessed;
+
+  ArchivedPlotReplyMetadata({
+    required this.currentPlotReply,
+    required this.pointsProcessed,
+  });
+}
+
 enum GenPlots {
   constant("PLOT TEST CONSTANT"),
   randConst("PLOT TEST RAND CONSTANT"),
@@ -425,7 +649,10 @@ enum GenPlots {
   scalarRandRamp("PLOT TEST SCALAR RAND RAMP"),
   parabola("PLOT TEST PARABOLA"),
   parabola64k("PLOT TEST PARABOLA 64K"),
+  parabola32k("PLOT TEST PARABOLA 32K"),
   sine("PLOT TEST SINE"),
+  sine64k("PLOT TEST SINE 64K"),
+  sine32k("PLOT TEST SINE 32K"),
   normal("PLOT TEST NORMAL");
 
   const GenPlots(this.name, {this.minUpdateDelay});

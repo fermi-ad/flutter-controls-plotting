@@ -10,6 +10,7 @@ import 'package:flutter_controls_plotting/entities/plot_data.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 import 'package:flutter_controls_plotting/widgets/plot_channel_title.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
+import 'package:flutter_controls_plotting/widgets/plot_y_axis_label_widget.dart';
 import 'package:graphic/graphic.dart';
 
 part 'flcharts_plot_widget_adapter.dart';
@@ -17,16 +18,16 @@ part 'graphic_plot_widget_adapter.dart';
 part 'fermi_plot_widget_adapter.dart';
 
 abstract class PlotWidgetAdapter {
-  final PlotWidget widget;
+  final PlotWidget plotWidget;
 
   PlotReply? plotReply;
 
-  PlotWidgetAdapter({required this.widget, this.plotReply});
+  PlotWidgetAdapter({required this.plotWidget, this.plotReply});
 
   Widget buildPlot();
 
   Color lineColorForChannel(String channelName) {
-    var plotChannels = widget.plotChannels;
+    var plotChannels = plotWidget.plotChannels;
     ChannelSetting setting = plotChannels[channelName]!;
 
     // Find unique color
@@ -53,14 +54,14 @@ abstract class PlotWidgetAdapter {
       candidateColor ??= PlotColor.blue.color;
       setting.lineColor = candidateColor;
 
-      widget.onInternalChannelSettingChange?.call(channelName);
+      plotWidget.onInternalChannelSettingChange?.call(channelName);
     }
 
     return setting.lineColor!;
   }
 
   int markerIndexForChannel(String channelName) {
-    var plotChannels = widget.plotChannels;
+    var plotChannels = plotWidget.plotChannels;
     ChannelSetting setting = plotChannels[channelName]!;
     return setting.plotMarker.markerIndex;
   }
@@ -76,8 +77,12 @@ class CustomDotPainter extends FlDotPainter {
   final String? character;
   final IconData? icon;
 
-  CustomDotPainter(
-      {required this.size, required this.color, this.character, this.icon});
+  CustomDotPainter({
+    required this.size,
+    required this.color,
+    this.character,
+    this.icon,
+  });
 
   @override
   void draw(Canvas canvas, FlSpot spot, Offset offsetInCanvas) {
@@ -95,25 +100,22 @@ class CustomDotPainter extends FlDotPainter {
       );
       textPainter.layout();
       textPainter.paint(
-          canvas,
-          offsetInCanvas -
-              Offset(textPainter.width / 2, textPainter.height / 2));
+        canvas,
+        offsetInCanvas - Offset(textPainter.width / 2, textPainter.height / 2),
+      );
     } else if (character != null) {
       final textPainter = TextPainter(
         text: TextSpan(
           text: character,
-          style: TextStyle(
-            fontSize: size,
-            color: color,
-          ),
+          style: TextStyle(fontSize: size, color: color),
         ),
         textDirection: TextDirection.ltr,
       );
       textPainter.layout();
       textPainter.paint(
-          canvas,
-          offsetInCanvas -
-              Offset(textPainter.width / 2, textPainter.height / 2));
+        canvas,
+        offsetInCanvas - Offset(textPainter.width / 2, textPainter.height / 2),
+      );
     }
   }
 

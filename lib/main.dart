@@ -13,7 +13,8 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => StandardApp(
-      title: _title,
-      appBar: AppBar(title: const Text(_title)),
-      body: const PlotDemoWidget());
+    title: _title,
+    appBar: AppBar(title: const Text(_title)),
+    body: const PlotDemoWidget(),
+  );
 }

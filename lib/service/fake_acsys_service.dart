@@ -27,25 +27,31 @@ class FakeACSysService implements ACSysServiceAPI {
       throw UnimplementedError();
 
   @override
-  Future<SettingStatus> sendCommand(
-          {required String toDRF, required String value}) =>
-      throw UnimplementedError();
+  Future<SettingStatus> sendCommand({
+    required String toDRF,
+    required String value,
+  }) => throw UnimplementedError();
 
   @override
-  Stream<PlotReply> startPlot(List<String> drfs,
-      {double? xMin,
-      double? xMax,
-      int? windowSize,
-      int? updateRate,
-      int? nAcquisitions,
-      int? triggerEvent}) {
+  Stream<PlotReply> startPlot(
+    List<String> drfs, {
+    double? xMin,
+    double? xMax,
+    double? startTime,
+    double? endTime,
+    int? windowSize,
+    int? updateRate,
+    int? nAcquisitions,
+    int? triggerEvent,
+  }) {
     startPlotCount++;
 
     startPlotnAcquistions = nAcquisitions;
 
     switch (drfs.first) {
       case "API TEST CONSTANT":
-        return Stream<PlotReply>.value(PlotReply(
+        return Stream<PlotReply>.value(
+          PlotReply(
             plotId: "fake",
             xAxisUnits: "Index",
             xAxisMin: 0,
@@ -54,16 +60,24 @@ class FakeACSysService implements ACSysServiceAPI {
             requestTime: 0.0,
             data: [
               PlotChannelData(
-                  name: drfs.first,
-                  units: "A",
-                  rate: getRate(updateRate),
-                  status: 0,
-                  points: List.generate(
-                      500, (i) => PlotPoint(x: i.toDouble(), y: 5.0)))
-            ]));
+                name: drfs.first,
+                units: "A",
+                rate: getRate(updateRate),
+                status: 0,
+                points: [
+                  PlotPoint(
+                    t: getCurrentAcsysEpochTime(),
+                    value: DevScalarArray(List.generate(500, (i) => 5)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
 
       default:
-        return Stream<PlotReply>.value(PlotReply(
+        return Stream<PlotReply>.value(
+          PlotReply(
             plotId: "fake",
             xAxisUnits: "Index",
             xAxisMin: xMin != null ? xMin.toDouble() : 0,
@@ -72,19 +86,23 @@ class FakeACSysService implements ACSysServiceAPI {
             requestTime: 0.0,
             data: [
               PlotChannelData(
-                  name: drfs.first,
-                  units: "",
-                  rate: getRate(updateRate),
-                  status: -1,
-                  points: [])
-            ]));
+                name: drfs.first,
+                units: "",
+                rate: getRate(updateRate),
+                status: -1,
+                points: [],
+              ),
+            ],
+          ),
+        );
     }
   }
 
   @override
-  Future<SettingStatus> submit(
-          {required String forDRF, required DeviceValue newSetting}) =>
-      throw UnimplementedError();
+  Future<SettingStatus> submit({
+    required String forDRF,
+    required DeviceValue newSetting,
+  }) => throw UnimplementedError();
 
   @override
   Future<List<PlotConfigurationListing>> listPlotConfigurations() {
@@ -93,35 +111,41 @@ class FakeACSysService implements ACSysServiceAPI {
   }
 
   @override
-  Future<void> removePlotConfiguration(
-      {required PlotConfigId configurationId}) {
+  Future<void> removePlotConfiguration({
+    required PlotConfigId configurationId,
+  }) {
     // N/A for plotting lib
     throw UnimplementedError();
   }
 
   @override
   Future<PlotConfigurationSnapshot> retrieveLastUserConfiguration(
-      String? user) {
+    String? user,
+  ) {
     throw UnimplementedError();
   }
 
   @override
-  Future<PlotConfigurationSnapshot> retrievePlotConfiguration(
-      {required PlotConfigId configurationId}) {
+  Future<PlotConfigurationSnapshot> retrievePlotConfiguration({
+    required PlotConfigId configurationId,
+  }) {
     // N/A for plotting lib
     throw UnimplementedError();
   }
 
   @override
-  Future<PlotConfigurationSnapshot> savePlotConfiguration(
-      {required PlotConfigurationSnapshot snapshot}) {
+  Future<PlotConfigurationSnapshot> savePlotConfiguration({
+    required PlotConfigurationSnapshot snapshot,
+  }) {
     // N/A for plotting lib
     throw UnimplementedError();
   }
 
   @override
-  Future<void> saveUserConfiguration(
-      {required PlotConfigurationSnapshot snapshot, String? user}) {
+  Future<void> saveUserConfiguration({
+    required PlotConfigurationSnapshot snapshot,
+    String? user,
+  }) {
     throw UnimplementedError();
   }
 

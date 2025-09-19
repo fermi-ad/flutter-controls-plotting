@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/entities/plotting_point.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
 import 'package:flutter_controls_plotting/entities/plot_metadata.dart';
@@ -22,10 +23,13 @@ class PlotWidget extends StatefulWidget {
   final PlotDAQService daqService;
   final PlotData plotData;
 
-  final double? yMin;
-  final double? yMax;
-  final double? xMin;
-  final double? xMax;
+  final double? confMinY;
+  final double? confMaxY;
+  final double? confMinX;
+  final double? confMaxX;
+
+  final double? dataLoggerStartTime;
+  final double? dataLoggerEndTime;
 
   final double? dataLoggerStartTime;
   final double? dataLoggerEndTime;
@@ -41,12 +45,14 @@ class PlotWidget extends StatefulWidget {
   final bool isPersistent;
   final ScalarDataOptions? scalarDataOptions;
 
+  final bool forceStreamReset;
+
   final Function(String channelName)? onInternalChannelSettingChange;
 
   final Function(PlotReply update)? onPlotUpdate;
 
   final Function(ConnectionState streamConnectionState)?
-      onStreamConnectionStateChange;
+  onStreamConnectionStateChange;
 
   final PlotImplementation implementation;
 
@@ -56,6 +62,7 @@ class PlotWidget extends StatefulWidget {
 
   final Function(double deltaY)? adjustYAxisLimits;
 
+<<<<<<< HEAD
   const PlotWidget(
       {super.key,
       this.plotChannels = const <String, ChannelSetting>{},
@@ -81,6 +88,35 @@ class PlotWidget extends StatefulWidget {
       this.adjustXAxisLimits,
       this.adjustYAxisLimits,
       this.implementation = PlotImplementation.flCharts});
+=======
+  const PlotWidget({
+    super.key,
+    this.plotChannels = const <String, ChannelSetting>{},
+    required this.daqService,
+    required this.plotData,
+    this.confMinY,
+    this.confMaxY,
+    this.confMinX,
+    this.confMaxX,
+    this.dataLoggerStartTime,
+    this.dataLoggerEndTime,
+    this.updateDelay = 0,
+    this.nAcquisitions = 0,
+    this.triggerEvent,
+    this.isShowLabels = true,
+    this.isPaused = false,
+    this.isPersistent = false,
+    this.scalarDataOptions,
+    this.onInternalChannelSettingChange,
+    this.onPlotUpdate,
+    this.onStreamConnectionStateChange,
+    this.onZoom,
+    this.adjustXAxisLimits,
+    this.adjustYAxisLimits,
+    this.implementation = PlotImplementation.flCharts,
+    this.forceStreamReset = false,
+  });
+>>>>>>> 5248c644ea45c08665ab2aef54e9859fb712311b
 
   @override
   State<StatefulWidget> createState() => PlotState();
@@ -134,23 +170,23 @@ class PlotState extends State<PlotWidget> {
 
   List<String> get channelNames => _plotReply != null
       ? _plotReply!.data
-          .map((PlotChannelData channelData) => channelData.name)
-          .toList()
+            .map((PlotChannelData channelData) => channelData.name)
+            .toList()
       : [];
 
   List<String> get channelUnits => _plotReply != null
       ? _plotReply!.data
-          .map((PlotChannelData channelData) => channelData.units)
-          .toList()
+            .map((PlotChannelData channelData) => channelData.units)
+            .toList()
       : [];
 
-  double? get minY => widget.plotData.minY;
+  double? get minYAxis => widget.plotData.minY;
 
-  double? get maxY => widget.plotData.maxY;
+  double? get maxYAxis => widget.plotData.maxY;
 
-  double? get minX => widget.plotData.minX;
+  double? get minXAxis => widget.plotData.minX;
 
-  double? get maxX => widget.plotData.maxX;
+  double? get maxXAxis => widget.plotData.maxX;
 
   String get xAxisTitle => _plotReply != null ? _plotReply!.xAxisUnits : "";
 
@@ -162,7 +198,11 @@ class PlotState extends State<PlotWidget> {
       .map((String channelName) => _adapter.markerIndexForChannel(channelName))
       .toList();
 
+<<<<<<< HEAD
   Map<String, List<List<PlotPoint>>> get points => widget.plotData.points;
+=======
+  Map<String, List<List<PlottingPoint>>> get points => widget.plotData.points;
+>>>>>>> 5248c644ea45c08665ab2aef54e9859fb712311b
   PlotMetadata get plotMetadata => widget.plotMetadata;
 
   @override
@@ -232,7 +272,9 @@ class PlotState extends State<PlotWidget> {
           widget.adjustYAxisLimits!(-1 * event.delta.dy);
         },
         child: ListenableBuilder(
-            listenable: _plotStreamMetadata, builder: _plotListenableBuilder),
+          listenable: _plotStreamMetadata,
+          builder: _plotListenableBuilder,
+        ),
       ),
     );
   }
@@ -245,14 +287,22 @@ class PlotState extends State<PlotWidget> {
       if (_plotStreamMetadata.lastStreamError != null) {
         var error = _plotStreamMetadata.lastStreamError;
         _plotStreamMetadata.lastStreamError = null;
-        return _buildWithErrorMessage(error!.toString(),
-            child: _buildEmptyPlot());
+        return _buildWithErrorMessage(
+          error!.toString(),
+          child: _buildEmptyPlot(),
+        );
       }
       final errorOnChannel = _plotReplyHasErrors();
       if (errorOnChannel != null) {
         return _buildWithErrorMessage(
+<<<<<<< HEAD
             "An error occurred when attempting to acquire data for $errorOnChannel",
             child: _buildPlotFromSnapshot());
+=======
+          "An error occured when attempting to acquire data for $errorOnChannel",
+          child: _buildPlotFromSnapshot(),
+        );
+>>>>>>> 5248c644ea45c08665ab2aef54e9859fb712311b
       }
 
       if (_plotReply == null) {
@@ -273,60 +323,78 @@ class PlotState extends State<PlotWidget> {
     if (widget.plotChannels.isNotEmpty) {
       _updateStreamConnectionChanged(ConnectionState.waiting);
 
-      _plotStreamSubscription = _plotStream!.listen((plotReply) {
-        _updateStreamConnectionChanged(ConnectionState.active);
-        _receiveData(plotReply);
-      }, onError: (error) {
-        _plotStreamMetadata.lastStreamError = error;
-        _plotReply = null;
-      }, onDone: () {
-        _updateStreamConnectionChanged(ConnectionState.done);
-      });
+      _plotStreamSubscription = _plotStream!.listen(
+        (plotReply) {
+          _updateStreamConnectionChanged(ConnectionState.active);
+          _receiveData(plotReply);
+        },
+        onError: (error) {
+          _plotStreamMetadata.lastStreamError = error;
+          _plotReply = null;
+        },
+        onDone: () {
+          _updateStreamConnectionChanged(ConnectionState.done);
+        },
+      );
     } else {
       _plotStream = null;
     }
   }
 
   Widget _buildPlotFromSnapshot() => Padding(
-      padding: const EdgeInsets.fromLTRB(10, 10, 30, 10),
-      child: _adapter.buildPlot());
+    padding: const EdgeInsets.fromLTRB(10, 10, 30, 10),
+    child: _adapter.buildPlot(),
+  );
 
-  Widget _buildEmptyPlotWithProgressIndicator() => Column(children: [
-        const Padding(
-            padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-            child: SizedBox(
-                height: 40,
-                child:
-                    Column(children: [Spacer(), LinearProgressIndicator()]))),
-        Expanded(
-            child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 30, 10),
-                child: _buildEmptyPlot()))
-      ]);
+  Widget _buildEmptyPlotWithProgressIndicator() => Column(
+    children: [
+      const Padding(
+        padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+        child: SizedBox(
+          height: 40,
+          child: Column(children: [Spacer(), LinearProgressIndicator()]),
+        ),
+      ),
+      Expanded(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 10, 30, 10),
+          child: _buildEmptyPlot(),
+        ),
+      ),
+    ],
+  );
 
   Widget _buildWithErrorMessage(String message, {required Widget child}) {
     final scheme = Theme.of(context).colorScheme;
-    return Column(children: [
-      Visibility(
+    return Column(
+      children: [
+        Visibility(
           visible: !_errorsDismissed,
           child: Padding(
-              padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
-              child: MaterialBanner(
-                padding: const EdgeInsets.all(5),
-                content: Text(message,
-                    style: TextStyle(color: scheme.onErrorContainer)),
-                leading: const Icon(Icons.error),
-                backgroundColor: scheme.errorContainer,
-                actions: <Widget>[
-                  TextButton(
-                    onPressed: _handleDismissErrors,
-                    child: Text('Dismiss',
-                        style: TextStyle(color: scheme.onErrorContainer)),
+            padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+            child: MaterialBanner(
+              padding: const EdgeInsets.all(5),
+              content: Text(
+                message,
+                style: TextStyle(color: scheme.onErrorContainer),
+              ),
+              leading: const Icon(Icons.error),
+              backgroundColor: scheme.errorContainer,
+              actions: <Widget>[
+                TextButton(
+                  onPressed: _handleDismissErrors,
+                  child: Text(
+                    'Dismiss',
+                    style: TextStyle(color: scheme.onErrorContainer),
                   ),
-                ],
-              ))),
-      Expanded(child: child)
-    ]);
+                ),
+              ],
+            ),
+          ),
+        ),
+        Expanded(child: child),
+      ],
+    );
   }
 
   Widget _buildEmptyPlot() {
@@ -341,19 +409,24 @@ class PlotState extends State<PlotWidget> {
     switch (widget.implementation) {
       case PlotImplementation.flCharts:
         _adapter = FlchartsPlotWidgetAdapter(
-            widget: widget,
-            isShowLabels: widget.isShowLabels,
-            plotReply: _plotStreamMetadata.plotReply);
+          plotWidget: widget,
+          isShowLabels: widget.isShowLabels,
+          plotReply: _plotStreamMetadata.plotReply,
+        );
         break;
 
       case PlotImplementation.graphic:
         _adapter = GraphicPlotWidgetAdapter(
-            widget: widget, plotReply: _plotStreamMetadata.plotReply);
+          plotWidget: widget,
+          plotReply: _plotStreamMetadata.plotReply,
+        );
         break;
 
       case PlotImplementation.fermi:
         _adapter = FermiPlotWidgetAdapter(
-            widget: widget, plotReply: _plotStreamMetadata.plotReply);
+          plotWidget: widget,
+          plotReply: _plotStreamMetadata.plotReply,
+        );
         break;
     }
   }
@@ -392,12 +465,19 @@ class PlotState extends State<PlotWidget> {
 
     if (widget.implementation == PlotImplementation.flCharts) {
       widget.plotData.flchartCache.prepareDataLoggerAcquisition(
+<<<<<<< HEAD
           startTime: _dataLoggerStartTime, endTime: _dataLoggerEndTime);
+=======
+        startTime: _dataLoggerStartTime,
+        endTime: _dataLoggerEndTime,
+      );
+>>>>>>> 5248c644ea45c08665ab2aef54e9859fb712311b
     }
 
     if (widget.plotChannels.isNotEmpty) {
       _errorsDismissed = false;
 
+<<<<<<< HEAD
       // Add OpenTelemetry trace span for plotStream
       final plotStreamSpan =
           otelTracer.startSpan('plotStream.retrievePlot', attributes: [
@@ -419,6 +499,17 @@ class PlotState extends State<PlotWidget> {
           startTime: _dataLoggerStartTime,
           endTime: _dataLoggerEndTime);
       plotStreamSpan.end();
+=======
+      _plotStream = widget.daqService.retrievePlot(
+        context,
+        forChannels: _channels.keys.toSet(),
+        updateDelay: _updateDelay,
+        triggerEvent: _triggerEvent,
+        nAcquisitions: apiAcquisitions,
+        startTime: _dataLoggerStartTime,
+        endTime: _dataLoggerEndTime,
+      );
+>>>>>>> 5248c644ea45c08665ab2aef54e9859fb712311b
     }
   }
 
@@ -478,12 +569,15 @@ class PlotState extends State<PlotWidget> {
     final plotChannels = _plotReply!.data;
 
     widget.plotData.findLimits(
-        plotChannels: plotChannels,
-        confMinY: widget.yMin,
-        confMaxY: widget.yMax,
-        confMinX: widget.xMin,
-        confMaxX: widget.xMax,
-        timeDelta: widget.scalarDataOptions?.timeDelta);
+      plotChannels: plotChannels,
+      confMinY: widget.confMinY,
+      confMaxY: widget.confMaxY,
+      confMinX: widget.confMinX,
+      confMaxX: widget.confMaxX,
+      timeDelta: widget.scalarDataOptions?.timeDelta,
+      channelSettings: widget.plotChannels,
+      triggerTimestamp: _plotReply!.triggerTimestamp,
+    );
   }
 
   void _filterPoints() {
@@ -499,9 +593,13 @@ class PlotState extends State<PlotWidget> {
 
     final plotChannels = _plotReply!.data;
     widget.plotData.filterPoints(
-        isTimedScalarData: widget.isTimedScalarData,
-        isPersistent: widget.isPersistent,
-        plotChannels: plotChannels);
+      isTimedScalarData: widget.isTimedScalarData,
+      isPersistent: widget.isPersistent,
+      isOneShot: widget.nAcquisitions == 1,
+      plotChannels: plotChannels,
+      triggerTimestamp: _plotReply!.triggerTimestamp,
+      channelSettings: widget.plotChannels,
+    );
   }
 
   String? _plotReplyHasErrors() {
@@ -527,10 +625,12 @@ class PlotState extends State<PlotWidget> {
     }
   }
 
-  bool get _streamShouldReset => !((mapEquals(widget.plotChannels, _channels) &&
-      _updateDelay == widget.updateDelay &&
-      _nAcquisitions == widget.nAcquisitions &&
-      _triggerEvent == widget.triggerEvent));
+  bool get _streamShouldReset =>
+      widget.forceStreamReset ||
+      !((mapEquals(widget.plotChannels, _channels) &&
+          _updateDelay == widget.updateDelay &&
+          _nAcquisitions == widget.nAcquisitions &&
+          _triggerEvent == widget.triggerEvent));
 
   late PlotWidgetAdapter _adapter;
 

@@ -11,7 +11,11 @@ class PlotMetadata with ChangeNotifier {
   double? _xMin;
   double? _xMax;
 
+  double? displayedArrayTime;
+
   int plotDataBytes = 0;
+  int _numberOfPoints = 0;
+  int? reducedPoints;
 
   PlotMetadata();
 
@@ -58,6 +62,13 @@ class PlotMetadata with ChangeNotifier {
     Future.delayed(Duration.zero, () => notifyListeners());
   }
 
+  int get numberOfPoints => _numberOfPoints;
+
+  set numberOfPoints(int numberOfPoints) {
+    _numberOfPoints = numberOfPoints;
+    Future.delayed(Duration.zero, () => notifyListeners());
+  }
+
   set xMin(double? xMin) {
     _xMin = xMin;
     Future.delayed(Duration.zero, () => notifyListeners());
@@ -69,6 +80,9 @@ class PlotMetadata with ChangeNotifier {
   }
 
   void cleanUp() {
+    numberOfPoints = 0;
+    reducedPoints = null;
+    displayedArrayTime = null;
     _latestDataEpochTime = null;
     _latestRequestEpochTime = null;
     _xMin = null;
