@@ -9,6 +9,7 @@ import 'package:flutter_controls_plotting/test_harness/actions.dart';
 import 'package:flutter_controls_plotting/test_harness/assertions.dart';
 import 'package:flutter_controls_plotting/test_harness/setup.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
+import 'package:flutter_controls_plotting/widgets/plot_y_axis_label_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -837,7 +838,7 @@ void main() {
         await tester.pumpWidget(_buildPlotWidget(channelList));
         await waitForPlotDataToLoad(tester);
 
-        // Verify that the correct min/max values for the two scales are displayed
+        // Then the correct min/max values for the two scales are displayed
         assertPlotYAxisLabel(
           isVisible: true,
           color: Colors.red,
@@ -859,6 +860,35 @@ void main() {
           color: Colors.blue,
           withText: "5.00",
         );
+      },
+    );
+
+    testWidgets(
+      "Plot two channels with independent y-scales, the correct number of labels is displayed",
+      (WidgetTester tester) async {
+        // Given a small desktop display size
+        await setDesktopScreenSize(tester);
+
+        // ... and a channel list with two channels and independent y-scales
+        final channelList = {
+          "PLOT TEST CONSTANT": ChannelSetting(
+            lineColor: PlotColor.red.color,
+            confMinY: 0.00,
+            confMaxY: 10.00,
+          ),
+          "PLOT TEST RAMP": ChannelSetting(
+            lineColor: PlotColor.blue.color,
+            confMinY: -5.00,
+            confMaxY: 5.00,
+          ),
+        };
+
+        // When I plot both channels
+        await tester.pumpWidget(_buildPlotWidget(channelList));
+        await waitForPlotDataToLoad(tester);
+
+        // Then a total of 11 y-axis labels are displayed
+        assertPlotYAxisLabelsCount(tester, 21);
       },
     );
 
@@ -1229,6 +1259,10 @@ void main() {
   });
 
   group("PlotWidget (implementation = Fermi) widget tests", () {});
+}
+
+void assertPlotYAxisLabelsCount(WidgetTester tester, int n) {
+  expect(find.byType(PlotYAxisLabelWidget).evaluate().length, n);
 }
 
 void assertPlotImplementationIs(
