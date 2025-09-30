@@ -23,6 +23,7 @@ class FlchartCache {
   // Datalogger skip cache spots.
   double? _dataLoggerStartTime;
   double? _dataLoggerEndTime;
+  bool _dLoggerApplyPredictiveReduction = false;
   final Map<String, double> _dLoggerEstimatedNumberOfPointsPerCh = {};
   double? __dLoggerEstimatedNumberOfPoints;
   int? __dLoggerPointSkipCount;
@@ -373,8 +374,14 @@ class FlchartCache {
     return spots;
   }
 
-  void prepareDataLoggerAcquisition({double? startTime, double? endTime}) {
+  void prepareDataLoggerAcquisition({
+    double? startTime,
+    double? endTime,
+    bool applyPredictiveReduction = true,
+  }) {
     clearDataLogger();
+
+    _dLoggerApplyPredictiveReduction = applyPredictiveReduction;
 
     if (startTime == null) {
       return;
@@ -454,6 +461,10 @@ class FlchartCache {
       return;
     }
 
+    if (!_dLoggerApplyPredictiveReduction) {
+      return;
+    }
+
     if (_dLoggerEstimatedNumberOfPointsPerCh.containsKey(channelName)) {
       return;
     }
@@ -512,6 +523,7 @@ class FlchartCache {
     _dataLoggerEndTime = null;
     _dLoggerEstimatedNumberOfPointsPerCh.clear();
     _dLoggerEstimatedNumberOfPoints = null;
+    _dLoggerApplyPredictiveReduction = false;
     reducedPoints = null;
   }
 }
