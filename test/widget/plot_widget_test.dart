@@ -893,6 +893,45 @@ void main() {
     );
 
     testWidgets(
+      "Plot four channels with independent y-scales, the correct number of labels is displayed",
+      (WidgetTester tester) async {
+        // Given a small desktop display size
+        await setDesktopScreenSize(tester);
+
+        // ... and a channel list with two channels and independent y-scales
+        final channelList = {
+          "PLOT TEST CONSTANT": ChannelSetting(
+            lineColor: PlotColor.red.color,
+            confMinY: 0.00,
+            confMaxY: 10.00,
+          ),
+          "PLOT TEST RAMP": ChannelSetting(
+            lineColor: PlotColor.blue.color,
+            confMinY: -5.00,
+            confMaxY: 5.00,
+          ),
+          "PLOT TEST RAND RAMP": ChannelSetting(
+            lineColor: PlotColor.green.color,
+            confMinY: 0.00,
+            confMaxY: 5.00,
+          ),
+          "PLOT TEST SINE": ChannelSetting(
+            lineColor: PlotColor.yellow.color,
+            confMinY: 0.00,
+            confMaxY: 5.00,
+          ),
+        };
+
+        // When I plot both channels
+        await tester.pumpWidget(_buildPlotWidget(channelList));
+        await waitForPlotDataToLoad(tester);
+
+        // Then a total of 11 y-axis labels are displayed
+        assertPlotYAxisLabelsCount(tester, 11);
+      },
+    );
+
+    testWidgets(
       "Set x-min and x-max to fractional values, all points are normalized properly",
       (WidgetTester tester) async {
         // Given a channel list containing "PLOT TEST PARABOLA"
