@@ -479,9 +479,6 @@ class PlotData {
   }) {
     minY = null;
     maxY = null;
-    double? logMinY;
-    double? logMaxY;
-
     for (int i = points.length - 1; i >= 0; i--) {
       final point = points[i];
       double yPoint = point.y;
@@ -491,33 +488,31 @@ class PlotData {
       if (xRangeMax != null && xPoint > xRangeMax) {
         continue;
       }
-
-      // calculate the minY, maxY in logScale.
       if (channelSetting != null && channelSetting.isLogScale) {
         if (yPoint > 0) {
           double logY = log(yPoint);
-          if (logMinY == null) {
-            logMinY = logY;
+          if (minY == null) {
+            minY = logY;
           } else {
-            logMinY = min(logY, logMinY);
+            minY = min(logY, minY);
           }
-          if (logMaxY == null) {
-            logMaxY = logY;
+          if (maxY == null) {
+            maxY = logY;
           } else {
-            logMaxY = max(logY, logMaxY);
+            maxY = max(logY, maxY);
           }
         }
-      }
-
-      if (minY == null) {
-        minY = yPoint;
       } else {
-        minY = min(yPoint, minY);
-      }
-      if (maxY == null) {
-        maxY = yPoint;
-      } else {
-        maxY = max(yPoint, maxY);
+        if (minY == null) {
+          minY = yPoint;
+        } else {
+          minY = min(yPoint, minY);
+        }
+        if (maxY == null) {
+          maxY = yPoint;
+        } else {
+          maxY = max(yPoint, maxY);
+        }
       }
 
       if (minX == null) {
@@ -537,44 +532,40 @@ class PlotData {
     }
 
     if (channelSetting != null) {
-      // Handle the y limits for constant data.
+      // Handle constant data by adding a small gap for visibility
+      double? adjustedMinY = minY;
+      double? adjustedMaxY = maxY;
+
       if (minY != null && maxY != null && minY == maxY) {
-        (minY, maxY) = adjustMinMaxForConstant(minY);
-        if (channelSetting.isLogScale) {
-          (logMinY, logMaxY) = adjustMinMaxForConstant(logMinY!);
+        // Constant data detected - add a small gap for visibility
+        double constantValue = minY;
+        double gap;
+
+        if (constantValue == 0) {
+          // For zero values, use a fixed small gap
+          gap = 0.1;
+        } else {
+          // For non-zero values, use 10% of the absolute value as gap
+          gap = constantValue.abs() * 0.1;
         }
+
+        adjustedMinY = constantValue - gap;
+        adjustedMaxY = constantValue + gap;
       }
 
       // Priority: user-defined confMinY/confMaxY > calculated values
       if (channelSetting.confMinY != null) {
-        channelSetting.displayedMinY = channelSetting.confMinY;
-        channelSetting.labelMinY = channelSetting.confMinY;
+        channelSetting.finalMinY = channelSetting.confMinY;
       } else {
-        channelSetting.displayedMinY = logMinY ?? minY;
-        channelSetting.labelMinY = minY;
+        channelSetting.finalMinY = adjustedMinY;
       }
-
       if (channelSetting.confMaxY != null) {
-        channelSetting.displayedMaxY = channelSetting.confMaxY;
-        channelSetting.labelMaxY = channelSetting.confMaxY;
+        channelSetting.finalMaxY = channelSetting.confMaxY;
       } else {
-        channelSetting.displayedMaxY = logMaxY ?? maxY;
-        channelSetting.labelMaxY = maxY;
+        channelSetting.finalMaxY = adjustedMaxY;
       }
     }
     return (minY, maxY, minX, maxX);
-  }
-
-  (double, double) adjustMinMaxForConstant(double constantValue) {
-    double gap;
-    if (constantValue == 0) {
-      gap = 0.1;
-    } else {
-      gap = constantValue.abs() * 0.1;
-    }
-    double adjustedMinY = constantValue - gap;
-    double adjustedMaxY = constantValue + gap;
-    return (adjustedMinY, adjustedMaxY);
   }
 
   void persistenceCleanUp({

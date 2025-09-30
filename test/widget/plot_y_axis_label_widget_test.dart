@@ -37,8 +37,8 @@ void main() {
         // When I build the PlotYAxisLabelWidget with a normalizedValue of 0, 0.1, 0.5 and 1
         final channels = {
           "Test": ChannelSetting(
-            labelMinY: 0,
-            labelMaxY: 10,
+            finalMinY: 0,
+            finalMaxY: 10,
             lineColor: Colors.red,
           ),
         };
@@ -100,8 +100,8 @@ void main() {
         // When I build the PlotYAxisLabelWidget with a normalizedValue of 0, 0.1, 0.5 and 1
         final channels = {
           "Test": ChannelSetting(
-            labelMinY: -10,
-            labelMaxY: 10,
+            finalMinY: -10,
+            finalMaxY: 10,
             lineColor: Colors.red,
           ),
         };
@@ -172,8 +172,8 @@ void main() {
         final channels = {
           "Test1": ChannelSetting(
             lineColor: Colors.red,
-            labelMinY: -10,
-            labelMaxY: 10,
+            finalMinY: -10,
+            finalMaxY: 10,
           ),
           "Test3": ChannelSetting(lineColor: Colors.green),
         };
