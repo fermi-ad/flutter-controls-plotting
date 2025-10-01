@@ -100,13 +100,13 @@ void assertConfigTimeLimits(
 
 void assertPlotYAxisLimits(
   WidgetTester tester, {
+  required String channelName,
   required double min,
   required double max,
 }) {
-  final plotState = tester.state(find.byType(PlotWidget)) as PlotState;
-
-  expect(plotState.minYAxis, closeTo(min, 0.01));
-  expect(plotState.maxYAxis, closeTo(max, 0.01));
+  final plotWidget = tester.widget<PlotWidget>(find.byType(PlotWidget));
+  expect(plotWidget.plotChannels[channelName]!.labelMinY, closeTo(min, 0.01));
+  expect(plotWidget.plotChannels[channelName]!.labelMaxY, closeTo(max, 0.01));
 }
 
 void assertPlotYAxisLabel({
