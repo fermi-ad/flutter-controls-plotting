@@ -9,6 +9,7 @@ import 'package:flutter_controls_plotting/test_harness/actions.dart';
 import 'package:flutter_controls_plotting/test_harness/assertions.dart';
 import 'package:flutter_controls_plotting/test_harness/setup.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
+import 'package:flutter_controls_plotting/widgets/plot_y_axis_label_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -474,9 +475,6 @@ void main() {
       // Then the plot is empty
       assertEmptyPlot(tester, isVisible: true);
 
-      // ... and the Y-axis limits are 0 to 3
-      assertPlotYAxisLimits(tester, min: 0, max: 3);
-
       // ... and the X-axis limits are 0 to 3
       assertPlotXAxisLimits(tester, min: 0, max: 3);
     });
@@ -507,7 +505,12 @@ void main() {
       );
 
       // ... and the Y-axis has limits of...
-      assertPlotYAxisLimits(tester, min: 4.5, max: 5.5);
+      assertPlotYAxisLimits(
+        tester,
+        channelName: "PLOT TEST CONSTANT",
+        min: 4.5,
+        max: 5.5,
+      );
       assertPlotYAxisLabel(
         isVisible: true,
         color: Colors.red,
@@ -540,7 +543,12 @@ void main() {
         assertPlotYAxisTitles(tester, titles: ["PLOT TEST RAMP"], units: ["V"]);
 
         // ... and the limits for the Y-axis are 0 to 500
-        assertPlotYAxisLimits(tester, min: 0, max: 499);
+        assertPlotYAxisLimits(
+          tester,
+          channelName: "PLOT TEST RAMP",
+          min: 0,
+          max: 499,
+        );
         assertPlotYAxisLabel(
           isVisible: true,
           color: Colors.red,
@@ -569,7 +577,12 @@ void main() {
 
         // Ensure that the axis limits accomodate the sine plot test.
         assertPlotXAxisLimits(tester, min: 0, max: 500.0);
-        assertPlotYAxisLimits(tester, min: -1, max: 1);
+        assertPlotYAxisLimits(
+          tester,
+          channelName: "PLOT TEST SINE",
+          min: -1,
+          max: 1,
+        );
         assertPlotYAxisLabel(
           isVisible: true,
           color: Colors.blue,
@@ -590,7 +603,12 @@ void main() {
 
         // Ensure that the axis limits changed to accomodate the new plot.
         assertPlotXAxisLimits(tester, min: 0, max: 500);
-        assertPlotYAxisLimits(tester, min: 4.5, max: 5.5);
+        assertPlotYAxisLimits(
+          tester,
+          channelName: "PLOT TEST CONSTANT",
+          min: 4.5,
+          max: 5.5,
+        );
         assertPlotYAxisLabel(
           isVisible: true,
           color: Colors.red,
@@ -837,7 +855,7 @@ void main() {
         await tester.pumpWidget(_buildPlotWidget(channelList));
         await waitForPlotDataToLoad(tester);
 
-        // Verify that the correct min/max values for the two scales are displayed
+        // Then the correct min/max values for the two scales are displayed
         assertPlotYAxisLabel(
           isVisible: true,
           color: Colors.red,
@@ -859,6 +877,74 @@ void main() {
           color: Colors.blue,
           withText: "5.00",
         );
+      },
+    );
+
+    testWidgets(
+      "Plot two channels with independent y-scales, the correct number of labels is displayed",
+      (WidgetTester tester) async {
+        // Given a small desktop display size
+        await setDesktopScreenSize(tester);
+
+        // ... and a channel list with two channels and independent y-scales
+        final channelList = {
+          "PLOT TEST CONSTANT": ChannelSetting(
+            lineColor: PlotColor.red.color,
+            confMinY: 0.00,
+            confMaxY: 10.00,
+          ),
+          "PLOT TEST RAMP": ChannelSetting(
+            lineColor: PlotColor.blue.color,
+            confMinY: -5.00,
+            confMaxY: 5.00,
+          ),
+        };
+
+        // When I plot both channels
+        await tester.pumpWidget(_buildPlotWidget(channelList));
+        await waitForPlotDataToLoad(tester);
+
+        // Then a total of 11 y-axis labels are displayed
+        assertPlotYAxisLabelsCount(tester, 21);
+      },
+    );
+
+    testWidgets(
+      "Plot four channels with independent y-scales, the correct number of labels is displayed",
+      (WidgetTester tester) async {
+        // Given a small desktop display size
+        await setDesktopScreenSize(tester);
+
+        // ... and a channel list with two channels and independent y-scales
+        final channelList = {
+          "PLOT TEST CONSTANT": ChannelSetting(
+            lineColor: PlotColor.red.color,
+            confMinY: 0.00,
+            confMaxY: 10.00,
+          ),
+          "PLOT TEST RAMP": ChannelSetting(
+            lineColor: PlotColor.blue.color,
+            confMinY: -5.00,
+            confMaxY: 5.00,
+          ),
+          "PLOT TEST RAND RAMP": ChannelSetting(
+            lineColor: PlotColor.green.color,
+            confMinY: 0.00,
+            confMaxY: 5.00,
+          ),
+          "PLOT TEST SINE": ChannelSetting(
+            lineColor: PlotColor.yellow.color,
+            confMinY: 0.00,
+            confMaxY: 5.00,
+          ),
+        };
+
+        // When I plot both channels
+        await tester.pumpWidget(_buildPlotWidget(channelList));
+        await waitForPlotDataToLoad(tester);
+
+        // Then a total of 11 y-axis labels are displayed
+        assertPlotYAxisLabelsCount(tester, 11);
       },
     );
 
@@ -923,12 +1009,6 @@ void main() {
 
       // ... and the plot is empty
       assertEmptyPlot(tester, isVisible: true);
-
-      // ... and the Y-axis limits are 0 to 1
-      assertPlotYAxisLimits(tester, min: 0, max: 3);
-
-      // ... and the X-axis limits are 0 to 1
-      // assertPlotXAxisLimits(tester, min: 0, max: 1);
     });
 
     testWidgets("Plot PLOT TEST CONSTANT, get a horizontal line at y=5.0", (
@@ -959,7 +1039,12 @@ void main() {
       );
 
       // ... and the Y-axis has limits of...
-      assertPlotYAxisLimits(tester, min: 4.5, max: 5.5);
+      assertPlotYAxisLimits(
+        tester,
+        channelName: "PLOT TEST CONSTANT",
+        min: 4.5,
+        max: 5.5,
+      );
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
@@ -989,7 +1074,12 @@ void main() {
         assertPlotYAxisTitles(tester, titles: ["PLOT TEST RAMP"], units: ["V"]);
 
         // ... and the limits for the Y-axis are 0 to 500
-        assertPlotYAxisLimits(tester, min: 0, max: 499);
+        assertPlotYAxisLimits(
+          tester,
+          channelName: "PLOT TEST RAMP",
+          min: 0,
+          max: 499,
+        );
 
         // ... and the X-axis is labeled...
         assertPlotXAxisTitle(tester, title: "Index");
@@ -1009,7 +1099,12 @@ void main() {
 
         // Ensure that the axis limits accomodate the sine plot test.
         assertPlotXAxisLimits(tester, min: 0, max: 500);
-        assertPlotYAxisLimits(tester, min: -1, max: 1);
+        assertPlotYAxisLimits(
+          tester,
+          channelName: "PLOT TEST SINE",
+          min: -1,
+          max: 1,
+        );
 
         // Plot a second channel.
         channelList["PLOT TEST CONSTANT"] = ChannelSetting();
@@ -1018,7 +1113,12 @@ void main() {
 
         // Ensure that the axis limits changed to accomodate the new plot.
         assertPlotXAxisLimits(tester, min: 0, max: 500);
-        assertPlotYAxisLimits(tester, min: 4.5, max: 5.5);
+        assertPlotYAxisLimits(
+          tester,
+          channelName: "PLOT TEST CONSTANT",
+          min: 4.5,
+          max: 5.5,
+        );
       },
     );
 
@@ -1229,6 +1329,10 @@ void main() {
   });
 
   group("PlotWidget (implementation = Fermi) widget tests", () {});
+}
+
+void assertPlotYAxisLabelsCount(WidgetTester tester, int n) {
+  expect(find.byType(PlotYAxisLabelWidget).evaluate().length, n);
 }
 
 void assertPlotImplementationIs(

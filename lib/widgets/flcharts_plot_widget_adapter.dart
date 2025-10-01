@@ -131,6 +131,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         axisNameWidget: axisNameWidget,
         sideTitles: SideTitles(
           showTitles: isShowLabels,
+          interval: _calculateYAxisLabelInterval(
+            forNChannels: plotReply.data.length,
+          ),
           reservedSize: 60,
           getTitlesWidget: _buildYLabelWidget,
         ),
@@ -142,6 +145,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       leftTitles = AxisTitles(
         sideTitles: SideTitles(
           showTitles: isShowLabels,
+          interval: _calculateYAxisLabelInterval(
+            forNChannels: plotReply.data.length,
+          ),
           reservedSize: 60,
           getTitlesWidget: _buildYLabelWidget,
         ),
@@ -412,6 +418,18 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     plotWidget.plotMetadata.numberOfPoints = cache.totalPoints;
 
     return lineChartList;
+  }
+
+  double _calculateYAxisLabelInterval({required int forNChannels}) {
+    if (forNChannels < 3) {
+      return 0.05;
+    } else if (forNChannels < 5) {
+      return 0.1;
+    } else if (forNChannels < 7) {
+      return 0.2;
+    } else {
+      return 0.25;
+    }
   }
 }
 
