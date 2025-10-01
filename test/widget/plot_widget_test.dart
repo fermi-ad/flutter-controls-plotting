@@ -475,9 +475,6 @@ void main() {
       // Then the plot is empty
       assertEmptyPlot(tester, isVisible: true);
 
-      // ... and the Y-axis limits are 0 to 3
-      assertPlotYAxisLimits(tester, min: 0, max: 3);
-
       // ... and the X-axis limits are 0 to 3
       assertPlotXAxisLimits(tester, min: 0, max: 3);
     });
@@ -508,7 +505,12 @@ void main() {
       );
 
       // ... and the Y-axis has limits of...
-      assertPlotYAxisLimits(tester, min: 4.5, max: 5.5);
+      assertPlotYAxisLimits(
+        tester,
+        channelName: "PLOT TEST CONSTANT",
+        min: 4.5,
+        max: 5.5,
+      );
       assertPlotYAxisLabel(
         isVisible: true,
         color: Colors.red,
@@ -541,7 +543,12 @@ void main() {
         assertPlotYAxisTitles(tester, titles: ["PLOT TEST RAMP"], units: ["V"]);
 
         // ... and the limits for the Y-axis are 0 to 500
-        assertPlotYAxisLimits(tester, min: 0, max: 499);
+        assertPlotYAxisLimits(
+          tester,
+          channelName: "PLOT TEST RAMP",
+          min: 0,
+          max: 499,
+        );
         assertPlotYAxisLabel(
           isVisible: true,
           color: Colors.red,
@@ -570,7 +577,12 @@ void main() {
 
         // Ensure that the axis limits accomodate the sine plot test.
         assertPlotXAxisLimits(tester, min: 0, max: 500.0);
-        assertPlotYAxisLimits(tester, min: -1, max: 1);
+        assertPlotYAxisLimits(
+          tester,
+          channelName: "PLOT TEST SINE",
+          min: -1,
+          max: 1,
+        );
         assertPlotYAxisLabel(
           isVisible: true,
           color: Colors.blue,
@@ -591,7 +603,12 @@ void main() {
 
         // Ensure that the axis limits changed to accomodate the new plot.
         assertPlotXAxisLimits(tester, min: 0, max: 500);
-        assertPlotYAxisLimits(tester, min: 4.5, max: 5.5);
+        assertPlotYAxisLimits(
+          tester,
+          channelName: "PLOT TEST CONSTANT",
+          min: 4.5,
+          max: 5.5,
+        );
         assertPlotYAxisLabel(
           isVisible: true,
           color: Colors.red,
@@ -992,12 +1009,6 @@ void main() {
 
       // ... and the plot is empty
       assertEmptyPlot(tester, isVisible: true);
-
-      // ... and the Y-axis limits are 0 to 1
-      assertPlotYAxisLimits(tester, min: 0, max: 3);
-
-      // ... and the X-axis limits are 0 to 1
-      // assertPlotXAxisLimits(tester, min: 0, max: 1);
     });
 
     testWidgets("Plot PLOT TEST CONSTANT, get a horizontal line at y=5.0", (
@@ -1028,7 +1039,12 @@ void main() {
       );
 
       // ... and the Y-axis has limits of...
-      assertPlotYAxisLimits(tester, min: 4.5, max: 5.5);
+      assertPlotYAxisLimits(
+        tester,
+        channelName: "PLOT TEST CONSTANT",
+        min: 4.5,
+        max: 5.5,
+      );
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
@@ -1058,7 +1074,12 @@ void main() {
         assertPlotYAxisTitles(tester, titles: ["PLOT TEST RAMP"], units: ["V"]);
 
         // ... and the limits for the Y-axis are 0 to 500
-        assertPlotYAxisLimits(tester, min: 0, max: 499);
+        assertPlotYAxisLimits(
+          tester,
+          channelName: "PLOT TEST RAMP",
+          min: 0,
+          max: 499,
+        );
 
         // ... and the X-axis is labeled...
         assertPlotXAxisTitle(tester, title: "Index");
@@ -1078,7 +1099,12 @@ void main() {
 
         // Ensure that the axis limits accomodate the sine plot test.
         assertPlotXAxisLimits(tester, min: 0, max: 500);
-        assertPlotYAxisLimits(tester, min: -1, max: 1);
+        assertPlotYAxisLimits(
+          tester,
+          channelName: "PLOT TEST SINE",
+          min: -1,
+          max: 1,
+        );
 
         // Plot a second channel.
         channelList["PLOT TEST CONSTANT"] = ChannelSetting();
@@ -1087,7 +1113,12 @@ void main() {
 
         // Ensure that the axis limits changed to accomodate the new plot.
         assertPlotXAxisLimits(tester, min: 0, max: 500);
-        assertPlotYAxisLimits(tester, min: 4.5, max: 5.5);
+        assertPlotYAxisLimits(
+          tester,
+          channelName: "PLOT TEST CONSTANT",
+          min: 4.5,
+          max: 5.5,
+        );
       },
     );
 
