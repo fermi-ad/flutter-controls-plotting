@@ -586,10 +586,10 @@ class PlotData {
         // Use calculated values
         if (channelSetting.isLogScale) {
           channelSetting.displayedMaxY = logMaxY;
-          channelSetting.labelMinY = exp(logMaxY as num);
+          channelSetting.labelMaxY = exp(logMaxY as num);
         } else {
           channelSetting.displayedMaxY = maxY;
-          channelSetting.labelMinY = maxY;
+          channelSetting.labelMaxY = maxY;
         }
       }
     }
