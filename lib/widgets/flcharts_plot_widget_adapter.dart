@@ -258,7 +258,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         xString = x.toString();
       }
 
-      final channelIndex = touchedSpots.indexOf(touchedSpot);
+      final channelIndex = touchedSpot.barIndex;
       final channelName = plotWidget.plotChannels.keys.toList()[channelIndex];
       final min =
           plotWidget.plotChannels[channelName]?.displayedMinY ??
