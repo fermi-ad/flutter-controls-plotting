@@ -49,8 +49,8 @@ class PlotYAxisLabelWidget extends StatelessWidget {
 
       return linearValue;
     } else {
-      final min = channel?.displayedMinY ?? defaultMin ?? 0;
-      final max = channel?.displayedMaxY ?? defaultMax ?? 1;
+      final min = channel?.labelMinY ?? defaultMin ?? 0;
+      final max = channel?.labelMaxY ?? defaultMax ?? 1;
 
       return normalizedValue * (max - min) + min;
     }
