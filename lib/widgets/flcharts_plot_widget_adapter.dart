@@ -261,14 +261,19 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       final channelIndex = touchedSpots.indexOf(touchedSpot);
       final channelName = plotWidget.plotChannels.keys.toList()[channelIndex];
       final min =
-          plotWidget.plotChannels[channelName]?.labelMinY ??
+          plotWidget.plotChannels[channelName]?.displayedMinY ??
           plotWidget.plotData.minY ??
           0;
       final max =
-          plotWidget.plotChannels[channelName]?.labelMaxY ??
+          plotWidget.plotChannels[channelName]?.displayedMaxY ??
           plotWidget.plotData.maxY ??
           1;
-      final yValue = _scaleY(y, min: min, max: max);
+      final yValue = _scaleY(
+        y,
+        min: min,
+        max: max,
+        isLogScale: plotWidget.plotChannels[channelName]?.isLogScale,
+      );
 
       tooltips.add(
         LineTooltipItem('$xString, ${yValue.toStringAsFixed(2)}', textStyle),
@@ -282,9 +287,11 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     double yNormalized, {
     required double min,
     required double max,
+    required isLogScale,
   }) {
     final ySpan = max - min;
-    return (yNormalized * ySpan + min);
+    final y = (yNormalized * ySpan + min);
+    return isLogScale ? exp(y) : y;
   }
 
   List<LineChartBarData> _toLineChartBarDataList(
