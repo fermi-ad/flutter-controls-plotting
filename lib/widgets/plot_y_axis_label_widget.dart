@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 
@@ -30,13 +31,28 @@ class PlotYAxisLabelWidget extends StatelessWidget {
     return Column(children: labels);
   }
 
-  double _calculateValue(String channelName) =>
-      normalizedValue * (_max(channelName) - _min(channelName)) +
-      _min(channelName);
+  double _calculateValue(String channelName) {
+    final channel = channels[channelName];
+    if (channel != null && channel.isLogScale) {
+      final logMin =
+          channel.displayedMinY ??
+          (defaultMin != null ? log(defaultMin!) : log(1));
+      final logMax =
+          channel.displayedMaxY ??
+          (defaultMax != null ? log(defaultMax!) : log(10));
 
-  double _min(String channelName) =>
-      channels[channelName]?.labelMinY ?? defaultMin ?? 0;
+      // Calculate the log value at this normalized position
+      final logValue = normalizedValue * (logMax - logMin) + logMin;
 
-  double _max(String channelName) =>
-      channels[channelName]?.labelMaxY ?? defaultMax ?? 1;
+      // Convert back to linear scale for display
+      final linearValue = exp(logValue);
+
+      return linearValue;
+    } else {
+      final min = channel?.labelMinY ?? defaultMin ?? 0;
+      final max = channel?.labelMaxY ?? defaultMax ?? 1;
+
+      return normalizedValue * (max - min) + min;
+    }
+  }
 }
