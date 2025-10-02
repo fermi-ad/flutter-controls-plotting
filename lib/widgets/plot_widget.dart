@@ -426,6 +426,9 @@ class PlotState extends State<PlotWidget> {
       widget.plotData.flchartCache.prepareDataLoggerAcquisition(
         startTime: _dataLoggerStartTime,
         endTime: _dataLoggerEndTime,
+        applyPredictiveReduction:
+            // Non-persistent array data should not apply predective reduction.
+            !(!widget.isTimedScalarData && !widget.isPersistent),
       );
     }
 
