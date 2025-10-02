@@ -545,23 +545,55 @@ class PlotData {
         }
       }
 
-      // Priority: user-defined confMinY/confMaxY > calculated values
       if (channelSetting.confMinY != null) {
-        channelSetting.displayedMinY = channelSetting.confMinY;
+        // Use user-configured values
+        if (channelSetting.isLogScale) {
+          if (channelSetting.confMinY! > 0) {
+            channelSetting.displayedMinY = log(channelSetting.confMinY!);
+          } else {
+            channelSetting.displayedMinY =
+                logMinY ?? log(0.001); // Use small positive default
+          }
+        } else {
+          channelSetting.displayedMinY = channelSetting.confMinY;
+        }
         channelSetting.labelMinY = channelSetting.confMinY;
       } else {
-        channelSetting.displayedMinY = logMinY ?? minY;
-        channelSetting.labelMinY = minY;
+        // Use calculated values
+        if (channelSetting.isLogScale) {
+          channelSetting.displayedMinY = logMinY;
+          channelSetting.labelMinY = exp(logMinY as num);
+        } else {
+          channelSetting.displayedMinY = minY;
+          channelSetting.labelMinY = minY;
+        }
       }
 
       if (channelSetting.confMaxY != null) {
-        channelSetting.displayedMaxY = channelSetting.confMaxY;
+        // Use user-configured values
+        if (channelSetting.isLogScale) {
+          if (channelSetting.confMaxY! > 0) {
+            channelSetting.displayedMaxY = log(channelSetting.confMaxY!);
+          } else {
+            channelSetting.displayedMaxY =
+                logMaxY ?? log(1000); // Use reasonable positive default
+          }
+        } else {
+          channelSetting.displayedMaxY = channelSetting.confMaxY;
+        }
         channelSetting.labelMaxY = channelSetting.confMaxY;
       } else {
-        channelSetting.displayedMaxY = logMaxY ?? maxY;
-        channelSetting.labelMaxY = maxY;
+        // Use calculated values
+        if (channelSetting.isLogScale) {
+          channelSetting.displayedMaxY = logMaxY;
+          channelSetting.labelMinY = exp(logMaxY as num);
+        } else {
+          channelSetting.displayedMaxY = maxY;
+          channelSetting.labelMinY = maxY;
+        }
       }
     }
+
     return (minY, maxY, minX, maxX);
   }
 
