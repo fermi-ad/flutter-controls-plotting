@@ -31,8 +31,17 @@ class PlotYAxisLabelWidget extends StatelessWidget {
     return Column(children: labels);
   }
 
-  String _formatValue(double v) =>
-      v.abs() >= 10000 ? v.toStringAsExponential(2) : v.toStringAsFixed(2);
+  String _formatValue(double v) {
+    if (v == v.roundToDouble()) {
+      return v.abs() >= 1000000
+          ? v.toStringAsExponential(2)
+          : v.toStringAsFixed(0);
+    } else {
+      return v.abs() >= 10000
+          ? v.toStringAsExponential(2)
+          : v.toStringAsFixed(2);
+    }
+  }
 
   double _calculateValue(String channelName) {
     final channel = channels[channelName];
