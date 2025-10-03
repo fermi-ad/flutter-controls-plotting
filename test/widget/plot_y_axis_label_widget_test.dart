@@ -227,15 +227,15 @@ void main() {
       },
     );
 
-    testWidgets("Six character numbers, displayed in scientific notation", (
+    testWidgets("Five character numbers, displayed in scientific notation", (
       WidgetTester tester,
     ) async {
       // Given a channel with a large min/max y
       final channels = {
         "Test1": ChannelSetting(
           lineColor: Colors.red,
-          labelMinY: -100000,
-          labelMaxY: 100000,
+          labelMinY: -10000,
+          labelMaxY: 10000,
         ),
       };
 
@@ -257,13 +257,13 @@ void main() {
       assertPlotYAxisLabel(
         isVisible: true,
         color: Colors.red,
-        withText: "-1.00e6",
+        withText: "1.00e+4",
       );
 
       assertPlotYAxisLabel(
         isVisible: true,
         color: Colors.red,
-        withText: "1.00e6",
+        withText: "-1.00e+4",
       );
     });
   });
