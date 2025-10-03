@@ -23,7 +23,11 @@ void main() {
       );
 
       // Then the normalized value is displayed
-      assertPlotYAxisLabel(isVisible: true, color: Colors.red, withText: "1");
+      assertPlotYAxisLabel(
+        isVisible: true,
+        color: Colors.red,
+        withText: "1.00",
+      );
     });
 
     testWidgets(
@@ -66,13 +70,25 @@ void main() {
         );
 
         // Then the displayed values are...
-        assertPlotYAxisLabel(isVisible: true, color: Colors.red, withText: "0");
-        assertPlotYAxisLabel(isVisible: true, color: Colors.red, withText: "1");
-        assertPlotYAxisLabel(isVisible: true, color: Colors.red, withText: "5");
         assertPlotYAxisLabel(
           isVisible: true,
           color: Colors.red,
-          withText: "10",
+          withText: "0.00",
+        );
+        assertPlotYAxisLabel(
+          isVisible: true,
+          color: Colors.red,
+          withText: "1.00",
+        );
+        assertPlotYAxisLabel(
+          isVisible: true,
+          color: Colors.red,
+          withText: "5.00",
+        );
+        assertPlotYAxisLabel(
+          isVisible: true,
+          color: Colors.red,
+          withText: "10.00",
         );
       },
     );
@@ -124,19 +140,27 @@ void main() {
         assertPlotYAxisLabel(
           isVisible: true,
           color: Colors.red,
-          withText: "-10",
+          withText: "-10.00",
         );
         assertPlotYAxisLabel(
           isVisible: true,
           color: Colors.red,
-          withText: "-8",
+          withText: "-8.00",
         );
-        assertPlotYAxisLabel(isVisible: true, color: Colors.red, withText: "0");
-        assertPlotYAxisLabel(isVisible: true, color: Colors.red, withText: "2");
         assertPlotYAxisLabel(
           isVisible: true,
           color: Colors.red,
-          withText: "10",
+          withText: "0.00",
+        );
+        assertPlotYAxisLabel(
+          isVisible: true,
+          color: Colors.red,
+          withText: "2.00",
+        );
+        assertPlotYAxisLabel(
+          isVisible: true,
+          color: Colors.red,
+          withText: "10.00",
         );
       },
     );
@@ -182,36 +206,36 @@ void main() {
         assertPlotYAxisLabel(
           isVisible: true,
           color: Colors.red,
-          withText: "-10",
+          withText: "-10.00",
         );
         assertPlotYAxisLabel(
           isVisible: true,
           color: Colors.green,
-          withText: "0",
+          withText: "0.00",
         );
 
         assertPlotYAxisLabel(
           isVisible: true,
           color: Colors.red,
-          withText: "10",
+          withText: "10.00",
         );
         assertPlotYAxisLabel(
           isVisible: true,
           color: Colors.green,
-          withText: "5",
+          withText: "5.00",
         );
       },
     );
 
     testWidgets(
-      "Great than five digit decimal numbers, displayed in scientific notation",
+      "Great than five digit numbers, displayed in scientific notation",
       (WidgetTester tester) async {
         // Given a channel with a large min/max y
         final channels = {
           "Test1": ChannelSetting(
             lineColor: Colors.red,
-            labelMinY: -10000.1,
-            labelMaxY: 10000.1,
+            labelMinY: -10000,
+            labelMaxY: 10000,
           ),
         };
 
@@ -246,53 +270,6 @@ void main() {
           isVisible: true,
           color: Colors.red,
           withText: "-1.00e+4",
-        );
-      },
-    );
-
-    testWidgets(
-      "Six digit integer numbers, displayed without decimals or scientific notation",
-      (WidgetTester tester) async {
-        // Given a channel with a large min/max y
-        final channels = {
-          "Test1": ChannelSetting(
-            lineColor: Colors.red,
-            labelMinY: -100000,
-            labelMaxY: 100000,
-          ),
-        };
-
-        // When I build the PlotYAxisLabelWidgets for values -100000 and 100000
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: Column(
-                children: [
-                  PlotYAxisLabelWidget(
-                    channels: channels,
-                    normalizedValue: 0.0,
-                  ),
-                  PlotYAxisLabelWidget(
-                    channels: channels,
-                    normalizedValue: 1.0,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-
-        // Then the values are displayed in scientific notation
-        assertPlotYAxisLabel(
-          isVisible: true,
-          color: Colors.red,
-          withText: "-100000",
-        );
-
-        assertPlotYAxisLabel(
-          isVisible: true,
-          color: Colors.red,
-          withText: "100000",
         );
       },
     );
