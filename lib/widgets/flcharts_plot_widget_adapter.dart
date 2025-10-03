@@ -134,7 +134,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
           interval: _calculateYAxisLabelInterval(
             forNChannels: plotReply.data.length,
           ),
-          reservedSize: 60,
+          reservedSize: 80,
           getTitlesWidget: _buildYLabelWidget,
         ),
       );
@@ -148,7 +148,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
           interval: _calculateYAxisLabelInterval(
             forNChannels: plotReply.data.length,
           ),
-          reservedSize: 60,
+          reservedSize: 80,
           getTitlesWidget: _buildYLabelWidget,
         ),
       );
