@@ -21,7 +21,7 @@ class PlotYAxisLabelWidget extends StatelessWidget {
     List<Text> labels = [];
 
     for (final channelName in channels.keys) {
-      final label = _calculateValue(channelName).toStringAsFixed(2);
+      final label = _formatValue(_calculateValue(channelName));
 
       labels.add(
         Text(label, style: TextStyle(color: channels[channelName]!.lineColor)),
@@ -30,6 +30,9 @@ class PlotYAxisLabelWidget extends StatelessWidget {
 
     return Column(children: labels);
   }
+
+  String _formatValue(double v) =>
+      v.abs() >= 10000 ? v.toStringAsExponential(2) : v.toStringAsFixed(2);
 
   double _calculateValue(String channelName) {
     final channel = channels[channelName];
