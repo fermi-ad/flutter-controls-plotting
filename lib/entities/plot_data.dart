@@ -339,9 +339,9 @@ class PlotData {
           segmentsToRemove += 1;
           pointsToPurgePerCh -= segment.length;
         }
-        if (segmentsToRemove > 0) {
-          segments.removeRange(0, segmentsToRemove);
-        }
+      }
+      if (segmentsToRemove > 0) {
+        segments.removeRange(0, segmentsToRemove);
       }
     }
 
