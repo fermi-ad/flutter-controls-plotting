@@ -227,44 +227,98 @@ void main() {
       },
     );
 
-    testWidgets("Five character numbers, displayed in scientific notation", (
-      WidgetTester tester,
-    ) async {
-      // Given a channel with a large min/max y
-      final channels = {
-        "Test1": ChannelSetting(
-          lineColor: Colors.red,
-          labelMinY: -10000,
-          labelMaxY: 10000,
-        ),
-      };
+    testWidgets(
+      "Five digit decimal numbers, displayed in scientific notation",
+      (WidgetTester tester) async {
+        // Given a channel with a large min/max y
+        final channels = {
+          "Test1": ChannelSetting(
+            lineColor: Colors.red,
+            labelMinY: -10000,
+            labelMaxY: 10000,
+          ),
+        };
 
-      // When I build the PlotYAxisLabelWidgets for values -100000 and 100000
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: Column(
-              children: [
-                PlotYAxisLabelWidget(channels: channels, normalizedValue: 0.0),
-                PlotYAxisLabelWidget(channels: channels, normalizedValue: 1.0),
-              ],
+        // When I build the PlotYAxisLabelWidgets for values -100000 and 100000
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Column(
+                children: [
+                  PlotYAxisLabelWidget(
+                    channels: channels,
+                    normalizedValue: 0.0,
+                  ),
+                  PlotYAxisLabelWidget(
+                    channels: channels,
+                    normalizedValue: 1.0,
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      // Then the values are displayed in scientific notation
-      assertPlotYAxisLabel(
-        isVisible: true,
-        color: Colors.red,
-        withText: "1.00e+4",
-      );
+        // Then the values are displayed in scientific notation
+        assertPlotYAxisLabel(
+          isVisible: true,
+          color: Colors.red,
+          withText: "1.00e+4",
+        );
 
-      assertPlotYAxisLabel(
-        isVisible: true,
-        color: Colors.red,
-        withText: "-1.00e+4",
-      );
-    });
+        assertPlotYAxisLabel(
+          isVisible: true,
+          color: Colors.red,
+          withText: "-1.00e+4",
+        );
+      },
+    );
+
+    testWidgets(
+      "Six digit integer numbers, displayed without decimals or scientific notation",
+      (WidgetTester tester) async {
+        // Given a channel with a large min/max y
+        final channels = {
+          "Test1": ChannelSetting(
+            lineColor: Colors.red,
+            labelMinY: -100000,
+            labelMaxY: 100000,
+          ),
+        };
+
+        // When I build the PlotYAxisLabelWidgets for values -100000 and 100000
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Column(
+                children: [
+                  PlotYAxisLabelWidget(
+                    channels: channels,
+                    normalizedValue: 0.0,
+                  ),
+                  PlotYAxisLabelWidget(
+                    channels: channels,
+                    normalizedValue: 1.0,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        // Then the values are displayed in scientific notation
+        assertPlotYAxisLabel(
+          isVisible: true,
+          color: Colors.red,
+          withText: "-100000",
+        );
+
+        assertPlotYAxisLabel(
+          isVisible: true,
+          color: Colors.red,
+          withText: "100000",
+        );
+      },
+    );
   });
 }
