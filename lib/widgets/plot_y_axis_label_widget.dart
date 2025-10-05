@@ -31,7 +31,8 @@ class PlotYAxisLabelWidget extends StatelessWidget {
     return Column(children: labels);
   }
 
-  String _formatValue(double v) => v.abs() >= 10000 || v.abs() <= 0.01
+  String _formatValue(double v) =>
+      v.abs() >= 10000 || (v.abs() > 0 && v.abs() <= 0.01)
       ? v.toStringAsExponential(2)
       : v.toStringAsFixed(2);
 
