@@ -298,6 +298,35 @@ class PlotData {
     return dataSize;
   }
 
+  void _recalculateArrayStartTimeIfApplicable() {
+    if (minArrayTime == null) {
+      // No need to recaluclate.
+      return;
+    }
+
+    minArrayTime = null;
+
+    for (var segments in points.values) {
+      if (segments.isEmpty || segments.first.isEmpty) {
+        continue;
+      }
+
+      var firstPoint = segments.first.first;
+      if (firstPoint.t != null) {
+        if (minArrayTime == null) {
+          minArrayTime = firstPoint.t;
+        } else {
+          minArrayTime = min(minArrayTime!, firstPoint.t!);
+        }
+      }
+    }
+
+    // Update the selected time when its less than min.
+    if (_selectedArrayTime != null && minArrayTime != null) {
+      _selectedArrayTime = max(_selectedArrayTime!, minArrayTime!);
+    }
+  }
+
   void _recalculateDataForAllPoints() {
     plotMetadata.plotDataBytes = 0;
 
@@ -339,12 +368,14 @@ class PlotData {
           segmentsToRemove += 1;
           pointsToPurgePerCh -= segment.length;
         }
-        if (segmentsToRemove > 0) {
-          segments.removeRange(0, segmentsToRemove);
-        }
+      }
+      if (segmentsToRemove > 0) {
+        segments.removeRange(0, segmentsToRemove);
       }
     }
 
+    flchartCache.clearAll();
+    _recalculateArrayStartTimeIfApplicable();
     _recalculateDataForAllPoints();
   }
 
