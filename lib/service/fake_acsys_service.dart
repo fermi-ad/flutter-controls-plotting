@@ -43,6 +43,7 @@ class FakeACSysService implements ACSysServiceAPI {
     int? updateRate,
     int? nAcquisitions,
     int? triggerEvent,
+    String? chXAxis,
   }) {
     startPlotCount++;
 

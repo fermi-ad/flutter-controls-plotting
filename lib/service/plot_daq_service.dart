@@ -13,6 +13,7 @@ abstract class PlotDAQService {
     double? startTime,
     double? endTime,
     int? triggerEvent,
+    String? chXAxis,
   });
 }
 
@@ -43,6 +44,7 @@ class StandardPlotDAQ implements PlotDAQService {
     double? startTime,
     double? endTime,
     int? triggerEvent,
+    String? chXAxis,
   }) {
     var containsGenPlots = false;
     var plotArgs = _PlotArgs(xMin: 0, xMax: 499, windowSize: 500);
@@ -76,6 +78,7 @@ class StandardPlotDAQ implements PlotDAQService {
         updateRate: updateDelay,
         triggerEvent: triggerEvent,
         nAcquisitions: nAcquisitions == 0 ? null : nAcquisitions,
+        chXAxis: chXAxis,
       );
     }
   }
@@ -89,6 +92,7 @@ class StandardPlotDAQ implements PlotDAQService {
     double? startTime,
     double? endTime,
     int? triggerEvent,
+    String? chXAxis,
   }) async* {
     var requestTime = getCurrentAcsysEpochTime();
     if (updateDelay == 0) {
@@ -134,6 +138,7 @@ class StandardPlotDAQ implements PlotDAQService {
       if (startTime != null) {
         var pointsProcessed = 0;
         while (true) {
+          // TODO integration chXAxis
           var archivedPlotMetadata = await _generateArchivedPlot(
             forChannels: forChannels,
             startTime: startTime,
@@ -251,6 +256,7 @@ class StandardPlotDAQ implements PlotDAQService {
           args: args,
           markChannelNameErrors: true,
           eventXList: eventXList,
+          chXAxis: chXAxis,
         );
 
         validLoop = false;
@@ -356,6 +362,7 @@ class StandardPlotDAQ implements PlotDAQService {
     // Optional parameter used for fetching "archived" data.
     double? currentEpochTime,
     bool noDelay = false,
+    String? chXAxis,
   }) async {
     var totalDuration = (apiDelay * pointCount);
 
@@ -364,6 +371,30 @@ class StandardPlotDAQ implements PlotDAQService {
 
     currentEpochTime ??= getCurrentAcsysEpochTime();
     double secondsPerPoint = apiDelay / 1e6;
+
+    // Generate x axis values for set. for maximum possible frequency for request.
+    List<double>? xAxisData;
+    if (chXAxis != null) {
+      xAxisData = [];
+      double xAxisTime = currentEpochTime;
+      for (int i = 0; i < pointCount; i++) {
+        var (unit, points) = _generateData(
+          forChannel: xAxisUnits,
+          currentEpochTime: xAxisTime,
+          xAxisUnits: xAxisUnits,
+          xAxisValue: null,
+          eventX: eventXList?[i],
+        );
+        if (points != null && points.isNotEmpty) {
+          if (points.isNotEmpty && points.first.value is DevScalar) {
+            xAxisData.add((points.first.value as DevScalar).value);
+          } else {
+            throw Exception('Invalid x-axis channel data.');
+          }
+        }
+        xAxisTime += secondsPerPoint;
+      }
+    }
 
     for (var forChannel in forChannels) {
       // Reset Time for next channel.
@@ -394,11 +425,26 @@ class StandardPlotDAQ implements PlotDAQService {
       }
 
       for (int i = 0; i < chPoints; i++) {
+        double? xAxisValue;
+        if (xAxisData != null) {
+          if (chPoints == pointCount) {
+            xAxisValue = xAxisData[i];
+          } else {
+            // Find nearest x axis index.
+            var indexRatio = pointCount / chPoints;
+            var xAxisIndex = (i * indexRatio).floor();
+            while (xAxisIndex >= xAxisData.length) {
+              xAxisIndex = xAxisData.length - 1;
+            }
+            xAxisValue = xAxisData[xAxisIndex];
+          }
+        }
         List<PlotPoint>? data;
         (xAxisUnits, data) = _generateData(
           forChannel: forChannel,
           currentEpochTime: chEpochTime,
           xAxisUnits: xAxisUnits,
+          xAxisValue: xAxisValue,
           eventX: eventXList?[i],
         );
 
@@ -469,6 +515,7 @@ class StandardPlotDAQ implements PlotDAQService {
     required String forChannel,
     required double currentEpochTime,
     required String xAxisUnits,
+    required double? xAxisValue,
     required double? eventX,
   }) {
     List<PlotPoint>? data;
@@ -517,8 +564,13 @@ class StandardPlotDAQ implements PlotDAQService {
         xAxisUnits = 'Time';
 
         var x = eventX ?? currentEpochTime;
-
-        data = [PlotPoint(value: DevScalar(difference), t: x)];
+        if (xAxisValue != null) {
+          data = [
+            PlotPoint(t: x, value: DevTimeSeries([(xAxisValue, difference)])),
+          ];
+        } else {
+          data = [PlotPoint(value: DevScalar(difference), t: x)];
+        }
       }
     } else if (forChannel == GenPlots.scalarRandRamp.name) {
       var rand = Random();
@@ -532,7 +584,13 @@ class StandardPlotDAQ implements PlotDAQService {
 
       var x = eventX ?? currentEpochTime;
 
-      data = [PlotPoint(value: DevScalar(value), t: x)];
+      if (xAxisValue != null) {
+        data = [
+          PlotPoint(t: x, value: DevTimeSeries([(xAxisValue, value)])),
+        ];
+      } else {
+        data = [PlotPoint(value: DevScalar(value), t: x)];
+      }
     } else if (forChannel == GenPlots.parabola.name) {
       data = [
         PlotPoint(
