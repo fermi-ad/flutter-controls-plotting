@@ -236,7 +236,7 @@ packages:
     description:
       path: "."
       ref: x-axis-integration
-      resolved-ref: b2f199b5f35921168ea2fef36403bbe9c898f0bb
+      resolved-ref: "3982e630d5977801e0f2cb1a91d7a39a167f2ed0"
       url: "https://github.com/fermi-ad/flutter-controls-core.git"
     source: git
     version: "0.3.1"

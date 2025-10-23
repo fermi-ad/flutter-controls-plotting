@@ -44,6 +44,7 @@ class StandardPlotDAQ implements PlotDAQService {
     double? startTime,
     double? endTime,
     int? triggerEvent,
+    int? sampleOnEvent,
     String? chXAxis,
   }) {
     var containsGenPlots = false;
@@ -77,6 +78,7 @@ class StandardPlotDAQ implements PlotDAQService {
         windowSize: plotArgs.windowSize,
         updateRate: updateDelay,
         triggerEvent: triggerEvent,
+        sampleOnEvent: sampleOnEvent,
         nAcquisitions: nAcquisitions == 0 ? null : nAcquisitions,
         chXAxis: chXAxis,
       );
