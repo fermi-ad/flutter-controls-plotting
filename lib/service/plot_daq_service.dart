@@ -13,6 +13,7 @@ abstract class PlotDAQService {
     double? startTime,
     double? endTime,
     int? triggerEvent,
+    int? sampleOnEvent,
     String? chXAxis,
   });
 }
