@@ -67,6 +67,7 @@ class StandardPlotDAQ implements PlotDAQService {
         endTime: endTime,
         triggerEvent: triggerEvent,
         nAcquisitions: nAcquisitions == 0 ? null : nAcquisitions,
+        chXAxis: chXAxis,
       );
     } else {
       // API only
@@ -105,6 +106,7 @@ class StandardPlotDAQ implements PlotDAQService {
         args: args,
         rate: getRate(updateDelay),
         requestTime: requestTime,
+        chXAxis: chXAxis,
       );
 
       // Verify if any apiChannels provided
@@ -382,7 +384,7 @@ class StandardPlotDAQ implements PlotDAQService {
       double xAxisTime = currentEpochTime;
       for (int i = 0; i < pointCount; i++) {
         var (unit, points) = _generateData(
-          forChannel: xAxisUnits,
+          forChannel: chXAxis,
           currentEpochTime: xAxisTime,
           xAxisUnits: xAxisUnits,
           xAxisValue: null,
@@ -564,14 +566,15 @@ class StandardPlotDAQ implements PlotDAQService {
       } else {
         scalarRampCount += 1;
         var difference = currentEpochTime - firstScalarRampEpochTime!;
-        xAxisUnits = 'Time';
 
         var x = eventX ?? currentEpochTime;
         if (xAxisValue != null) {
+          xAxisUnits = 'X Device';
           data = [
             PlotPoint(t: x, value: DevTimeSeries([(xAxisValue, difference)])),
           ];
         } else {
+          xAxisUnits = 'Time';
           data = [PlotPoint(value: DevScalar(difference), t: x)];
         }
       }
@@ -583,15 +586,15 @@ class StandardPlotDAQ implements PlotDAQService {
 
       value = value + (rand.nextInt(50) - 25);
 
-      xAxisUnits = 'Time';
-
       var x = eventX ?? currentEpochTime;
 
       if (xAxisValue != null) {
+        xAxisUnits = 'X Device';
         data = [
           PlotPoint(t: x, value: DevTimeSeries([(xAxisValue, value)])),
         ];
       } else {
+        xAxisUnits = 'Time';
         data = [PlotPoint(value: DevScalar(value), t: x)];
       }
     } else if (forChannel == GenPlots.parabola.name) {
