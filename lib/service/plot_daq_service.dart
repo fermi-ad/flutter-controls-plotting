@@ -380,6 +380,7 @@ class StandardPlotDAQ implements PlotDAQService {
     // Generate x axis values for set. for maximum possible frequency for request.
     List<double>? xAxisData;
     if (chXAxis != null) {
+      xAxisUnits = chXAxis;
       xAxisData = [];
       double xAxisTime = currentEpochTime;
       for (int i = 0; i < pointCount; i++) {
@@ -569,7 +570,6 @@ class StandardPlotDAQ implements PlotDAQService {
 
         var x = eventX ?? currentEpochTime;
         if (xAxisValue != null) {
-          xAxisUnits = 'X Device';
           data = [
             PlotPoint(t: x, value: DevTimeSeries([(xAxisValue, difference)])),
           ];
@@ -589,7 +589,6 @@ class StandardPlotDAQ implements PlotDAQService {
       var x = eventX ?? currentEpochTime;
 
       if (xAxisValue != null) {
-        xAxisUnits = 'X Device';
         data = [
           PlotPoint(t: x, value: DevTimeSeries([(xAxisValue, value)])),
         ];
