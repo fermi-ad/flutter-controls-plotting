@@ -151,7 +151,9 @@ class PlotData {
   ) {
     List<List<PlottingPoint>> points = [];
 
-    if (plotPoints.isNotEmpty && plotPoints.first.value is DevScalar) {
+    if (plotPoints.isNotEmpty &&
+        (plotPoints.first.value is DevScalar ||
+            plotPoints.first.value is DevTimeSeries)) {
       points.add([]);
     }
 
@@ -179,14 +181,24 @@ class PlotData {
 
           points.last.add(PlottingPoint(x: x.toDouble(), y: y, t: time));
         }
-      } else if (deviceValue is DevScalar) {
+      } else if (deviceValue is DevScalar || deviceValue is DevTimeSeries) {
         var t = time;
 
         if (triggerTimestamp != null) {
           t = triggerTimestamp + t;
         }
 
-        points[0].add(PlottingPoint(x: time, y: deviceValue.value, t: t));
+        if (deviceValue is DevTimeSeries) {
+          points[0].add(
+            PlottingPoint(
+              x: deviceValue.values[0].$1,
+              y: deviceValue.values[0].$2,
+              t: t,
+            ),
+          );
+        } else if (deviceValue is DevScalar) {
+          points[0].add(PlottingPoint(x: time, y: deviceValue.value, t: t));
+        }
       } else {
         throw Exception(
           'Unsupported device value type: ${deviceValue.runtimeType}',

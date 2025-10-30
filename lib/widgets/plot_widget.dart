@@ -30,6 +30,8 @@ class PlotWidget extends StatefulWidget {
   final double? dataLoggerStartTime;
   final double? dataLoggerEndTime;
 
+  final String? chXAxis;
+
   final int updateDelay;
 
   final int? triggerEvent;
@@ -61,6 +63,7 @@ class PlotWidget extends StatefulWidget {
   const PlotWidget({
     super.key,
     this.plotChannels = const <String, ChannelSetting>{},
+    this.chXAxis,
     required this.daqService,
     required this.plotData,
     this.confMinY,
@@ -92,7 +95,7 @@ class PlotWidget extends StatefulWidget {
   bool get isTimedScalarData => scalarDataOptions != null;
   bool get isTimedXAxis {
     if (isTimedScalarData) {
-      return triggerEvent == null;
+      return triggerEvent == null && chXAxis == null;
     }
     return false;
   }
@@ -420,7 +423,9 @@ class PlotState extends State<PlotWidget> {
     }
 
     widget.plotData.scalarEventMode =
-        widget.isTimedScalarData && !widget.isTimedXAxis;
+        widget.isTimedScalarData &&
+        !widget.isTimedXAxis &&
+        widget.triggerEvent != null;
 
     if (widget.implementation == PlotImplementation.flCharts) {
       widget.plotData.flchartCache.prepareDataLoggerAcquisition(
@@ -443,6 +448,7 @@ class PlotState extends State<PlotWidget> {
         nAcquisitions: apiAcquisitions,
         startTime: _dataLoggerStartTime,
         endTime: _dataLoggerEndTime,
+        chXAxis: widget.chXAxis,
       );
     }
   }

@@ -13,6 +13,8 @@ abstract class PlotDAQService {
     double? startTime,
     double? endTime,
     int? triggerEvent,
+    int? sampleOnEvent,
+    String? chXAxis,
   });
 }
 
@@ -21,6 +23,7 @@ class StandardPlotDAQ implements PlotDAQService {
 
   double? firstScalarRampEpochTime;
   double? firstScalarRandRampEpochTime;
+  double? repetetiveScalarPlotEpochTime;
 
   int? eventAcquisitionCount;
   int? eventAcquisitionLimit;
@@ -43,6 +46,8 @@ class StandardPlotDAQ implements PlotDAQService {
     double? startTime,
     double? endTime,
     int? triggerEvent,
+    int? sampleOnEvent,
+    String? chXAxis,
   }) {
     var containsGenPlots = false;
     var plotArgs = _PlotArgs(xMin: 0, xMax: 499, windowSize: 500);
@@ -63,6 +68,7 @@ class StandardPlotDAQ implements PlotDAQService {
         endTime: endTime,
         triggerEvent: triggerEvent,
         nAcquisitions: nAcquisitions == 0 ? null : nAcquisitions,
+        chXAxis: chXAxis,
       );
     } else {
       // API only
@@ -75,7 +81,9 @@ class StandardPlotDAQ implements PlotDAQService {
         windowSize: plotArgs.windowSize,
         updateRate: updateDelay,
         triggerEvent: triggerEvent,
+        sampleOnEvent: sampleOnEvent,
         nAcquisitions: nAcquisitions == 0 ? null : nAcquisitions,
+        chXAxis: chXAxis,
       );
     }
   }
@@ -89,6 +97,7 @@ class StandardPlotDAQ implements PlotDAQService {
     double? startTime,
     double? endTime,
     int? triggerEvent,
+    String? chXAxis,
   }) async* {
     var requestTime = getCurrentAcsysEpochTime();
     if (updateDelay == 0) {
@@ -98,6 +107,7 @@ class StandardPlotDAQ implements PlotDAQService {
         args: args,
         rate: getRate(updateDelay),
         requestTime: requestTime,
+        chXAxis: chXAxis,
       );
 
       // Verify if any apiChannels provided
@@ -134,6 +144,7 @@ class StandardPlotDAQ implements PlotDAQService {
       if (startTime != null) {
         var pointsProcessed = 0;
         while (true) {
+          // TODO integration chXAxis
           var archivedPlotMetadata = await _generateArchivedPlot(
             forChannels: forChannels,
             startTime: startTime,
@@ -251,6 +262,7 @@ class StandardPlotDAQ implements PlotDAQService {
           args: args,
           markChannelNameErrors: true,
           eventXList: eventXList,
+          chXAxis: chXAxis,
         );
 
         validLoop = false;
@@ -356,6 +368,7 @@ class StandardPlotDAQ implements PlotDAQService {
     // Optional parameter used for fetching "archived" data.
     double? currentEpochTime,
     bool noDelay = false,
+    String? chXAxis,
   }) async {
     var totalDuration = (apiDelay * pointCount);
 
@@ -364,6 +377,31 @@ class StandardPlotDAQ implements PlotDAQService {
 
     currentEpochTime ??= getCurrentAcsysEpochTime();
     double secondsPerPoint = apiDelay / 1e6;
+
+    // Generate x axis values for set. for maximum possible frequency for request.
+    List<double>? xAxisData;
+    if (chXAxis != null) {
+      xAxisUnits = chXAxis;
+      xAxisData = [];
+      double xAxisTime = currentEpochTime;
+      for (int i = 0; i < pointCount; i++) {
+        var (unit, points) = _generateData(
+          forChannel: chXAxis,
+          currentEpochTime: xAxisTime,
+          xAxisUnits: xAxisUnits,
+          xAxisValue: null,
+          eventX: eventXList?[i],
+        );
+        if (points != null && points.isNotEmpty) {
+          if (points.isNotEmpty && points.first.value is DevScalar) {
+            xAxisData.add((points.first.value as DevScalar).value);
+          } else {
+            throw Exception('Invalid x-axis channel data.');
+          }
+        }
+        xAxisTime += secondsPerPoint;
+      }
+    }
 
     for (var forChannel in forChannels) {
       // Reset Time for next channel.
@@ -394,11 +432,26 @@ class StandardPlotDAQ implements PlotDAQService {
       }
 
       for (int i = 0; i < chPoints; i++) {
+        double? xAxisValue;
+        if (xAxisData != null) {
+          if (chPoints == pointCount) {
+            xAxisValue = xAxisData[i];
+          } else {
+            // Find nearest x axis index.
+            var indexRatio = pointCount / chPoints;
+            var xAxisIndex = (i * indexRatio).floor();
+            while (xAxisIndex >= xAxisData.length) {
+              xAxisIndex = xAxisData.length - 1;
+            }
+            xAxisValue = xAxisData[xAxisIndex];
+          }
+        }
         List<PlotPoint>? data;
         (xAxisUnits, data) = _generateData(
           forChannel: forChannel,
           currentEpochTime: chEpochTime,
           xAxisUnits: xAxisUnits,
+          xAxisValue: xAxisValue,
           eventX: eventXList?[i],
         );
 
@@ -469,6 +522,7 @@ class StandardPlotDAQ implements PlotDAQService {
     required String forChannel,
     required double currentEpochTime,
     required String xAxisUnits,
+    required double? xAxisValue,
     required double? eventX,
   }) {
     List<PlotPoint>? data;
@@ -514,11 +568,16 @@ class StandardPlotDAQ implements PlotDAQService {
       } else {
         scalarRampCount += 1;
         var difference = currentEpochTime - firstScalarRampEpochTime!;
-        xAxisUnits = 'Time';
 
         var x = eventX ?? currentEpochTime;
-
-        data = [PlotPoint(value: DevScalar(difference), t: x)];
+        if (xAxisValue != null) {
+          data = [
+            PlotPoint(t: x, value: DevTimeSeries([(xAxisValue, difference)])),
+          ];
+        } else {
+          xAxisUnits = 'Time';
+          data = [PlotPoint(value: DevScalar(difference), t: x)];
+        }
       }
     } else if (forChannel == GenPlots.scalarRandRamp.name) {
       var rand = Random();
@@ -528,11 +587,82 @@ class StandardPlotDAQ implements PlotDAQService {
 
       value = value + (rand.nextInt(50) - 25);
 
-      xAxisUnits = 'Time';
-
       var x = eventX ?? currentEpochTime;
 
-      data = [PlotPoint(value: DevScalar(value), t: x)];
+      if (xAxisValue != null) {
+        data = [
+          PlotPoint(t: x, value: DevTimeSeries([(xAxisValue, value)])),
+        ];
+      } else {
+        xAxisUnits = 'Time';
+        data = [PlotPoint(value: DevScalar(value), t: x)];
+      }
+    } else if (forChannel == GenPlots.scalarSquare.name) {
+      repetetiveScalarPlotEpochTime ??= currentEpochTime;
+      var difference = currentEpochTime - repetetiveScalarPlotEpochTime!;
+      var period = 2.0; // 2 second period
+      var phase = (difference % period) / period;
+      var value = phase < 0.5 ? 10.0 : -10.0;
+
+      var x = eventX ?? currentEpochTime;
+      if (xAxisValue != null) {
+        data = [
+          PlotPoint(t: x, value: DevTimeSeries([(xAxisValue, value)])),
+        ];
+      } else {
+        xAxisUnits = 'Time';
+        data = [PlotPoint(value: DevScalar(value), t: x)];
+      }
+    } else if (forChannel == GenPlots.scalarTriangle.name) {
+      repetetiveScalarPlotEpochTime ??= currentEpochTime;
+      var difference = currentEpochTime - repetetiveScalarPlotEpochTime!;
+      var period = 4.0; // 4 second period
+      var phase = (difference % period) / period;
+      var value = phase < 0.5
+          ? 20.0 * (2.0 * phase) - 10.0
+          : 20.0 * (2.0 - 2.0 * phase) - 10.0;
+
+      var x = eventX ?? currentEpochTime;
+      if (xAxisValue != null) {
+        data = [
+          PlotPoint(t: x, value: DevTimeSeries([(xAxisValue, value)])),
+        ];
+      } else {
+        xAxisUnits = 'Time';
+        data = [PlotPoint(value: DevScalar(value), t: x)];
+      }
+    } else if (forChannel == GenPlots.scalarSawtooth.name) {
+      repetetiveScalarPlotEpochTime ??= currentEpochTime;
+      var difference = currentEpochTime - repetetiveScalarPlotEpochTime!;
+      var period = 3.0; // 3 second period
+      var phase = (difference % period) / period;
+      var value = 20.0 * phase - 10.0;
+
+      var x = eventX ?? currentEpochTime;
+      if (xAxisValue != null) {
+        data = [
+          PlotPoint(t: x, value: DevTimeSeries([(xAxisValue, value)])),
+        ];
+      } else {
+        xAxisUnits = 'Time';
+        data = [PlotPoint(value: DevScalar(value), t: x)];
+      }
+    } else if (forChannel == GenPlots.scalarSine.name) {
+      repetetiveScalarPlotEpochTime ??= currentEpochTime;
+      var difference = currentEpochTime - repetetiveScalarPlotEpochTime!;
+      var period = 2.0; // 2 second period
+      var phase = (difference % period) / period;
+      var value = 10.0 * sin(phase * 2 * pi);
+
+      var x = eventX ?? currentEpochTime;
+      if (xAxisValue != null) {
+        data = [
+          PlotPoint(t: x, value: DevTimeSeries([(xAxisValue, value)])),
+        ];
+      } else {
+        xAxisUnits = 'Time';
+        data = [PlotPoint(value: DevScalar(value), t: x)];
+      }
     } else if (forChannel == GenPlots.parabola.name) {
       data = [
         PlotPoint(
@@ -647,6 +777,10 @@ enum GenPlots {
   scalarRamp("PLOT TEST SCALAR RAMP"),
   slowScalarRamp("PLOT TEST SLOW SCALAR RAMP", minUpdateDelay: 50000),
   scalarRandRamp("PLOT TEST SCALAR RAND RAMP"),
+  scalarSine("PLOT TEST SCALAR SINE"),
+  scalarSquare("PLOT TEST SCALAR SQUARE"),
+  scalarTriangle("PLOT TEST SCALAR TRIANGLE"),
+  scalarSawtooth("PLOT TEST SCALAR SAWTOOTH"),
   parabola("PLOT TEST PARABOLA"),
   parabola64k("PLOT TEST PARABOLA 64K"),
   parabola32k("PLOT TEST PARABOLA 32K"),
