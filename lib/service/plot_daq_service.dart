@@ -23,6 +23,7 @@ class StandardPlotDAQ implements PlotDAQService {
 
   double? firstScalarRampEpochTime;
   double? firstScalarRandRampEpochTime;
+  double? repetetiveScalarPlotEpochTime;
 
   int? eventAcquisitionCount;
   int? eventAcquisitionLimit;
@@ -596,6 +597,72 @@ class StandardPlotDAQ implements PlotDAQService {
         xAxisUnits = 'Time';
         data = [PlotPoint(value: DevScalar(value), t: x)];
       }
+    } else if (forChannel == GenPlots.scalarSquare.name) {
+      repetetiveScalarPlotEpochTime ??= currentEpochTime;
+      var difference = currentEpochTime - repetetiveScalarPlotEpochTime!;
+      var period = 2.0; // 2 second period
+      var phase = (difference % period) / period;
+      var value = phase < 0.5 ? 10.0 : -10.0;
+
+      var x = eventX ?? currentEpochTime;
+      if (xAxisValue != null) {
+        data = [
+          PlotPoint(t: x, value: DevTimeSeries([(xAxisValue, value)])),
+        ];
+      } else {
+        xAxisUnits = 'Time';
+        data = [PlotPoint(value: DevScalar(value), t: x)];
+      }
+    } else if (forChannel == GenPlots.scalarTriangle.name) {
+      repetetiveScalarPlotEpochTime ??= currentEpochTime;
+      var difference = currentEpochTime - repetetiveScalarPlotEpochTime!;
+      var period = 4.0; // 4 second period
+      var phase = (difference % period) / period;
+      var value = phase < 0.5
+          ? 20.0 * (2.0 * phase) - 10.0
+          : 20.0 * (2.0 - 2.0 * phase) - 10.0;
+
+      var x = eventX ?? currentEpochTime;
+      if (xAxisValue != null) {
+        data = [
+          PlotPoint(t: x, value: DevTimeSeries([(xAxisValue, value)])),
+        ];
+      } else {
+        xAxisUnits = 'Time';
+        data = [PlotPoint(value: DevScalar(value), t: x)];
+      }
+    } else if (forChannel == GenPlots.scalarSawtooth.name) {
+      repetetiveScalarPlotEpochTime ??= currentEpochTime;
+      var difference = currentEpochTime - repetetiveScalarPlotEpochTime!;
+      var period = 3.0; // 3 second period
+      var phase = (difference % period) / period;
+      var value = 20.0 * phase - 10.0;
+
+      var x = eventX ?? currentEpochTime;
+      if (xAxisValue != null) {
+        data = [
+          PlotPoint(t: x, value: DevTimeSeries([(xAxisValue, value)])),
+        ];
+      } else {
+        xAxisUnits = 'Time';
+        data = [PlotPoint(value: DevScalar(value), t: x)];
+      }
+    } else if (forChannel == GenPlots.scalarSine.name) {
+      repetetiveScalarPlotEpochTime ??= currentEpochTime;
+      var difference = currentEpochTime - repetetiveScalarPlotEpochTime!;
+      var period = 2.0; // 2 second period
+      var phase = (difference % period) / period;
+      var value = 10.0 * sin(phase * 2 * pi);
+
+      var x = eventX ?? currentEpochTime;
+      if (xAxisValue != null) {
+        data = [
+          PlotPoint(t: x, value: DevTimeSeries([(xAxisValue, value)])),
+        ];
+      } else {
+        xAxisUnits = 'Time';
+        data = [PlotPoint(value: DevScalar(value), t: x)];
+      }
     } else if (forChannel == GenPlots.parabola.name) {
       data = [
         PlotPoint(
@@ -710,6 +777,10 @@ enum GenPlots {
   scalarRamp("PLOT TEST SCALAR RAMP"),
   slowScalarRamp("PLOT TEST SLOW SCALAR RAMP", minUpdateDelay: 50000),
   scalarRandRamp("PLOT TEST SCALAR RAND RAMP"),
+  scalarSine("PLOT TEST SCALAR SINE"),
+  scalarSquare("PLOT TEST SCALAR SQUARE"),
+  scalarTriangle("PLOT TEST SCALAR TRIANGLE"),
+  scalarSawtooth("PLOT TEST SCALAR SAWTOOTH"),
   parabola("PLOT TEST PARABOLA"),
   parabola64k("PLOT TEST PARABOLA 64K"),
   parabola32k("PLOT TEST PARABOLA 32K"),
