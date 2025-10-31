@@ -136,6 +136,26 @@ void assertPlotContainsHorizontalLine(
   }
 }
 
+void assertPlotContainsPoints(
+  WidgetTester tester, {
+  required String channelName,
+  required List<PlottingPoint> points,
+  double xTolerance = 0,
+  double yTolerance = 0,
+}) {
+  assertPlotContainsNPoints(tester, points.length, channelName: channelName);
+
+  final plotPoints = _getPlotPoints(tester, channelName: channelName);
+
+  for (int i = 0; i != points.length; i++) {
+    var plotPoint = plotPoints[i];
+    var expectedPoint = points[i];
+
+    expect(plotPoint.x, closeTo(expectedPoint.x, xTolerance));
+    expect(plotPoint.y, closeTo(expectedPoint.y, yTolerance));
+  }
+}
+
 void assertPlotContainsRamp(
   WidgetTester tester, {
   required int numberOfPoints,
