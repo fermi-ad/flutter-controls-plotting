@@ -85,4 +85,11 @@ enum PlotMarker {
   const PlotMarker(this.name, this.markerIndex); // Ensure this line is correct
   final String name;
   final int markerIndex; // Ensure this line is correct
+
+  static PlotMarker getPlotMarkerForIndex(int index) {
+    return PlotMarker.values.firstWhere(
+      (marker) => marker.markerIndex == index,
+      orElse: () => PlotMarker.line,
+    );
+  }
 }
