@@ -49,16 +49,10 @@ class StandardPlotDAQ implements PlotDAQService {
     int? sampleOnEvent,
     String? chXAxis,
   }) {
-    var containsGenPlots = false;
     var plotArgs = _PlotArgs(xMin: 0, xMax: 499, windowSize: 500);
-    for (var genChannel in GenPlots.values) {
-      if (forChannels.contains(genChannel.name)) {
-        containsGenPlots = true;
-        break;
-      }
-    }
+    final channels = _separateChannels(forChannels);
 
-    if (containsGenPlots) {
+    if (channels.mockChannels.isNotEmpty) {
       return _retrieveInternalPlot(
         context,
         forChannels: forChannels,
@@ -110,19 +104,13 @@ class StandardPlotDAQ implements PlotDAQService {
         chXAxis: chXAxis,
       );
 
-      // Verify if any apiChannels provided
-      List<String> apiChannels = [];
-      apiChannels.addAll(forChannels);
-      for (var genChannel in GenPlots.values) {
-        if (forChannels.contains(genChannel.name)) {
-          apiChannels.remove(genChannel.name);
-        }
-      }
+      // Separate channels into mock and API categories
+      final channels = _separateChannels(forChannels);
 
-      if (apiChannels.isNotEmpty) {
+      if (channels.apiChannels.isNotEmpty) {
         // Internal and API request
         var apiStream = ACSys.api(context).startPlot(
-          apiChannels,
+          channels.apiChannels,
           xMin: args.xMin,
           xMax: args.xMax,
           windowSize: args.windowSize,
@@ -131,6 +119,7 @@ class StandardPlotDAQ implements PlotDAQService {
         var generatePlot = await generatePlotFuture;
 
         var apiResponse = apiStream.first;
+
         apiResponse.then((PlotReply value) {
           generatePlot.data.addAll(value.data);
         });
@@ -354,6 +343,32 @@ class StandardPlotDAQ implements PlotDAQService {
       currentPlotReply: result,
       pointsProcessed: pointsProcessed,
     );
+  }
+
+  // Separates channels into mock channels and API channels
+  _Channels _separateChannels(Set<String> forChannels) {
+    List<String> apiChannels = [];
+    Set<String> mockChannels = {};
+
+    for (var channel in forChannels) {
+      bool isMockChannel = false;
+
+      // Check if this channel is a mock channel (GenPlot)
+      for (var genChannel in GenPlots.values) {
+        if (genChannel.name == channel) {
+          mockChannels.add(channel);
+          isMockChannel = true;
+          break;
+        }
+      }
+
+      // If not a mock channel, it's an API channel
+      if (!isMockChannel) {
+        apiChannels.add(channel);
+      }
+    }
+
+    return _Channels(mockChannels: mockChannels, apiChannels: apiChannels);
   }
 
   Future<PlotReply> _generatePlot({
@@ -767,6 +782,14 @@ class ArchivedPlotReplyMetadata {
     required this.currentPlotReply,
     required this.pointsProcessed,
   });
+}
+
+// Helper class to separate mock channels from API channels
+class _Channels {
+  final Set<String> mockChannels;
+  final List<String> apiChannels;
+
+  _Channels({required this.mockChannels, required this.apiChannels});
 }
 
 enum GenPlots {
