@@ -30,8 +30,9 @@ class StandardPlotDAQ implements PlotDAQService {
 
   // Test variables
   int scalarRampCount = 0;
-  int scalarRampEventDuration = 10;
+  int tclkEvent10Duration = 10;
   int? scalarRampCountLimit;
+  final int oneSecondDelay = 1000000;
 
   int maxUpdateDelay = 333333;
 
@@ -61,6 +62,7 @@ class StandardPlotDAQ implements PlotDAQService {
         startTime: startTime,
         endTime: endTime,
         triggerEvent: triggerEvent,
+        sampleOnEvent: sampleOnEvent,
         nAcquisitions: nAcquisitions == 0 ? null : nAcquisitions,
         chXAxis: chXAxis,
       );
@@ -90,11 +92,12 @@ class StandardPlotDAQ implements PlotDAQService {
     int? nAcquisitions,
     double? startTime,
     double? endTime,
+    int? sampleOnEvent,
     int? triggerEvent,
     String? chXAxis,
   }) async* {
     var requestTime = getCurrentAcsysEpochTime();
-    if (updateDelay == 0) {
+    if (updateDelay == 0 && sampleOnEvent == null) {
       // No refresh cycle, attempt to combine gen plots with api results
       var generatePlotFuture = _generatePlot(
         forChannels: forChannels,
@@ -129,6 +132,14 @@ class StandardPlotDAQ implements PlotDAQService {
         yield await generatePlotFuture;
       }
     } else {
+      // Mock event-driven updates.
+      if (sampleOnEvent != null) {
+        if (sampleOnEvent == plotEvent10Sec) {
+          updateDelay = 10 * oneSecondDelay;
+        } else if (sampleOnEvent == plotEvent2Sec) {
+          updateDelay = 2 * oneSecondDelay;
+        }
+      }
       // Verify if archiver request
       if (startTime != null) {
         var pointsProcessed = 0;
@@ -169,15 +180,21 @@ class StandardPlotDAQ implements PlotDAQService {
       // Refresh cycle only API provided.
       bool validLoop = true;
       int nAcquisitionsInLoop = 0;
+      int eventDuration = 0;
 
       // Calculate event if appliable
-      if (triggerEvent != null && triggerEvent == plotEvent) {
+      if (triggerEvent != null && triggerEvent == plotEvent10Sec) {
         eventAcquisitionCount = 0;
 
         // Points per second.
         double pointLimitCalc = 1000000 / updateDelay;
         // Total points for event duration
-        pointLimitCalc = pointLimitCalc * scalarRampEventDuration;
+        if (triggerEvent == plotEvent10Sec) {
+          eventDuration = 10;
+        } else if (triggerEvent == plotEvent2Sec) {
+          eventDuration = 2;
+        }
+        pointLimitCalc = pointLimitCalc * eventDuration;
 
         eventAcquisitionLimit = pointLimitCalc.floor();
       }
@@ -228,7 +245,7 @@ class StandardPlotDAQ implements PlotDAQService {
           if (triggerEvent != null && eventAcquisitionCount != null) {
             eventXList ??= [];
             eventXList.add(
-              (scalarRampEventDuration * eventAcquisitionCount!) /
+              (eventDuration * eventAcquisitionCount!) /
                   (eventAcquisitionLimit!),
             );
 
@@ -818,7 +835,9 @@ enum GenPlots {
 }
 
 // Event of '10' is used for gen plots with reset of 10s acquisitions for scalar plots.
-const int plotEvent = 16;
+// Event of 20' is used for gen plots with reset of 2s acquisitions for scalar plots.
+const int plotEvent10Sec = 16;
+const int plotEvent2Sec = 32;
 
 bool channelHasError(PlotChannelData chData) {
   return chData.status < 0;

@@ -413,7 +413,7 @@ void main() {
         // And daq service with scalar ramp point count limit of 10 points.
         StandardPlotDAQ daqService = StandardPlotDAQ();
         daqService.scalarRampCountLimit = 42;
-        daqService.scalarRampEventDuration = 2;
+        daqService.tclkEvent10Duration = 2;
 
         ConnectionState connectionState = ConnectionState.none;
 
