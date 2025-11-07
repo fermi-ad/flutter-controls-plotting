@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 
@@ -9,6 +11,38 @@ class PlotStreamMetadata extends ChangeNotifier {
   PlotReply? _plotReply;
 
   dynamic lastStreamError;
+
+  Timer? _blinkTimer;
+
+  double? _lastTriggered;
+
+  @override
+  void dispose() {
+    tearDownBlinkTimer();
+    super.dispose();
+  }
+
+  void setupBlinkTimer(Duration duration) {
+    tearDownBlinkTimer();
+    _blinkTimer = Timer.periodic(duration, (_) {
+      if (_lastTriggered != null) {
+        final now = DateTime.now().millisecondsSinceEpoch.toDouble();
+        if (now - _lastTriggered! < duration.inMilliseconds) {
+          return;
+        }
+      }
+      print("Timer Triggered: $duration");
+      notifyListeners();
+    });
+  }
+
+  void tearDownBlinkTimer() {
+    if (_blinkTimer == null) {
+      return;
+    }
+    _blinkTimer?.cancel();
+    _blinkTimer = null;
+  }
 
   set lastConnectionState(ConnectionState? state) {
     if (_lastConnectionState != state) {
@@ -22,5 +56,11 @@ class PlotStreamMetadata extends ChangeNotifier {
   set plotReply(PlotReply? reply) {
     _plotReply = reply;
     notifyListeners();
+  }
+
+  @override
+  void notifyListeners() {
+    _lastTriggered = DateTime.now().millisecondsSinceEpoch.toDouble();
+    super.notifyListeners();
   }
 }
