@@ -31,7 +31,6 @@ class PlotStreamMetadata extends ChangeNotifier {
           return;
         }
       }
-      print("Timer Triggered: $duration");
       notifyListeners();
     });
   }
