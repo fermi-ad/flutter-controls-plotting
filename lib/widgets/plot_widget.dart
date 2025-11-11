@@ -41,6 +41,7 @@ class PlotWidget extends StatefulWidget {
   final bool isShowLabels;
   final bool isPaused;
   final bool isPersistent;
+  final bool isBlinkLatestSegment;
   final ScalarDataOptions? scalarDataOptions;
 
   final bool forceStreamReset;
@@ -78,6 +79,7 @@ class PlotWidget extends StatefulWidget {
     this.isShowLabels = true,
     this.isPaused = false,
     this.isPersistent = false,
+    this.isBlinkLatestSegment = false,
     this.scalarDataOptions,
     this.onInternalChannelSettingChange,
     this.onPlotUpdate,
@@ -395,6 +397,13 @@ class PlotState extends State<PlotWidget> {
 
   void _resetStream() {
     _plotReply = null;
+
+    // Setup a new blink timer if necessary.
+    if (widget.isBlinkLatestSegment) {
+      _plotStreamMetadata.setupBlinkTimer(const Duration(milliseconds: 500));
+    } else {
+      _plotStreamMetadata.tearDownBlinkTimer();
+    }
 
     _channels = Map.from(widget.plotChannels);
     _updateDelay = widget.updateDelay;

@@ -25,6 +25,9 @@ class PlotData {
 
   int? _lastPlotReplyHash;
 
+  double? _blinkTimestamp;
+  bool _blinkState = false;
+
   // Map of channel name and points split into segments.
   Map<String, List<List<PlottingPoint>>> points = {};
 
@@ -713,5 +716,15 @@ class PlotData {
     _maxX = maxX;
     plotMetadata.xMin = _minX;
     plotMetadata.xMax = _maxX;
+  }
+
+  bool get blinkState => _blinkState;
+
+  set blinkState(bool value) {
+    final now = DateTime.now().millisecondsSinceEpoch / 1000.0;
+    if (_blinkTimestamp == null || (now - _blinkTimestamp!) >= 0.450) {
+      _blinkState = value;
+      _blinkTimestamp = now;
+    }
   }
 }

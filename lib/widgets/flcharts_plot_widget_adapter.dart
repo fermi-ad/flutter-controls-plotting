@@ -320,6 +320,13 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       cache.reducedPoints = null;
     }
 
+    var isBlinkSegment = plotWidget.isBlinkLatestSegment;
+
+    bool blinkState = false;
+    if (isBlinkSegment) {
+      blinkState = plotData.blinkState = !plotData.blinkState;
+    }
+
     plotChannels.asMap().forEach((index, plotChannel) {
       if (_channelHasError(plotChannel) ||
           !points.containsKey(plotChannel.name)) {
@@ -347,8 +354,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         }
       }
 
-      for (var (segmentIndex, pointSegment)
-          in points[plotChannel.name]!.indexed) {
+      var segmentsForChannel = points[plotChannel.name]!;
+
+      for (var (segmentIndex, pointSegment) in segmentsForChannel.indexed) {
         if (possibleSkippedSegments) {
           if (arrayNonPersistentData) {
             // Array data
@@ -385,9 +393,17 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
               arrayNonPersistentData || arrayPersistentData,
         );
 
+        // the segment would dim in this itteration as well as the segment is the last one.
+        var blinkingSegment =
+            blinkState && segmentIndex == segmentsForChannel.length - 1;
+
+        var segmentColor = lineColorForChannel(
+          plotChannel.name,
+        ).withValues(alpha: blinkingSegment ? 0.3 : 1);
+
         lineChartList.add(
           LineChartBarData(
-            color: lineColorForChannel(plotChannel.name),
+            color: segmentColor,
             spots: spots,
             isCurved: false,
             belowBarData: BarAreaData(show: false),
@@ -399,7 +415,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
             //dotData: _selectFlDotData(int.parse(widget.plotMarker.markerIndex)  , lineColorForChannel(plotChannel.name)),
             dotData: _selectFlDotData(
               markerIndexForChannel(plotChannel.name),
-              lineColorForChannel(plotChannel.name),
+              segmentColor,
             ),
           ),
         );
