@@ -46,7 +46,7 @@ dependencies:
     # path: ../flutter-controls-core
     git:
        url: https://github.com/fermi-ad/flutter-controls-core.git
-       ref: main
+       ref: blink-setting
 
   fl_chart: ^1.0.0
 
