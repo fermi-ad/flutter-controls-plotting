@@ -353,16 +353,65 @@ List<PlottingPoint> _getPlotPoints(
   return plotState.points[channelName]?[segment] ?? [];
 }
 
-List<FlSpot> _getFlSpots(WidgetTester tester, {int channelIndex = 0}) {
+LineChartBarData? _getLineChartBarData(
+  WidgetTester tester, {
+  int channelIndex = 0,
+}) {
   final lineChartWidget =
       find.byType(LineChart).evaluate().first.widget as LineChart;
   final channels = lineChartWidget.data.lineBarsData;
 
   if (channelIndex >= channels.length) {
+    return null;
+  }
+
+  return channels[channelIndex];
+}
+
+List<FlSpot> _getFlSpots(WidgetTester tester, {int channelIndex = 0}) {
+  var lineBarsData = _getLineChartBarData(tester, channelIndex: channelIndex);
+
+  if (lineBarsData == null) {
     return [];
   }
 
-  return channels[channelIndex].spots;
+  return lineBarsData.spots;
+}
+
+Future<void> assertChannelIsBlinking(
+  WidgetTester tester, {
+  required int channelIndex,
+  required bool blinking,
+  Duration blinkChangeTimeout = const Duration(seconds: 2),
+  Duration pumpInterval = const Duration(milliseconds: 50),
+}) async {
+  var data = _getLineChartBarData(tester, channelIndex: channelIndex);
+
+  bool currentBlinkState = data!.color!.a == 1.0;
+
+  LineChartBarData? updatedData;
+  bool updatedBlinkState = currentBlinkState;
+
+  final stopwatch = Stopwatch()..start();
+  while (stopwatch.elapsed < blinkChangeTimeout) {
+    await tester.pump(pumpInterval);
+
+    updatedData = _getLineChartBarData(tester, channelIndex: channelIndex);
+    updatedBlinkState = updatedData!.color!.a == 1.0;
+
+    if (currentBlinkState != updatedBlinkState) {
+      break;
+    }
+  }
+  stopwatch.stop();
+
+  if (blinking) {
+    expect(currentBlinkState == updatedBlinkState, false);
+  } else {
+    expect(currentBlinkState == updatedBlinkState, true);
+    // Line should not be dim in this mode.
+    expect(currentBlinkState, true);
+  }
 }
 
 Future<void> assertFlSpotsDifferent(
