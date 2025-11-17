@@ -144,7 +144,6 @@ class StandardPlotDAQ implements PlotDAQService {
       if (startTime != null) {
         var pointsProcessed = 0;
         while (true) {
-          // TODO integration chXAxis
           var archivedPlotMetadata = await _generateArchivedPlot(
             forChannels: forChannels,
             startTime: startTime,
@@ -153,6 +152,7 @@ class StandardPlotDAQ implements PlotDAQService {
             pointsProcessed: pointsProcessed,
             requestTime: requestTime,
             apiDelay: updateDelay,
+            chXAxis: chXAxis,
           );
 
           var reply = archivedPlotMetadata.currentPlotReply;
@@ -303,6 +303,7 @@ class StandardPlotDAQ implements PlotDAQService {
     required int apiDelay,
     int pointsPerReply = 1000,
     int pointsProcessed = 0,
+    String? chXAxis,
     required double requestTime,
   }) async {
     var rate = getRate(apiDelay);
@@ -346,6 +347,7 @@ class StandardPlotDAQ implements PlotDAQService {
       pointCount: pointsPerReply,
       currentEpochTime: calulatedStartTime,
       rate: rate,
+      chXAxis: chXAxis,
       noDelay: true,
     );
 
