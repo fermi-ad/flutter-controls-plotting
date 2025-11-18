@@ -273,7 +273,7 @@ void assertPlotContainsNormalDistribution(
   }
 }
 
-void assertPlotContainsNPoints(
+int assertPlotContainsNPoints(
   WidgetTester tester,
   dynamic numberOfPoints, {
   required String channelName,
@@ -286,6 +286,8 @@ void assertPlotContainsNPoints(
   );
 
   expect(plotPoints.length, numberOfPoints);
+
+  return plotPoints.length;
 }
 
 void assertPlotContainsStartAndEndX(
