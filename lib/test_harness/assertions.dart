@@ -136,23 +136,24 @@ void assertPlotContainsHorizontalLine(
   }
 }
 
-void assertPlotContainsPoints(
+void assertPlotContainsPointsByCalculation(
   WidgetTester tester, {
   required String channelName,
-  required List<PlottingPoint> points,
+  required List<double> xPoints,
+  required double Function(double) yValueCalculation,
   double xTolerance = 0,
-  double yTolerance = 0,
 }) {
-  assertPlotContainsNPoints(tester, points.length, channelName: channelName);
+  assertPlotContainsNPoints(tester, xPoints.length, channelName: channelName);
 
   final plotPoints = _getPlotPoints(tester, channelName: channelName);
 
-  for (int i = 0; i != points.length; i++) {
+  for (int i = 0; i != xPoints.length; i++) {
     var plotPoint = plotPoints[i];
-    var expectedPoint = points[i];
+    double expectedX = xPoints[i];
+    double expectedY = yValueCalculation(plotPoint.x);
 
-    expect(plotPoint.x, closeTo(expectedPoint.x, xTolerance));
-    expect(plotPoint.y, closeTo(expectedPoint.y, yTolerance));
+    expect(plotPoint.x, closeTo(expectedX, xTolerance));
+    expect(plotPoint.y, expectedY);
   }
 }
 
