@@ -144,7 +144,6 @@ class StandardPlotDAQ implements PlotDAQService {
       if (startTime != null) {
         var pointsProcessed = 0;
         while (true) {
-          // TODO integration chXAxis
           var archivedPlotMetadata = await _generateArchivedPlot(
             forChannels: forChannels,
             startTime: startTime,
@@ -153,6 +152,7 @@ class StandardPlotDAQ implements PlotDAQService {
             pointsProcessed: pointsProcessed,
             requestTime: requestTime,
             apiDelay: updateDelay,
+            chXAxis: chXAxis,
           );
 
           var reply = archivedPlotMetadata.currentPlotReply;
@@ -303,6 +303,7 @@ class StandardPlotDAQ implements PlotDAQService {
     required int apiDelay,
     int pointsPerReply = 1000,
     int pointsProcessed = 0,
+    String? chXAxis,
     required double requestTime,
   }) async {
     var rate = getRate(apiDelay);
@@ -346,6 +347,7 @@ class StandardPlotDAQ implements PlotDAQService {
       pointCount: pointsPerReply,
       currentEpochTime: calulatedStartTime,
       rate: rate,
+      chXAxis: chXAxis,
       noDelay: true,
     );
 
@@ -600,9 +602,7 @@ class StandardPlotDAQ implements PlotDAQService {
     } else if (forChannel == GenPlots.scalarSquare.name) {
       repetetiveScalarPlotEpochTime ??= currentEpochTime;
       var difference = currentEpochTime - repetetiveScalarPlotEpochTime!;
-      var period = 2.0; // 2 second period
-      var phase = (difference % period) / period;
-      var value = phase < 0.5 ? 10.0 : -10.0;
+      double value = calculateSquareByDifference(difference);
 
       var x = eventX ?? currentEpochTime;
       if (xAxisValue != null) {
@@ -634,9 +634,7 @@ class StandardPlotDAQ implements PlotDAQService {
     } else if (forChannel == GenPlots.scalarSawtooth.name) {
       repetetiveScalarPlotEpochTime ??= currentEpochTime;
       var difference = currentEpochTime - repetetiveScalarPlotEpochTime!;
-      var period = 3.0; // 3 second period
-      var phase = (difference % period) / period;
-      var value = 20.0 * phase - 10.0;
+      double value = calculateSawtoothByDifference(difference);
 
       var x = eventX ?? currentEpochTime;
       if (xAxisValue != null) {
@@ -650,9 +648,7 @@ class StandardPlotDAQ implements PlotDAQService {
     } else if (forChannel == GenPlots.scalarSine.name) {
       repetetiveScalarPlotEpochTime ??= currentEpochTime;
       var difference = currentEpochTime - repetetiveScalarPlotEpochTime!;
-      var period = 2.0; // 2 second period
-      var phase = (difference % period) / period;
-      var value = 10.0 * sin(phase * 2 * pi);
+      double value = calculateSineByDifference(difference);
 
       var x = eventX ?? currentEpochTime;
       if (xAxisValue != null) {
@@ -743,6 +739,27 @@ class StandardPlotDAQ implements PlotDAQService {
     }
     return (xAxisUnits, data);
   }
+}
+
+double calculateSawtoothByDifference(double difference) {
+  var period = 3.0; // 3 second period
+  var phase = (difference % period) / period;
+  var value = 20.0 * phase - 10.0;
+  return value;
+}
+
+double calculateSineByDifference(double difference) {
+  var period = 2.0; // 2 second period
+  var phase = (difference % period) / period;
+  var value = 10.0 * sin(phase * 2 * pi);
+  return value;
+}
+
+double calculateSquareByDifference(double difference) {
+  var period = 2.0; // 2 second period
+  var phase = (difference % period) / period;
+  var value = phase < 0.5 ? 10.0 : -10.0;
+  return value;
 }
 
 double getCurrentAcsysEpochTime() {
