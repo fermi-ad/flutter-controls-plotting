@@ -147,10 +147,9 @@ void assertPlotContainsPointsByCalculation(
 
   final plotPoints = _getPlotPoints(tester, channelName: channelName);
 
-  for (int i = 0; i != xPoints.length; i++) {
-    var plotPoint = plotPoints[i];
-    double expectedX = xPoints[i];
-    double expectedY = yValueCalculation(plotPoint.x);
+  for (final (ii, expectedX) in xPoints.indexed) {
+    final plotPoint = plotPoints[ii];
+    final expectedY = yValueCalculation(plotPoint.x);
 
     expect(plotPoint.x, closeTo(expectedX, xTolerance));
     expect(plotPoint.y, expectedY);
