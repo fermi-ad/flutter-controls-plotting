@@ -235,8 +235,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: periodic-on-event
-      resolved-ref: "88817a8a664c6c580b086fbd9043ddf7b93d40ca"
+      ref: main
+      resolved-ref: "8ea6c445ffdf8c6d5c52a94ae4170839bb89bdfa"
       url: "https://github.com/fermi-ad/flutter-controls-core.git"
     source: git
     version: "0.3.1"
