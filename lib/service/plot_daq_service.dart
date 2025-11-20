@@ -135,7 +135,7 @@ class StandardPlotDAQ implements PlotDAQService {
       // Mock event-driven updates.
       if (sampleOnEvent != null) {
         if (sampleOnEvent == plotEvent10Sec) {
-          updateDelay = 10 * oneSecondDelay;
+          updateDelay = tclkEvent10Duration * oneSecondDelay;
         } else if (sampleOnEvent == plotEvent2Sec) {
           updateDelay = 2 * oneSecondDelay;
         }
@@ -190,7 +190,7 @@ class StandardPlotDAQ implements PlotDAQService {
         double pointLimitCalc = 1000000 / updateDelay;
         // Total points for event duration
         if (triggerEvent == plotEvent10Sec) {
-          eventDuration = 10;
+          eventDuration = tclkEvent10Duration;
         } else if (triggerEvent == plotEvent2Sec) {
           eventDuration = 2;
         }
