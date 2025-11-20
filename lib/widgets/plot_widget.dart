@@ -36,6 +36,8 @@ class PlotWidget extends StatefulWidget {
 
   final int? triggerEvent;
 
+  final int? sampleOnEvent;
+
   final int nAcquisitions;
 
   final bool isShowLabels;
@@ -76,6 +78,7 @@ class PlotWidget extends StatefulWidget {
     this.updateDelay = 0,
     this.nAcquisitions = 0,
     this.triggerEvent,
+    this.sampleOnEvent,
     this.isShowLabels = true,
     this.isPaused = false,
     this.isPersistent = false,
@@ -407,6 +410,7 @@ class PlotState extends State<PlotWidget> {
 
     _channels = Map.from(widget.plotChannels);
     _updateDelay = widget.updateDelay;
+    _sampleOnEvent = widget.sampleOnEvent;
     _triggerEvent = widget.triggerEvent;
     _nAcquisitions = widget.nAcquisitions;
     var apiAcquisitions = _nAcquisitions;
@@ -458,6 +462,7 @@ class PlotState extends State<PlotWidget> {
         startTime: _dataLoggerStartTime,
         endTime: _dataLoggerEndTime,
         chXAxis: widget.chXAxis,
+        sampleOnEvent: _sampleOnEvent,
       );
     }
   }
@@ -608,6 +613,8 @@ class PlotState extends State<PlotWidget> {
   int _updateDelay = 0;
 
   int? _triggerEvent = 0;
+
+  int? _sampleOnEvent;
 
   int _nAcquisitions = 0;
 
