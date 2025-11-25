@@ -136,23 +136,23 @@ void assertPlotContainsHorizontalLine(
   }
 }
 
-void assertPlotContainsPoints(
+void assertPlotContainsPointsByCalculation(
   WidgetTester tester, {
   required String channelName,
-  required List<PlottingPoint> points,
+  required List<double> xPoints,
+  required double Function(double) yValueCalculation,
   double xTolerance = 0,
-  double yTolerance = 0,
 }) {
-  assertPlotContainsNPoints(tester, points.length, channelName: channelName);
+  assertPlotContainsNPoints(tester, xPoints.length, channelName: channelName);
 
   final plotPoints = _getPlotPoints(tester, channelName: channelName);
 
-  for (int i = 0; i != points.length; i++) {
-    var plotPoint = plotPoints[i];
-    var expectedPoint = points[i];
+  for (final (ii, expectedX) in xPoints.indexed) {
+    final plotPoint = plotPoints[ii];
+    final expectedY = yValueCalculation(plotPoint.x);
 
-    expect(plotPoint.x, closeTo(expectedPoint.x, xTolerance));
-    expect(plotPoint.y, closeTo(expectedPoint.y, yTolerance));
+    expect(plotPoint.x, closeTo(expectedX, xTolerance));
+    expect(plotPoint.y, expectedY);
   }
 }
 
@@ -272,7 +272,7 @@ void assertPlotContainsNormalDistribution(
   }
 }
 
-void assertPlotContainsNPoints(
+int assertPlotContainsNPoints(
   WidgetTester tester,
   dynamic numberOfPoints, {
   required String channelName,
@@ -285,6 +285,8 @@ void assertPlotContainsNPoints(
   );
 
   expect(plotPoints.length, numberOfPoints);
+
+  return plotPoints.length;
 }
 
 void assertPlotContainsStartAndEndX(
