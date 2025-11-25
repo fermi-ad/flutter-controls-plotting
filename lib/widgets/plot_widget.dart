@@ -36,11 +36,14 @@ class PlotWidget extends StatefulWidget {
 
   final int? triggerEvent;
 
+  final int? sampleOnEvent;
+
   final int nAcquisitions;
 
   final bool isShowLabels;
   final bool isPaused;
   final bool isPersistent;
+  final bool isBlinkLatestSegment;
   final ScalarDataOptions? scalarDataOptions;
 
   final bool forceStreamReset;
@@ -75,9 +78,11 @@ class PlotWidget extends StatefulWidget {
     this.updateDelay = 0,
     this.nAcquisitions = 0,
     this.triggerEvent,
+    this.sampleOnEvent,
     this.isShowLabels = true,
     this.isPaused = false,
     this.isPersistent = false,
+    this.isBlinkLatestSegment = false,
     this.scalarDataOptions,
     this.onInternalChannelSettingChange,
     this.onPlotUpdate,
@@ -396,8 +401,16 @@ class PlotState extends State<PlotWidget> {
   void _resetStream() {
     _plotReply = null;
 
+    // Setup a new blink timer if necessary.
+    if (widget.isBlinkLatestSegment) {
+      _plotStreamMetadata.setupBlinkTimer(const Duration(milliseconds: 500));
+    } else {
+      _plotStreamMetadata.tearDownBlinkTimer();
+    }
+
     _channels = Map.from(widget.plotChannels);
     _updateDelay = widget.updateDelay;
+    _sampleOnEvent = widget.sampleOnEvent;
     _triggerEvent = widget.triggerEvent;
     _nAcquisitions = widget.nAcquisitions;
     var apiAcquisitions = _nAcquisitions;
@@ -449,6 +462,7 @@ class PlotState extends State<PlotWidget> {
         startTime: _dataLoggerStartTime,
         endTime: _dataLoggerEndTime,
         chXAxis: widget.chXAxis,
+        sampleOnEvent: _sampleOnEvent,
       );
     }
   }
@@ -599,6 +613,8 @@ class PlotState extends State<PlotWidget> {
   int _updateDelay = 0;
 
   int? _triggerEvent = 0;
+
+  int? _sampleOnEvent;
 
   int _nAcquisitions = 0;
 

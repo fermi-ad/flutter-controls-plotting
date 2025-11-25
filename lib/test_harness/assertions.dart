@@ -136,6 +136,26 @@ void assertPlotContainsHorizontalLine(
   }
 }
 
+void assertPlotContainsPointsByCalculation(
+  WidgetTester tester, {
+  required String channelName,
+  required List<double> xPoints,
+  required double Function(double) yValueCalculation,
+  double xTolerance = 0,
+}) {
+  assertPlotContainsNPoints(tester, xPoints.length, channelName: channelName);
+
+  final plotPoints = _getPlotPoints(tester, channelName: channelName);
+
+  for (final (ii, expectedX) in xPoints.indexed) {
+    final plotPoint = plotPoints[ii];
+    final expectedY = yValueCalculation(plotPoint.x);
+
+    expect(plotPoint.x, closeTo(expectedX, xTolerance));
+    expect(plotPoint.y, expectedY);
+  }
+}
+
 void assertPlotContainsRamp(
   WidgetTester tester, {
   required int numberOfPoints,
@@ -252,7 +272,7 @@ void assertPlotContainsNormalDistribution(
   }
 }
 
-void assertPlotContainsNPoints(
+int assertPlotContainsNPoints(
   WidgetTester tester,
   dynamic numberOfPoints, {
   required String channelName,
@@ -265,6 +285,8 @@ void assertPlotContainsNPoints(
   );
 
   expect(plotPoints.length, numberOfPoints);
+
+  return plotPoints.length;
 }
 
 void assertPlotContainsStartAndEndX(
@@ -333,16 +355,65 @@ List<PlottingPoint> _getPlotPoints(
   return plotState.points[channelName]?[segment] ?? [];
 }
 
-List<FlSpot> _getFlSpots(WidgetTester tester, {int channelIndex = 0}) {
+LineChartBarData? _getLineChartBarData(
+  WidgetTester tester, {
+  int channelIndex = 0,
+}) {
   final lineChartWidget =
       find.byType(LineChart).evaluate().first.widget as LineChart;
   final channels = lineChartWidget.data.lineBarsData;
 
   if (channelIndex >= channels.length) {
+    return null;
+  }
+
+  return channels[channelIndex];
+}
+
+List<FlSpot> _getFlSpots(WidgetTester tester, {int channelIndex = 0}) {
+  var lineBarsData = _getLineChartBarData(tester, channelIndex: channelIndex);
+
+  if (lineBarsData == null) {
     return [];
   }
 
-  return channels[channelIndex].spots;
+  return lineBarsData.spots;
+}
+
+Future<void> assertChannelIsBlinking(
+  WidgetTester tester, {
+  required int channelIndex,
+  required bool blinking,
+  Duration blinkChangeTimeout = const Duration(seconds: 2),
+  Duration pumpInterval = const Duration(milliseconds: 50),
+}) async {
+  var data = _getLineChartBarData(tester, channelIndex: channelIndex);
+
+  bool currentBlinkState = data!.color!.a == 1.0;
+
+  LineChartBarData? updatedData;
+  bool updatedBlinkState = currentBlinkState;
+
+  final stopwatch = Stopwatch()..start();
+  while (stopwatch.elapsed < blinkChangeTimeout) {
+    await tester.pump(pumpInterval);
+
+    updatedData = _getLineChartBarData(tester, channelIndex: channelIndex);
+    updatedBlinkState = updatedData!.color!.a == 1.0;
+
+    if (currentBlinkState != updatedBlinkState) {
+      break;
+    }
+  }
+  stopwatch.stop();
+
+  if (blinking) {
+    expect(currentBlinkState == updatedBlinkState, false);
+  } else {
+    expect(currentBlinkState == updatedBlinkState, true);
+    // Line should not be dim in this mode.
+    expect(currentBlinkState, true);
+  }
 }
 
 Future<void> assertFlSpotsDifferent(
