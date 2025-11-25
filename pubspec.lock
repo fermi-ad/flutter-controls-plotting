@@ -235,8 +235,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: blink-setting
-      resolved-ref: "0ced01ebc390391512331edb81370cde0fcb1cc5"
+      ref: main
+      resolved-ref: "3b7f1e5d8c6992d520c50d59ee6dab17ad29e8f7"
       url: "https://github.com/fermi-ad/flutter-controls-core.git"
     source: git
     version: "0.3.1"
