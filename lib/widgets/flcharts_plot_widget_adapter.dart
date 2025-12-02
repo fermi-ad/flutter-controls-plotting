@@ -322,18 +322,21 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
 
     var isBlinkSegment = plotWidget.isBlinkLatestSegment;
 
+    var isSkipLastPointForBlink =
+        isBlinkSegment && plotWidget.triggerEvent == null;
+
     bool blinkState = false;
     if (isBlinkSegment) {
       blinkState = plotData.blinkState = !plotData.blinkState;
     }
 
     plotChannels.asMap().forEach((index, plotChannel) {
-      if (_channelHasError(plotChannel) ||
-          !points.containsKey(plotChannel.name)) {
+      var channelName = plotChannel.name;
+      if (_channelHasError(plotChannel) || !points.containsKey(channelName)) {
         return;
       }
 
-      int nearestSegmentIndex = points[plotChannel.name]!.length - 1;
+      int nearestSegmentIndex = points[channelName]!.length - 1;
       if (arrayNonPersistentData || arrayPersistentData) {
         // Array data
         var selectedTime = plotData.selectedArrayTime;
@@ -341,7 +344,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
           // Find the segment index nearest to selectedArrayTime
           double minTimeDiff = double.infinity;
 
-          for (var (idx, segment) in points[plotChannel.name]!.indexed) {
+          for (var (idx, segment) in points[channelName]!.indexed) {
             var t = segment.first.t;
             if (t != null) {
               var timeDiff = (t - selectedTime).abs();
@@ -354,7 +357,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         }
       }
 
-      var segmentsForChannel = points[plotChannel.name]!;
+      var segmentsForChannel = points[channelName]!;
 
       for (var (segmentIndex, pointSegment) in segmentsForChannel.indexed) {
         if (possibleSkippedSegments) {
@@ -376,30 +379,42 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
             plotWidget.plotMetadata.displayedArrayTime = pointSegment.first.t;
           }
 
-          displayedSegments[plotChannel.name] ??= [];
-          displayedSegments[plotChannel.name]!.add(segmentIndex);
+          displayedSegments[channelName] ??= [];
+          displayedSegments[channelName]!.add(segmentIndex);
         }
+
+        // the segment would dim in this itteration as well as the segment is the last one.
+        var blinkingSegment =
+            blinkState && segmentIndex == segmentsForChannel.length - 1;
 
         // min and max y is not passed in for limiting points. This can cause behavior where poitns in the middle of axis are dropped.
         var spots = cache.toSpots(
           points: pointSegment,
-          channelName: plotChannel.name,
-          channelSetting: plotWidget.plotChannels[plotChannel.name]!,
+          channelName: channelName,
+          channelSetting: plotWidget.plotChannels[channelName]!,
           segmentIndex: segmentIndex,
           minX: plotWidget.confMinX,
           maxX: plotWidget.confMaxX,
           exitForScalar: exitForScalar,
           appendExistingArrayPoints:
               arrayNonPersistentData || arrayPersistentData,
+          skipLastPoint: isSkipLastPointForBlink,
         );
 
-        // the segment would dim in this itteration as well as the segment is the last one.
-        var blinkingSegment =
-            blinkState && segmentIndex == segmentsForChannel.length - 1;
-
         var segmentColor = lineColorForChannel(
-          plotChannel.name,
-        ).withValues(alpha: blinkingSegment ? 0.3 : 1);
+          channelName,
+          dim: blinkingSegment && !isSkipLastPointForBlink,
+        );
+
+        double barWidth =
+            markerIndexForChannel(channelName) == 0 ||
+                markerIndexForChannel(channelName) == 1
+            ? 3
+            : 0;
+        var dotData = _selectFlDotData(
+          markerIndexForChannel(channelName),
+          segmentColor,
+        );
 
         lineChartList.add(
           LineChartBarData(
@@ -407,18 +422,39 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
             spots: spots,
             isCurved: false,
             belowBarData: BarAreaData(show: false),
-            barWidth:
-                markerIndexForChannel(plotChannel.name) == 0 ||
-                    markerIndexForChannel(plotChannel.name) == 1
-                ? 3
-                : 0,
-            //dotData: _selectFlDotData(int.parse(widget.plotMarker.markerIndex)  , lineColorForChannel(plotChannel.name)),
-            dotData: _selectFlDotData(
-              markerIndexForChannel(plotChannel.name),
-              segmentColor,
-            ),
+            barWidth: barWidth,
+            dotData: dotData,
           ),
         );
+
+        // Blinked last spot when its split into its own list
+        if (isSkipLastPointForBlink) {
+          if (!cache.tempSpot.containsKey(channelName)) {
+            continue;
+          }
+          List<PlottingFlSpot> tempSpot = [cache.tempSpot[channelName]!];
+
+          var segmentColor = lineColorForChannel(
+            channelName,
+            dim: blinkingSegment,
+          );
+
+          var dotData = _selectFlDotData(
+            markerIndexForChannel(channelName),
+            segmentColor,
+          );
+
+          lineChartList.add(
+            LineChartBarData(
+              color: segmentColor,
+              spots: tempSpot,
+              isCurved: false,
+              belowBarData: BarAreaData(show: false),
+              barWidth: barWidth,
+              dotData: dotData,
+            ),
+          );
+        }
 
         if (arrayNonPersistentData) {
           // Array data

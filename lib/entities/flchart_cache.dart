@@ -9,6 +9,7 @@ class FlchartCache {
   static const int minimumNumberOfReducedPoints = 8000;
 
   final Map<String, List<List<PlottingFlSpot>>> spots = {};
+  final Map<String, PlottingFlSpot> tempSpot = {};
   final Map<String, List<int>> lastProcessedIndex = {};
 
   int? reducedPoints;
@@ -39,6 +40,8 @@ class FlchartCache {
     double? maxY,
     bool exitForScalar = false,
     bool appendExistingArrayPoints = false,
+    // Last point will have its own segment for blinking puprposes created outside of cache.
+    bool skipLastPoint = false,
   }) {
     if (!_resetCache) {
       _resetCache = shouldResetCache(
@@ -109,7 +112,11 @@ class FlchartCache {
     int? maxYPairIndex;
 
     List<PlottingFlSpot> newSpots = [];
-    for (int i = points.length - 1; i >= startIndex; i--) {
+    if (points.length == 1) {
+      skipLastPoint = false;
+    }
+    final int endIndex = skipLastPoint ? points.length - 1 : points.length;
+    for (int i = endIndex - 1; i >= startIndex; i--) {
       PlottingPoint point = points[i];
       var x = point.x;
       var y = point.y;
@@ -215,6 +222,33 @@ class FlchartCache {
 
     flSpots.addAll(newSpots);
 
+    if (skipLastPoint && points.isNotEmpty) {
+      PlottingPoint lastPoint = points[points.length - 1];
+      var lastX = lastPoint.x;
+      var lastY = lastPoint.y;
+
+      if (channelSetting.isLogScale) {
+        if (lastY > 0) {
+          lastY = log(lastY);
+        }
+      }
+
+      PlottingFlSpot? existingSpot;
+      if (tempSpot.containsKey(channelName)) {
+        existingSpot = tempSpot[channelName];
+      }
+
+      if (existingSpot == null ||
+          existingSpot.x != lastX ||
+          existingSpot.y != lastY) {
+        if (existingSpot != null) {
+          flSpots.add(existingSpot);
+        }
+
+        tempSpot[channelName] = PlottingFlSpot(lastX, lastY);
+      }
+    }
+
     spots[channelName]![segmentIndex] = flSpots;
     lastProcessedIndex[channelName]![segmentIndex] = points.length - 1;
     return flSpots;
@@ -239,6 +273,16 @@ class FlchartCache {
           );
           spot.normalizedY = normalizedY;
         }
+      }
+      if (tempSpot.containsKey(channelName)) {
+        var spot = tempSpot[channelName]!;
+        var normalizedY = _normalizeY(
+          spot.originalY,
+          channelSetting: channelSetting,
+          minY: minY,
+          maxY: maxY,
+        );
+        spot.normalizedY = normalizedY;
       }
     }
   }
