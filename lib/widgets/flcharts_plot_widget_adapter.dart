@@ -444,7 +444,6 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
             segmentColor,
           );
 
-          segmentColor = lineColorForChannel(channelName, dim: true);
           lineChartList.add(
             LineChartBarData(
               color: segmentColor,
