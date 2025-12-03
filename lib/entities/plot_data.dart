@@ -523,8 +523,8 @@ class PlotData {
     double? xRangeMax,
     ChannelSetting? channelSetting,
   }) {
-    minY = null;
-    maxY = null;
+    // minY = null;
+    // maxY = null;
     double? logMinY;
     double? logMaxY;
 
