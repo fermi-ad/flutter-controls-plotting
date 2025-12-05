@@ -5,6 +5,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
 
   final int maxiumumPointsDisplayed = 10000;
 
+  // Add a map to track barIndex to channel name mapping
+  final Map<int, String> _barIndexToChannelName = {};
+
   FlchartsPlotWidgetAdapter({
     required super.plotWidget,
     required this.isShowLabels,
@@ -259,7 +262,12 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       }
 
       final channelIndex = touchedSpot.barIndex;
-      final channelName = plotWidget.plotChannels.keys.toList()[channelIndex];
+      // Use the mapping to get the correct channel name
+      String? channelName =
+          _barIndexToChannelName[touchedSpot.barIndex] ??
+          // Old way for fetching the channel name.
+          plotWidget.plotChannels.keys.toList()[channelIndex];
+
       final min =
           plotWidget.plotChannels[channelName]?.displayedMinY ??
           plotWidget.plotData.minY ??
@@ -299,6 +307,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     PlotData plotData,
   ) {
     List<LineChartBarData> lineChartList = [];
+
+    // Clear the mapping at the start of each rebuild
+    _barIndexToChannelName.clear();
 
     var points = plotData.points;
 
@@ -416,6 +427,8 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
           segmentColor,
         );
 
+        // Keep index of channel name for new bar data.
+        _barIndexToChannelName[lineChartList.length] = channelName;
         lineChartList.add(
           LineChartBarData(
             color: segmentColor,
@@ -443,6 +456,8 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
             markerIndexForChannel(channelName),
             segmentColor,
           );
+
+          _barIndexToChannelName[lineChartList.length] = channelName;
 
           lineChartList.add(
             LineChartBarData(
