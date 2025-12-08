@@ -355,6 +355,28 @@ List<PlottingPoint> _getPlotPoints(
   return plotState.points[channelName]?[segment] ?? [];
 }
 
+void assertFlLineChartBarDataCount(
+  WidgetTester tester, {
+  required int expectedCount,
+}) {
+  final lineChartWidget =
+      find.byType(LineChart).evaluate().first.widget as LineChart;
+  final channels = lineChartWidget.data.lineBarsData;
+
+  expect(channels.length, expectedCount);
+}
+
+void assertFlLineChartBarDataLength(
+  WidgetTester tester, {
+  required int channelIndex,
+  required int expectedLength,
+}) {
+  final lineBarsData = _getLineChartBarData(tester, channelIndex: channelIndex);
+
+  expect(lineBarsData, isNotNull);
+  expect(lineBarsData!.spots.length, expectedLength);
+}
+
 LineChartBarData? _getLineChartBarData(
   WidgetTester tester, {
   int channelIndex = 0,
