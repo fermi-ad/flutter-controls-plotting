@@ -9,51 +9,55 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     required super.plotWidget,
     required this.isShowLabels,
     super.plotReply,
-  }); // Update this line
+  });
 
   final GlobalKey chartKey = GlobalKey();
 
   @override
-  Widget buildPlot() => LayoutBuilder(
-    builder: (BuildContext context, BoxConstraints constraints) => LineChart(
-      key: chartKey,
-      duration: plotWidget.plotAnimationDuration,
-      LineChartData(
-        clipData: const FlClipData.all(),
-        minX: plotWidget.plotData.minX,
-        maxX: plotWidget.plotData.maxX,
-        minY: 0,
-        maxY: 1,
-        lineBarsData: plotReply == null
-            ? []
-            : _toLineChartBarDataList(plotReply!.data, plotWidget.plotData),
-        lineTouchData: LineTouchData(
-          distanceCalculator:
-              (Offset touchPoint, Offset spotPixelCoordinates) =>
-                  touchPointDistanceCalculate(
-                    touchPoint: touchPoint,
-                    spotPixelCoordinates: spotPixelCoordinates,
-                    nearestPointXY: plotWidget.plotData.scalarEventMode,
-                  ),
-          touchTooltipData: LineTouchTooltipData(
-            maxContentWidth: 100,
-            fitInsideHorizontally: true,
-            fitInsideVertically: true,
-            getTooltipColor: (touchedSpot) => Colors.black,
-            getTooltipItems: (touchedSpots) =>
-                _generateLineTooltipItem(touchedSpots: touchedSpots),
+  Widget buildPlot() {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        return LineChart(
+          key: chartKey,
+          duration: plotWidget.plotAnimationDuration,
+          LineChartData(
+            clipData: const FlClipData.all(),
+            minX: plotWidget.plotData.minX,
+            maxX: plotWidget.plotData.maxX,
+            minY: 0,
+            maxY: 1,
+            lineBarsData: plotReply == null
+                ? []
+                : _toLineChartBarDataList(plotReply!.data, plotWidget.plotData),
+            lineTouchData: LineTouchData(
+              distanceCalculator:
+                  (Offset touchPoint, Offset spotPixelCoordinates) =>
+                      touchPointDistanceCalculate(
+                        touchPoint: touchPoint,
+                        spotPixelCoordinates: spotPixelCoordinates,
+                        nearestPointXY: plotWidget.plotData.scalarEventMode,
+                      ),
+              touchTooltipData: LineTouchTooltipData(
+                maxContentWidth: 100,
+                fitInsideHorizontally: true,
+                fitInsideVertically: true,
+                getTooltipColor: (touchedSpot) => Colors.black,
+                getTooltipItems: (touchedSpots) =>
+                    _generateLineTooltipItem(touchedSpots: touchedSpots),
+              ),
+              handleBuiltInTouches: true,
+              getTouchLineStart: (data, index) => 0,
+              touchCallback: handleTouchCallback,
+            ),
+            titlesData: _buildTitlesData(
+              plotReply: plotReply,
+              wide: constraints.maxWidth > 600,
+            ),
           ),
-          handleBuiltInTouches: true,
-          getTouchLineStart: (data, index) => 0,
-          touchCallback: handleTouchCallback,
-        ),
-        titlesData: _buildTitlesData(
-          plotReply: plotReply,
-          wide: constraints.maxWidth > 600,
-        ),
-      ),
-    ),
-  );
+        );
+      },
+    );
+  }
 
   // Get the size of the LineChart Widget.
   Size? getChartSize() {
@@ -378,7 +382,6 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
                     markerIndexForChannel(plotChannel.name) == 1
                 ? 3
                 : 0,
-            //dotData: _selectFlDotData(int.parse(widget.plotMarker.markerIndex)  , lineColorForChannel(plotChannel.name)),
             dotData: _selectFlDotData(
               markerIndexForChannel(plotChannel.name),
               lineColorForChannel(plotChannel.name),

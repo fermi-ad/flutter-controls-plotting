@@ -238,7 +238,9 @@ class PlotState extends State<PlotWidget> {
         },
         child: ListenableBuilder(
           listenable: _plotStreamMetadata,
-          builder: _plotListenableBuilder,
+          builder: (context, child) {
+            return _plotListenableBuilder(context, child);
+          },
         ),
       ),
     );
@@ -518,7 +520,6 @@ class PlotState extends State<PlotWidget> {
     _plotReply = plotReply;
 
     _filterPoints();
-
     _findLimits();
 
     widget.onPlotUpdate?.call(plotReply);

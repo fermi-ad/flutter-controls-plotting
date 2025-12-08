@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:opentelemetry/api.dart' show Attribute;
 
 abstract class PlotDAQService {
   Stream<PlotReply> retrievePlot(
@@ -44,6 +45,15 @@ class StandardPlotDAQ implements PlotDAQService {
     double? endTime,
     int? triggerEvent,
   }) {
+    final span = otelTracer.startSpan(
+      'StandardPlotDAQ.retrievePlot',
+      attributes: [
+        Attribute.fromInt('channel_count', forChannels.length),
+        Attribute.fromInt('update_delay_us', updateDelay),
+        Attribute.fromInt('n_acquisitions', nAcquisitions),
+      ],
+    );
+
     var containsGenPlots = false;
     var plotArgs = _PlotArgs(xMin: 0, xMax: 499, windowSize: 500);
     for (var genChannel in GenPlots.values) {
@@ -52,6 +62,8 @@ class StandardPlotDAQ implements PlotDAQService {
         break;
       }
     }
+
+    span.end();
 
     if (containsGenPlots) {
       return _retrieveInternalPlot(
@@ -90,6 +102,10 @@ class StandardPlotDAQ implements PlotDAQService {
     double? endTime,
     int? triggerEvent,
   }) async* {
+    final acquisitionStartTime = DateTime.now();
+    int totalAcquisitions = 0;
+    int totalPoints = 0;
+
     var requestTime = getCurrentAcsysEpochTime();
     if (updateDelay == 0) {
       // No refresh cycle, attempt to combine gen plots with api results
@@ -145,20 +161,19 @@ class StandardPlotDAQ implements PlotDAQService {
           );
 
           var reply = archivedPlotMetadata.currentPlotReply;
-          if (reply == null) {
-            break;
+          if (reply == null) break;
+
+          totalAcquisitions++;
+          for (var channelData in reply.data) {
+            totalPoints += channelData.points.length;
           }
 
           yield reply;
-
           pointsProcessed = archivedPlotMetadata.pointsProcessed;
-
           await Future.delayed(Duration.zero);
         }
 
-        if (endTime != null && getCurrentAcsysEpochTime() > endTime) {
-          return;
-        }
+        if (endTime != null && getCurrentAcsysEpochTime() > endTime) return;
 
         // wait for future plot
         while (getCurrentAcsysEpochTime() < startTime) {
@@ -207,6 +222,7 @@ class StandardPlotDAQ implements PlotDAQService {
         acquisitionStopwatch = Stopwatch();
         acquisitionStopwatch.start();
       }
+
       while (validLoop) {
         if (apiDelay == 0) {
           await Future.delayed(Duration(microseconds: updateDelay));
@@ -262,6 +278,12 @@ class StandardPlotDAQ implements PlotDAQService {
         }
 
         nAcquisitionsInLoop += pointCount;
+        totalAcquisitions++;
+
+        for (var channelData in plot.data) {
+          totalPoints += channelData.points.length;
+        }
+
         if (nAcquisitions != null && nAcquisitionsInLoop == nAcquisitions) {
           validLoop = false;
         }
@@ -273,7 +295,6 @@ class StandardPlotDAQ implements PlotDAQService {
           }
         }
 
-        // If end time is specified end the acquisition once the end time is reached.
         if (endTime != null && getCurrentAcsysEpochTime() >= endTime) {
           validLoop = false;
         }
