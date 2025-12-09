@@ -227,7 +227,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: e5ea40c8a0907050aca62adc1e03c4c755147991
+      resolved-ref: c6887fa73e0f1bfb4f291e620ba342ed70239d84
       url: "https://github.com/fermi-ad/flutter-controls-auth.git"
     source: git
     version: "0.2.0"
@@ -236,7 +236,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: "3b7f1e5d8c6992d520c50d59ee6dab17ad29e8f7"
+      resolved-ref: e16791dfe7b76565b8be96332ab3e00e5318d63d
       url: "https://github.com/fermi-ad/flutter-controls-core.git"
     source: git
     version: "0.3.1"
@@ -469,10 +469,10 @@ packages:
     dependency: transitive
     description:
       name: openid_client
-      sha256: "9f09d107a8bcb540e0c5d3aa5601440c5eea7043a665dfbf8bcff10383049e03"
+      sha256: d7c229b849eaf4ff0ac77c22f8f1c4c522f6830b8c58d7b73953514ad6980954
       url: "https://pub.dev"
     source: hosted
-    version: "0.4.9+1"
+    version: "0.4.9+2"
   opentelemetry:
     dependency: transitive
     description:
