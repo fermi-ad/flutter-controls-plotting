@@ -356,7 +356,6 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
           }
         }
       }
-
       var segmentsForChannel = points[channelName]!;
 
       for (var (segmentIndex, pointSegment) in segmentsForChannel.indexed) {
@@ -386,6 +385,16 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         // the segment would dim in this itteration as well as the segment is the last one.
         var blinkingSegment =
             blinkState && segmentIndex == segmentsForChannel.length - 1;
+
+        // For timed scalar data with persistence disabled, clear cache to show only latest segment
+        bool shouldClearCache =
+            plotWidget.isTimedScalarData && !plotWidget.isPersistent;
+        if (shouldClearCache) {
+          if (cache.spots.containsKey(channelName)) {
+            cache.spots[channelName]!.clear();
+            cache.lastProcessedIndex[channelName]!.clear();
+          }
+        }
 
         // min and max y is not passed in for limiting points. This can cause behavior where poitns in the middle of axis are dropped.
         var spots = cache.toSpots(
