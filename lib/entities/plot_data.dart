@@ -523,10 +523,18 @@ class PlotData {
     double? xRangeMax,
     ChannelSetting? channelSetting,
   }) {
-    // minY = null;
-    // maxY = null;
     double? logMinY;
     double? logMaxY;
+
+    // reset minY and maxY for constant data
+    bool resetYLimits =
+        channelSetting != null && channelSetting.constantY != null;
+
+    if (resetYLimits) {
+      minY = channelSetting.constantY;
+      maxY = channelSetting.constantY;
+      channelSetting.constantY = null;
+    }
 
     for (int i = points.length - 1; i >= 0; i--) {
       final point = points[i];
@@ -585,6 +593,7 @@ class PlotData {
     if (channelSetting != null) {
       // Handle the y limits for constant data.
       if (minY != null && maxY != null && minY == maxY) {
+        channelSetting.constantY = minY;
         (minY, maxY) = adjustMinMaxForConstant(minY);
         if (channelSetting.isLogScale) {
           (logMinY, logMaxY) = adjustMinMaxForConstant(logMinY!);
