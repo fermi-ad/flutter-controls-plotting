@@ -107,8 +107,7 @@ class PlotWidget extends StatefulWidget {
 
   Duration get plotAnimationDuration {
     if (isTimedScalarData) {
-      // No animation for scrolling data.
-      return isTimedXAxis ? Duration.zero : const Duration(milliseconds: 150);
+      return Duration.zero;
     }
 
     // No animation for frequency over 15Hz.
