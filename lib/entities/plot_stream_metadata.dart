@@ -16,7 +16,7 @@ class PlotStreamMetadata extends ChangeNotifier {
 
   double? _lastTriggered;
 
-  int _failed_reconnect_count = 0;
+  late int _failedReconnectCount = 0;
 
   @override
   void dispose() {
@@ -60,16 +60,16 @@ class PlotStreamMetadata extends ChangeNotifier {
   }
 
   void incrementFailedReconnectCount() {
-    _failed_reconnect_count++;
+    _failedReconnectCount++;
   }
 
   void resetFailedReconnectCount() {
-    if (_failed_reconnect_count != 0) {
-      _failed_reconnect_count = 0;
+    if (_failedReconnectCount != 0) {
+      _failedReconnectCount = 0;
     }
   }
 
-  int get failedReconnectCount => _failed_reconnect_count;
+  int get failedReconnectCount => _failedReconnectCount;
 
   @override
   void notifyListeners() {
