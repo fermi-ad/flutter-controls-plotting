@@ -253,7 +253,8 @@ class PlotState extends State<PlotWidget> {
 
   Widget _plotListenableBuilder(BuildContext context, Widget? child) {
     if (widget.plotChannels.isNotEmpty &&
-        lastConnectionState == ConnectionState.waiting) {
+        (lastConnectionState == ConnectionState.waiting ||
+            _plotReply == null)) {
       _plotReply = lastReply;
       var plot = _buildPlotWithProgressIndicator(
         isEmpty: widget.plotData.points.isEmpty,
