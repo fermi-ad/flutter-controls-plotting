@@ -261,7 +261,6 @@ class PlotState extends State<PlotWidget> {
 
       if (_plotStreamMetadata.lastStreamError != null) {
         var error = _plotStreamMetadata.lastStreamError;
-        _plotStreamMetadata.lastStreamError = null;
         return _buildWithErrorMessage(error!.toString(), child: plot);
       }
 
