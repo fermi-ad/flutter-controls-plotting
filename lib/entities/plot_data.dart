@@ -457,6 +457,12 @@ class PlotData {
         double? minY = channelSetting!.displayedMinY;
         double? maxY = channelSetting!.displayedMaxY;
 
+        // For event-based channels, reset Y limits when starting a new event (x starts near 0)
+        if (scalarEventMode && points.isNotEmpty && points.first.x < 0.001) {
+          minY = null;
+          maxY = null;
+        }
+
         (minX, maxX) = _getLimitsPerPoints(
           points: points,
           minY: minY,
@@ -698,11 +704,10 @@ class PlotData {
     }
   }
 
+  // TODO: need to reset the y limits for all channels.
   void resetMinMaxXY() {
     _minX = null;
     _maxX = null;
-    _minY = null;
-    _maxY = null;
   }
 
   void setXLimits({double? minX, double? maxX}) {
