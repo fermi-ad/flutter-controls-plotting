@@ -248,7 +248,7 @@ class PlotData {
                   _clearSegments(segments);
                 }
                 // Reset point limits based on the current data since data is being removed.
-                findPointsLimits(channelSettings: channelSettings);
+                findLimitsWithXRange(channelSettings: channelSettings);
                 // New event
                 segments.add([]);
                 // Reload pointsList
@@ -394,7 +394,7 @@ class PlotData {
     _recalculateDataForAllPoints();
   }
 
-  void findPointsLimits({
+  void findLimitsWithXRange({
     double? xRangeMin,
     double? xRangeMax,
     Map<String, ChannelSetting>? channelSettings,
@@ -407,9 +407,11 @@ class PlotData {
 
       // Access channel setting for this channel
       ChannelSetting? channelSetting = channelSettings?[channelName];
+      minY = channelSetting!.displayedMinY;
+      maxY = channelSetting!.displayedMaxY;
 
       for (var pointList in segments) {
-        (minY, maxY, minX, maxX) = _getLimitsPerPoints(
+        (minX, maxX) = _getLimitsPerPoints(
           points: pointList,
           minY: minY,
           maxY: maxY,
@@ -422,7 +424,7 @@ class PlotData {
       }
     }
 
-    setLimits(minX: minX, maxX: maxX, minY: minY, maxY: maxY);
+    setXLimits(minX: minX, maxX: maxX);
   }
 
   void findLimits({
@@ -435,8 +437,6 @@ class PlotData {
     required double? triggerTimestamp,
     Map<String, ChannelSetting>? channelSettings,
   }) {
-    double? minY = _minY;
-    double? maxY = _maxY;
     double? minX = _minX;
     double? maxX = _maxX;
 
@@ -454,18 +454,15 @@ class PlotData {
 
         // Access channel setting for this channel
         ChannelSetting? channelSetting = channelSettings?[name];
+        double? minY = channelSetting!.displayedMinY;
+        double? maxY = channelSetting!.displayedMaxY;
 
-        (minY, maxY, minX, maxX) = _getLimitsPerPoints(
+        (minX, maxX) = _getLimitsPerPoints(
           points: points,
-
           minY: minY,
-
           maxY: maxY,
-
           minX: minX,
-
           maxX: maxX,
-
           channelSetting: channelSetting,
         );
       }
@@ -492,28 +489,18 @@ class PlotData {
         minX = maxX! - timeDelta;
         // Calculate y based on points displayed.
         if (confMinY == null && confMaxY == null) {
-          findPointsLimits(
+          findLimitsWithXRange(
             xRangeMin: minX,
             xRangeMax: maxX,
             channelSettings: channelSettings,
           );
-          minY = _minY;
-          maxY = _maxY;
         }
       }
     }
-
-    // Override configuration
-    if (confMinY != null) {
-      minY = confMinY;
-    }
-    if (confMaxY != null) {
-      maxY = confMaxY;
-    }
-    setLimits(minX: minX, maxX: maxX, minY: minY, maxY: maxY);
+    setXLimits(minX: minX, maxX: maxX);
   }
 
-  (double?, double?, double?, double?) _getLimitsPerPoints({
+  (double?, double?) _getLimitsPerPoints({
     required List<PlottingPoint> points,
     required double? minY,
     required double? maxY,
@@ -649,7 +636,7 @@ class PlotData {
       }
     }
 
-    return (minY, maxY, minX, maxX);
+    return (minX, maxX);
   }
 
   (double, double) adjustMinMaxForConstant(double constantValue) {
@@ -678,7 +665,7 @@ class PlotData {
           }
         }
         // Potential clean up for scalar data. Recaluclate limits for all points.
-        findPointsLimits();
+        findLimitsWithXRange();
         _recalculateDataForAllPoints();
       }
     }
@@ -718,9 +705,7 @@ class PlotData {
     _maxY = null;
   }
 
-  void setLimits({double? minY, double? maxY, double? minX, double? maxX}) {
-    _minY = minY;
-    _maxY = maxY;
+  void setXLimits({double? minX, double? maxX}) {
     _minX = minX;
     _maxX = maxX;
     plotMetadata.xMin = _minX;
