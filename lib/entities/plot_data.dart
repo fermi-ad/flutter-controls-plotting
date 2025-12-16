@@ -409,6 +409,11 @@ class PlotData {
       ChannelSetting? channelSetting = channelSettings?[channelName];
       minY = channelSetting!.displayedMinY;
       maxY = channelSetting!.displayedMaxY;
+      
+      // Skip calculating yLimits for channels with conf Y limits set.
+      if (channelSetting.confMinY != null || channelSetting.confMaxY != null) {
+        continue;
+      }
 
       for (var pointList in segments) {
         (minX, maxX) = _getLimitsPerPoints(
@@ -429,8 +434,6 @@ class PlotData {
 
   void findLimits({
     required List<PlotChannelData> plotChannels,
-    required double? confMinY,
-    required double? confMaxY,
     required double? confMinX,
     required double? confMaxX,
     required double? timeDelta,
@@ -494,13 +497,11 @@ class PlotData {
         }
         minX = maxX! - timeDelta;
         // Calculate y based on points displayed.
-        if (confMinY == null && confMaxY == null) {
-          findLimitsWithXRange(
-            xRangeMin: minX,
-            xRangeMax: maxX,
-            channelSettings: channelSettings,
-          );
-        }
+        findLimitsWithXRange(
+          xRangeMin: minX,
+          xRangeMax: maxX,
+          channelSettings: channelSettings,
+        );
       }
     }
     setXLimits(minX: minX, maxX: maxX);
