@@ -501,7 +501,7 @@ class PlotState extends State<PlotWidget> {
     if (widget.plotData.points.isEmpty) {
       // Switching from empty plot to plot with channels.
       // Ensure that min and max xy get adjusted appropriately.
-      widget.plotData.resetMinMaxXY();
+      widget.plotData.resetMinMaxXY(channels: widget.plotChannels);
     }
 
     widget.plotData.processPlotReplyMetadata(plotReply: plotReply);

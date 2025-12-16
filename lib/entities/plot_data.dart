@@ -704,10 +704,20 @@ class PlotData {
     }
   }
 
-  // TODO: need to reset the y limits for all channels.
-  void resetMinMaxXY() {
+  void resetMinMaxXY({Map<String, ChannelSetting>? channels}) {
     _minX = null;
     _maxX = null;
+
+    // Reset y-limits for all channels
+    if (channels != null) {
+      for (final channelName in channels.keys) {
+        final channel = channels[channelName];
+        if (channel != null) {
+          channel.displayedMinY = null;
+          channel.displayedMaxY = null;
+        }
+      }
+    }
   }
 
   void setXLimits({double? minX, double? maxX}) {
