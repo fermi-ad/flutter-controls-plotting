@@ -254,11 +254,7 @@ class FlchartCache {
     return flSpots;
   }
 
-  void normalizeCacheSpots({
-    required Map<String, ChannelSetting> channels,
-    required double? minY,
-    required double? maxY,
-  }) {
+  void normalizeCacheSpots({required Map<String, ChannelSetting> channels}) {
     for (var entry in spots.entries) {
       var channelName = entry.key;
       var channelSpots = entry.value;
@@ -268,8 +264,6 @@ class FlchartCache {
           var normalizedY = _normalizeY(
             spot.originalY,
             channelSetting: channelSetting,
-            minY: minY,
-            maxY: maxY,
           );
           spot.normalizedY = normalizedY;
         }
@@ -279,22 +273,15 @@ class FlchartCache {
         var normalizedY = _normalizeY(
           spot.originalY,
           channelSetting: channelSetting,
-          minY: minY,
-          maxY: maxY,
         );
         spot.normalizedY = normalizedY;
       }
     }
   }
 
-  double _normalizeY(
-    double y, {
-    required ChannelSetting channelSetting,
-    required double? minY,
-    required double? maxY,
-  }) {
-    final max = channelSetting.displayedMaxY ?? maxY ?? 1;
-    final min = channelSetting.displayedMinY ?? minY ?? 0;
+  double _normalizeY(double y, {required ChannelSetting channelSetting}) {
+    final max = channelSetting.displayedMaxY ?? 1;
+    final min = channelSetting.displayedMinY ?? 0;
 
     if (min == max) {
       return 0;

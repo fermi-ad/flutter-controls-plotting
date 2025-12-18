@@ -155,10 +155,6 @@ class PlotState extends State<PlotWidget> {
             .toList()
       : [];
 
-  double? get minYAxis => widget.plotData.minY;
-
-  double? get maxYAxis => widget.plotData.maxY;
-
   double? get minXAxis => widget.plotData.minX;
 
   double? get maxXAxis => widget.plotData.maxX;
@@ -523,8 +519,6 @@ class PlotState extends State<PlotWidget> {
 
     widget.plotData.findLimits(
       plotChannels: plotChannels,
-      confMinY: widget.confMinY,
-      confMaxY: widget.confMaxY,
       confMinX: widget.confMinX,
       confMaxX: widget.confMaxX,
       timeDelta: widget.scalarDataOptions?.timeDelta,

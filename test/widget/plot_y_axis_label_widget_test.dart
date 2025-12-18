@@ -187,14 +187,10 @@ void main() {
                   PlotYAxisLabelWidget(
                     channels: channels,
                     normalizedValue: 0.0,
-                    defaultMin: 0,
-                    defaultMax: 5,
                   ),
                   PlotYAxisLabelWidget(
                     channels: channels,
                     normalizedValue: 1.0,
-                    defaultMin: 0,
-                    defaultMax: 5,
                   ),
                 ],
               ),

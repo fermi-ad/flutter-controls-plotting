@@ -13,8 +13,8 @@ const int _plotPointsByteSize = 3 * 8;
 const int _defaultPurgeDataSize = 5 * 1024 * 1024;
 
 class PlotData {
-  // min/max XY that is currently displayed on the plot.
-  double? _minY, _maxY, _minX, _maxX;
+  // min/max X that is currently displayed on the plot.
+  double? _minX, _maxX;
 
   double? closestSpotX, closestSpotY;
 
@@ -102,20 +102,6 @@ class PlotData {
       return 3.0;
     }
     return _maxX;
-  }
-
-  double? get minY {
-    if (points.isEmpty) {
-      return 0;
-    }
-    return _minY;
-  }
-
-  double? get maxY {
-    if (points.isEmpty) {
-      return 3.0;
-    }
-    return _maxY;
   }
 
   int? get maxDataBytes => _maxDataBytes;
@@ -407,11 +393,12 @@ class PlotData {
 
       // Access channel setting for this channel
       ChannelSetting? channelSetting = channelSettings?[channelName];
-      minY = channelSetting!.displayedMinY;
-      maxY = channelSetting!.displayedMaxY;
-      
+      minY = channelSetting?.displayedMinY;
+      maxY = channelSetting?.displayedMaxY;
+
       // Skip calculating yLimits for channels with conf Y limits set.
-      if (channelSetting.confMinY != null || channelSetting.confMaxY != null) {
+      if (channelSetting?.confMinY != null ||
+          channelSetting?.confMaxY != null) {
         continue;
       }
 
@@ -457,8 +444,8 @@ class PlotData {
 
         // Access channel setting for this channel
         ChannelSetting? channelSetting = channelSettings?[name];
-        double? minY = channelSetting!.displayedMinY;
-        double? maxY = channelSetting!.displayedMaxY;
+        double? minY = channelSetting?.displayedMinY;
+        double? maxY = channelSetting?.displayedMaxY;
 
         // For event-based channels, reset Y limits when starting a new event (x starts near 0)
         if (scalarEventMode && points.isNotEmpty && points.first.x < 0.001) {

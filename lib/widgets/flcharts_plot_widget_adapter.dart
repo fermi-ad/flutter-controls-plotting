@@ -198,8 +198,6 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         child: PlotYAxisLabelWidget(
           channels: plotWidget.plotChannels,
           normalizedValue: value,
-          defaultMin: plotWidget.plotData.minY,
-          defaultMax: plotWidget.plotData.maxY,
         ),
       );
 
@@ -268,14 +266,8 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
           // Old way for fetching the channel name.
           plotWidget.plotChannels.keys.toList()[channelIndex];
 
-      final min =
-          plotWidget.plotChannels[channelName]?.displayedMinY ??
-          plotWidget.plotData.minY ??
-          0;
-      final max =
-          plotWidget.plotChannels[channelName]?.displayedMaxY ??
-          plotWidget.plotData.maxY ??
-          1;
+      final min = plotWidget.plotChannels[channelName]?.displayedMinY ?? 0;
+      final max = plotWidget.plotChannels[channelName]?.displayedMaxY ?? 1;
       final yValue = _scaleY(
         y,
         min: min,
@@ -491,11 +483,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     int? reducedPoints = cache.reduceSpots(
       displayedSegments: displayedSegments,
     );
-    cache.normalizeCacheSpots(
-      channels: plotWidget.plotChannels,
-      minY: plotWidget.plotData.minY,
-      maxY: plotWidget.plotData.maxY,
-    );
+    cache.normalizeCacheSpots(channels: plotWidget.plotChannels);
 
     plotWidget.plotMetadata.reducedPoints = reducedPoints;
     plotWidget.plotMetadata.numberOfPoints = cache.totalPoints;
