@@ -13,6 +13,7 @@ import 'package:flutter_controls_plotting/entities/plot_stream_metadata.dart';
 import 'package:flutter_controls_plotting/entities/scalar_data_options.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget_adapter.dart';
+import 'package:flutter_controls_plotting/widgets/plot_widget_error_banner.dart';
 
 enum PlotImplementation { flCharts, graphic, fermi }
 
@@ -355,38 +356,23 @@ class PlotState extends State<PlotWidget> {
     ],
   );
 
-  Widget _buildWithErrorMessage(String message, {required Widget child}) {
-    final scheme = Theme.of(context).colorScheme;
-    return Column(
-      children: [
-        Visibility(
-          visible: !_errorsDismissed,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
-            child: MaterialBanner(
-              padding: const EdgeInsets.all(5),
-              content: Text(
-                message,
-                style: TextStyle(color: scheme.onErrorContainer),
+  Widget _buildWithErrorMessage(String message, {required Widget child}) =>
+      Column(
+        children: [
+          Visibility(
+            visible: !_errorsDismissed,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+              child: PlotWidgetErrorBanner(
+                message: message,
+                scheme: Theme.of(context).colorScheme,
+                onPressed: _handleDismissErrors,
               ),
-              leading: const Icon(Icons.error),
-              backgroundColor: scheme.errorContainer,
-              actions: <Widget>[
-                TextButton(
-                  onPressed: _handleDismissErrors,
-                  child: Text(
-                    'Dismiss',
-                    style: TextStyle(color: scheme.onErrorContainer),
-                  ),
-                ),
-              ],
             ),
           ),
-        ),
-        Expanded(child: child),
-      ],
-    );
-  }
+          Expanded(child: child),
+        ],
+      );
 
   Widget _buildEmptyPlot() {
     return _adapter.buildPlot();
