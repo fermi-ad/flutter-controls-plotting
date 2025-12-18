@@ -136,6 +136,18 @@ void assertPlotContainsHorizontalLine(
   }
 }
 
+void assertPlotPointsByFunction(
+  WidgetTester tester, {
+  required String channelName,
+  required void Function(double, double) verifyPoint,
+}) {
+  final plotPoints = _getPlotPoints(tester, channelName: channelName);
+
+  for (var point in plotPoints) {
+    verifyPoint(point.x, point.y);
+  }
+}
+
 void assertPlotContainsPointsByCalculation(
   WidgetTester tester, {
   required String channelName,
