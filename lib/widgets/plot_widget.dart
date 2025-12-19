@@ -64,6 +64,10 @@ class PlotWidget extends StatefulWidget {
 
   final Function(double deltaY)? adjustYAxisLimits;
 
+  /// Delay in milliseconds before attempting to reconnect after stream failure.
+  /// Useful for testing to observe reconnection behavior.
+  final int? reconnectionDelayMs;
+
   const PlotWidget({
     super.key,
     this.plotChannels = const <String, ChannelSetting>{},
@@ -93,6 +97,7 @@ class PlotWidget extends StatefulWidget {
     this.adjustYAxisLimits,
     this.implementation = PlotImplementation.flCharts,
     this.forceStreamReset = false,
+    this.reconnectionDelayMs,
   });
 
   @override
@@ -294,13 +299,27 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _attemptReconnection() {
-    if (_plotStreamMetadata.failedReconnectCount == 0) {
-      // Attempt to restore imediately after failure.
-      _initializeStream();
-    } else {
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {}
+    Duration? delay;
+
+    if (_plotStreamMetadata.failedReconnectCount == 0 &&
+        widget.reconnectionDelayMs != null) {
+      // Use custom delay for first attempt if provided
+      delay = Duration(milliseconds: widget.reconnectionDelayMs!);
+    } else if (_plotStreamMetadata.failedReconnectCount > 0) {
+      // Subsequent attempts always use 1 second delay
+      delay = const Duration(seconds: 1);
+    }
+
+    if (delay != null) {
+      // Delayed reconnection attempt
+      Future.delayed(delay, () {
+        if (mounted) {
+          _initializeStream();
+        }
       });
+    } else {
+      // Immediate reconnection for nonconfigured (reconnectionDelayMs) first attempt
+      _initializeStream();
     }
 
     _plotStreamMetadata.incrementFailedReconnectCount();
