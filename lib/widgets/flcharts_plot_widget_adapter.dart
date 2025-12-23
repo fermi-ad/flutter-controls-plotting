@@ -78,6 +78,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         final px = getPixelX(spot, chartSize);
         final py = getPixelY(spot, chartSize);
         final spotOffset = Offset(px, py);
+        // calculate distance at pixel level
         final distance = (touchPosition - spotOffset).distance;
         if (distance < minDistance) {
           minDistance = distance;
@@ -228,12 +229,22 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   // Converts a LineBarSpot's Y data value to pixel position,
   // assuming full widget size is used for the plot area.
   double getPixelY(LineBarSpot touchedSpot, Size viewSize) {
-    final deltaY = plotWidget.plotData.maxY! - plotWidget.plotData.minY!;
+    // Get the channel name from the bar index
+    final channelName = _barIndexToChannelName[touchedSpot.barIndex];
+    final channel = channelName != null
+        ? plotWidget.plotChannels[channelName]
+        : null;
+
+    // Use per-channel Y limits (normalized 0-1 range)
+    final minY = channel?.displayedMinY ?? 0;
+    final maxY = channel?.displayedMaxY ?? 1;
+
+    final deltaY = maxY - minY;
     if (deltaY == 0.0) {
-      return 0;
+      return viewSize.height / 2;
     }
     // Flip the Y axis, the smallest Y is at the top.
-    final normalizedY = (touchedSpot.y - plotWidget.plotData.minY!) / deltaY;
+    final normalizedY = (touchedSpot.y - minY) / deltaY;
     return viewSize.height * (1 - normalizedY);
   }
 
