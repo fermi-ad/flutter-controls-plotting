@@ -216,8 +216,9 @@ class PlotData {
         if (!points.containsKey(plotChannel.name)) {
           points[plotChannel.name] = [[]];
         }
-
-        var segments = points[plotChannel.name]!;
+        final channelName = plotChannel.name;
+        ChannelSetting? channelSetting = channelSettings?[channelName];
+        var segments = points[channelName]!;
         var pointsList = segments.last;
         bool oneShotCleared = false;
 
@@ -232,6 +233,8 @@ class PlotData {
                 if (!isPersistent) {
                   // Clear all events.
                   _clearSegments(segments);
+                  channelSetting?.displayedMinY = null;
+                  channelSetting?.displayedMaxY = null;
                 }
                 // Reset point limits based on the current data since data is being removed.
                 findLimitsWithXRange(channelSettings: channelSettings);
@@ -248,6 +251,8 @@ class PlotData {
               if (isOneShot && !oneShotCleared) {
                 _clearSegments(segments);
                 oneShotCleared = true;
+                channelSetting?.displayedMinY = null;
+                channelSetting?.displayedMaxY = null;
               }
               // Reload pointsList
               pointsList = [];
@@ -425,6 +430,7 @@ class PlotData {
     required double? confMaxX,
     required double? timeDelta,
     required double? triggerTimestamp,
+    required bool isPersistent,
     Map<String, ChannelSetting>? channelSettings,
   }) {
     double? minX = _minX;
@@ -446,12 +452,6 @@ class PlotData {
         ChannelSetting? channelSetting = channelSettings?[name];
         double? minY = channelSetting?.displayedMinY;
         double? maxY = channelSetting?.displayedMaxY;
-
-        // For event-based channels, reset Y limits when starting a new event (x starts near 0)
-        if (scalarEventMode && points.isNotEmpty && points.first.x < 0.001) {
-          minY = null;
-          maxY = null;
-        }
 
         (minX, maxX) = _getLimitsPerPoints(
           points: points,

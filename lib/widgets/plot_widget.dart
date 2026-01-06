@@ -524,6 +524,7 @@ class PlotState extends State<PlotWidget> {
       timeDelta: widget.scalarDataOptions?.timeDelta,
       channelSettings: widget.plotChannels,
       triggerTimestamp: _plotReply!.triggerTimestamp,
+      isPersistent: widget.isPersistent,
     );
   }
 
