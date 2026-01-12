@@ -178,7 +178,7 @@ void main() {
           "Test3": ChannelSetting(lineColor: Colors.green),
         };
 
-        // When I build the PlotYAxisLabelWidgets for normalized values of 0 and 1 and global min/max of 0 to 10
+        // When I build the PlotYAxisLabelWidgets for normalized values of 0 and 1 and global min/max of 0 to 5
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
@@ -187,10 +187,14 @@ void main() {
                   PlotYAxisLabelWidget(
                     channels: channels,
                     normalizedValue: 0.0,
+                    defaultMinY: 0,
+                    defaultMaxY: 5,
                   ),
                   PlotYAxisLabelWidget(
                     channels: channels,
                     normalizedValue: 1.0,
+                    defaultMinY: 0,
+                    defaultMaxY: 5,
                   ),
                 ],
               ),
