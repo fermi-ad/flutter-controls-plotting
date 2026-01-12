@@ -13,6 +13,7 @@ import 'package:flutter_controls_plotting/entities/plot_stream_metadata.dart';
 import 'package:flutter_controls_plotting/entities/scalar_data_options.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget_adapter.dart';
+import 'package:flutter_controls_plotting/widgets/plot_widget_error_banner.dart';
 
 enum PlotImplementation { flCharts, graphic, fermi }
 
@@ -63,6 +64,10 @@ class PlotWidget extends StatefulWidget {
 
   final Function(double deltaY)? adjustYAxisLimits;
 
+  /// Delay in milliseconds before attempting to reconnect after stream failure.
+  /// Useful for testing to observe reconnection behavior.
+  final int? reconnectionDelayMs;
+
   const PlotWidget({
     super.key,
     this.plotChannels = const <String, ChannelSetting>{},
@@ -92,6 +97,7 @@ class PlotWidget extends StatefulWidget {
     this.adjustYAxisLimits,
     this.implementation = PlotImplementation.flCharts,
     this.forceStreamReset = false,
+    this.reconnectionDelayMs,
   });
 
   @override
@@ -252,15 +258,25 @@ class PlotState extends State<PlotWidget> {
   }
 
   Widget _plotListenableBuilder(BuildContext context, Widget? child) {
-    if (widget.plotChannels.isNotEmpty && _plotReply == null) {
-      return _buildEmptyPlotWithProgressIndicator();
+    if (widget.plotChannels.isNotEmpty &&
+        (lastConnectionState == ConnectionState.waiting ||
+            _plotReply == null)) {
+      var plot = _buildPlotWithProgressIndicator(
+        isEmpty: widget.plotData.points.isEmpty,
+      );
+
+      if (_plotStreamMetadata.lastStreamError != null) {
+        var error = _plotStreamMetadata.lastStreamError;
+        return _buildWithErrorMessage(error.toString(), child: plot);
+      }
+
+      return plot;
     }
     if (_plotStream != null) {
       if (_plotStreamMetadata.lastStreamError != null) {
         var error = _plotStreamMetadata.lastStreamError;
-        _plotStreamMetadata.lastStreamError = null;
         return _buildWithErrorMessage(
-          error!.toString(),
+          error.toString(),
           child: _buildEmptyPlot(),
         );
       }
@@ -282,6 +298,33 @@ class PlotState extends State<PlotWidget> {
     return _buildEmptyPlot();
   }
 
+  void _attemptReconnection() {
+    Duration? delay;
+
+    if (_plotStreamMetadata.failedReconnectCount == 0 &&
+        widget.reconnectionDelayMs != null) {
+      // Use custom delay for first attempt if provided
+      delay = Duration(milliseconds: widget.reconnectionDelayMs!);
+    } else if (_plotStreamMetadata.failedReconnectCount > 0) {
+      // Subsequent attempts always use 1 second delay
+      delay = const Duration(seconds: 1);
+    }
+
+    if (delay != null) {
+      // Delayed reconnection attempt
+      Future.delayed(delay, () {
+        if (mounted) {
+          _initializeStream();
+        }
+      });
+    } else {
+      // Immediate reconnection for nonconfigured (reconnectionDelayMs) first attempt
+      _initializeStream();
+    }
+
+    _plotStreamMetadata.incrementFailedReconnectCount();
+  }
+
   void _initializeStream() {
     _resetStream();
     _plotStreamSubscription?.cancel();
@@ -292,12 +335,13 @@ class PlotState extends State<PlotWidget> {
 
       _plotStreamSubscription = _plotStream!.listen(
         (plotReply) {
+          _plotStreamMetadata.resetFailedReconnectCount();
           _updateStreamConnectionChanged(ConnectionState.active);
           _receiveData(plotReply);
         },
         onError: (error) {
           _plotStreamMetadata.lastStreamError = error;
-          _plotReply = null;
+          _attemptReconnection();
         },
         onDone: () {
           _updateStreamConnectionChanged(ConnectionState.done);
@@ -313,7 +357,7 @@ class PlotState extends State<PlotWidget> {
     child: _adapter.buildPlot(),
   );
 
-  Widget _buildEmptyPlotWithProgressIndicator() => Column(
+  Widget _buildPlotWithProgressIndicator({bool isEmpty = true}) => Column(
     children: [
       const Padding(
         padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
@@ -325,44 +369,29 @@ class PlotState extends State<PlotWidget> {
       Expanded(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(10, 10, 30, 10),
-          child: _buildEmptyPlot(),
+          child: isEmpty ? _buildEmptyPlot() : _buildPlotFromSnapshot(),
         ),
       ),
     ],
   );
 
-  Widget _buildWithErrorMessage(String message, {required Widget child}) {
-    final scheme = Theme.of(context).colorScheme;
-    return Column(
-      children: [
-        Visibility(
-          visible: !_errorsDismissed,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
-            child: MaterialBanner(
-              padding: const EdgeInsets.all(5),
-              content: Text(
-                message,
-                style: TextStyle(color: scheme.onErrorContainer),
+  Widget _buildWithErrorMessage(String message, {required Widget child}) =>
+      Column(
+        children: [
+          Visibility(
+            visible: !_errorsDismissed,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+              child: PlotWidgetErrorBanner(
+                message: message,
+                scheme: Theme.of(context).colorScheme,
+                onPressed: _handleDismissErrors,
               ),
-              leading: const Icon(Icons.error),
-              backgroundColor: scheme.errorContainer,
-              actions: <Widget>[
-                TextButton(
-                  onPressed: _handleDismissErrors,
-                  child: Text(
-                    'Dismiss',
-                    style: TextStyle(color: scheme.onErrorContainer),
-                  ),
-                ),
-              ],
             ),
           ),
-        ),
-        Expanded(child: child),
-      ],
-    );
-  }
+          Expanded(child: child),
+        ],
+      );
 
   Widget _buildEmptyPlot() {
     return _adapter.buildPlot();

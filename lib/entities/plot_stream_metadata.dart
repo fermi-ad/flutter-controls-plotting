@@ -16,6 +16,8 @@ class PlotStreamMetadata extends ChangeNotifier {
 
   double? _lastTriggered;
 
+  late int _failedReconnectCount = 0;
+
   @override
   void dispose() {
     tearDownBlinkTimer();
@@ -56,6 +58,18 @@ class PlotStreamMetadata extends ChangeNotifier {
     _plotReply = reply;
     notifyListeners();
   }
+
+  void incrementFailedReconnectCount() {
+    _failedReconnectCount++;
+  }
+
+  void resetFailedReconnectCount() {
+    if (_failedReconnectCount != 0) {
+      _failedReconnectCount = 0;
+    }
+  }
+
+  int get failedReconnectCount => _failedReconnectCount;
 
   @override
   void notifyListeners() {
