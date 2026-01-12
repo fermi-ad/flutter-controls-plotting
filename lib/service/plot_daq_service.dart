@@ -26,7 +26,9 @@ class StandardPlotDAQ implements PlotDAQService {
   double? repetetiveScalarPlotEpochTime;
 
   double? timeOfLastIntermittentError;
-  final double minTimeSinceLastError = 5;
+  final double minTimeSinceLastError = 10;
+  int currentConsecutiveErrorCount = 0;
+  int maxConsecutiveErrors = 1;
 
   int? eventAcquisitionCount;
   int? eventAcquisitionLimit;
@@ -687,16 +689,30 @@ class StandardPlotDAQ implements PlotDAQService {
       double value = calculateSineByDifference(difference);
 
       if (forChannel == GenPlots.scalarSineIntermittent.name) {
+        bool exception = false;
+        if (currentConsecutiveErrorCount > 0 &&
+            currentConsecutiveErrorCount < maxConsecutiveErrors) {
+          // Finish all the consecutive errors.
+          currentConsecutiveErrorCount++;
+          exception = true;
+        }
         if (value >= 1 && value <= 2) {
           // Error should be thrown on first try.
           var timeSinceLastError = timeOfLastIntermittentError != null
               ? currentEpochTime - timeOfLastIntermittentError!
               : minTimeSinceLastError;
           if (timeSinceLastError >= minTimeSinceLastError) {
+            currentConsecutiveErrorCount = 1;
             timeOfLastIntermittentError = currentEpochTime;
-            throw Exception('Intermittent Error at $value');
+            exception = true;
           }
         }
+        if (exception) {
+          throw Exception(
+            'Intermittent Error at $value (consecutive: $currentConsecutiveErrorCount/$maxConsecutiveErrors)',
+          );
+        }
+        currentConsecutiveErrorCount = 0;
       }
 
       var x = eventX ?? currentEpochTime;
