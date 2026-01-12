@@ -78,6 +78,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         final px = getPixelX(spot, chartSize);
         final py = getPixelY(spot, chartSize);
         final spotOffset = Offset(px, py);
+        // calculate distance at pixel level
         final distance = (touchPosition - spotOffset).distance;
         if (distance < minDistance) {
           minDistance = distance;
@@ -198,8 +199,6 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         child: PlotYAxisLabelWidget(
           channels: plotWidget.plotChannels,
           normalizedValue: value,
-          defaultMin: plotWidget.plotData.minY,
-          defaultMax: plotWidget.plotData.maxY,
         ),
       );
 
@@ -230,12 +229,22 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   // Converts a LineBarSpot's Y data value to pixel position,
   // assuming full widget size is used for the plot area.
   double getPixelY(LineBarSpot touchedSpot, Size viewSize) {
-    final deltaY = plotWidget.plotData.maxY! - plotWidget.plotData.minY!;
+    // Get the channel name from the bar index
+    final channelName = _barIndexToChannelName[touchedSpot.barIndex];
+    final channel = channelName != null
+        ? plotWidget.plotChannels[channelName]
+        : null;
+
+    // Use per-channel Y limits (normalized 0-1 range)
+    final minY = channel?.displayedMinY ?? 0;
+    final maxY = channel?.displayedMaxY ?? 1;
+
+    final deltaY = maxY - minY;
     if (deltaY == 0.0) {
-      return 0;
+      return viewSize.height / 2;
     }
     // Flip the Y axis, the smallest Y is at the top.
-    final normalizedY = (touchedSpot.y - plotWidget.plotData.minY!) / deltaY;
+    final normalizedY = (touchedSpot.y - minY) / deltaY;
     return viewSize.height * (1 - normalizedY);
   }
 
@@ -268,14 +277,8 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
           // Old way for fetching the channel name.
           plotWidget.plotChannels.keys.toList()[channelIndex];
 
-      final min =
-          plotWidget.plotChannels[channelName]?.displayedMinY ??
-          plotWidget.plotData.minY ??
-          0;
-      final max =
-          plotWidget.plotChannels[channelName]?.displayedMaxY ??
-          plotWidget.plotData.maxY ??
-          1;
+      final min = plotWidget.plotChannels[channelName]?.displayedMinY ?? 0;
+      final max = plotWidget.plotChannels[channelName]?.displayedMaxY ?? 1;
       final yValue = _scaleY(
         y,
         min: min,
@@ -367,7 +370,6 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
           }
         }
       }
-
       var segmentsForChannel = points[channelName]!;
 
       for (var (segmentIndex, pointSegment) in segmentsForChannel.indexed) {
@@ -397,6 +399,16 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         // the segment would dim in this itteration as well as the segment is the last one.
         var blinkingSegment =
             blinkState && segmentIndex == segmentsForChannel.length - 1;
+
+        // For timed scalar data with persistence disabled, clear cache to show only latest segment
+        bool shouldClearCache =
+            plotWidget.isTimedScalarData && !plotWidget.isPersistent;
+        if (shouldClearCache) {
+          if (cache.spots.containsKey(channelName)) {
+            cache.spots[channelName]!.clear();
+            cache.lastProcessedIndex[channelName]!.clear();
+          }
+        }
 
         // min and max y is not passed in for limiting points. This can cause behavior where poitns in the middle of axis are dropped.
         var spots = cache.toSpots(
@@ -482,11 +494,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     int? reducedPoints = cache.reduceSpots(
       displayedSegments: displayedSegments,
     );
-    cache.normalizeCacheSpots(
-      channels: plotWidget.plotChannels,
-      minY: plotWidget.plotData.minY,
-      maxY: plotWidget.plotData.maxY,
-    );
+    cache.normalizeCacheSpots(channels: plotWidget.plotChannels);
 
     plotWidget.plotMetadata.reducedPoints = reducedPoints;
     plotWidget.plotMetadata.numberOfPoints = cache.totalPoints;

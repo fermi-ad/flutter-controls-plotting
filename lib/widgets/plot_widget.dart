@@ -113,8 +113,7 @@ class PlotWidget extends StatefulWidget {
 
   Duration get plotAnimationDuration {
     if (isTimedScalarData) {
-      // No animation for scrolling data.
-      return isTimedXAxis ? Duration.zero : const Duration(milliseconds: 150);
+      return Duration.zero;
     }
 
     // No animation for frequency over 15Hz.
@@ -161,10 +160,6 @@ class PlotState extends State<PlotWidget> {
             .map((PlotChannelData channelData) => channelData.units)
             .toList()
       : [];
-
-  double? get minYAxis => widget.plotData.minY;
-
-  double? get maxYAxis => widget.plotData.maxY;
 
   double? get minXAxis => widget.plotData.minX;
 
@@ -531,7 +526,7 @@ class PlotState extends State<PlotWidget> {
     if (widget.plotData.points.isEmpty) {
       // Switching from empty plot to plot with channels.
       // Ensure that min and max xy get adjusted appropriately.
-      widget.plotData.resetMinMaxXY();
+      widget.plotData.resetMinMaxXY(channels: widget.plotChannels);
     }
 
     widget.plotData.processPlotReplyMetadata(plotReply: plotReply);
@@ -553,13 +548,12 @@ class PlotState extends State<PlotWidget> {
 
     widget.plotData.findLimits(
       plotChannels: plotChannels,
-      confMinY: widget.confMinY,
-      confMaxY: widget.confMaxY,
       confMinX: widget.confMinX,
       confMaxX: widget.confMaxX,
       timeDelta: widget.scalarDataOptions?.timeDelta,
       channelSettings: widget.plotChannels,
       triggerTimestamp: _plotReply!.triggerTimestamp,
+      isPersistent: widget.isPersistent,
     );
   }
 

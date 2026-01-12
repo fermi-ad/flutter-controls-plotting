@@ -35,7 +35,9 @@ class StandardPlotDAQ implements PlotDAQService {
 
   // Test variables
   int scalarRampCount = 0;
-  int tclkEvent10Duration = 10;
+  int tclkEvent00Duration = 2;
+  int tclkEvent10Duration = 5;
+  int tclkEvent20Duration = 10;
   int? scalarRampCountLimit;
   final int oneSecondDelay = 1000000;
 
@@ -139,10 +141,12 @@ class StandardPlotDAQ implements PlotDAQService {
     } else {
       // Mock event-driven updates.
       if (sampleOnEvent != null) {
-        if (sampleOnEvent == plotEvent10Sec) {
+        if (sampleOnEvent == plotEvent00) {
+          updateDelay = tclkEvent00Duration * oneSecondDelay;
+        } else if (sampleOnEvent == plotEvent10) {
           updateDelay = tclkEvent10Duration * oneSecondDelay;
-        } else if (sampleOnEvent == plotEvent2Sec) {
-          updateDelay = 2 * oneSecondDelay;
+        } else if (sampleOnEvent == plotEvent20) {
+          updateDelay = tclkEvent20Duration * oneSecondDelay;
         }
       }
       // Verify if archiver request
@@ -188,16 +192,18 @@ class StandardPlotDAQ implements PlotDAQService {
       int eventDuration = 0;
 
       // Calculate event if appliable
-      if (triggerEvent != null && triggerEvent == plotEvent10Sec) {
+      if (triggerEvent != null && (triggerEvent == plotEvent00 || triggerEvent == plotEvent10 || triggerEvent == plotEvent20)) {
         eventAcquisitionCount = 0;
 
         // Points per second.
         double pointLimitCalc = 1000000 / updateDelay;
         // Total points for event duration
-        if (triggerEvent == plotEvent10Sec) {
+        if (triggerEvent == plotEvent00) {
+          eventDuration = tclkEvent00Duration;
+        } else if (triggerEvent == plotEvent10) {
           eventDuration = tclkEvent10Duration;
-        } else if (triggerEvent == plotEvent2Sec) {
-          eventDuration = 2;
+        } else if (triggerEvent == plotEvent20) {
+          eventDuration = tclkEvent20Duration;
         }
         pointLimitCalc = pointLimitCalc * eventDuration;
 
@@ -885,10 +891,9 @@ enum GenPlots {
   final int? minUpdateDelay;
 }
 
-// Event of '10' is used for gen plots with reset of 10s acquisitions for scalar plots.
-// Event of 20' is used for gen plots with reset of 2s acquisitions for scalar plots.
-const int plotEvent10Sec = 16;
-const int plotEvent2Sec = 32;
+const int plotEvent00 = 0;
+const int plotEvent10 = 16;
+const int plotEvent20 = 32;
 
 bool channelHasError(PlotChannelData chData) {
   return chData.status < 0;

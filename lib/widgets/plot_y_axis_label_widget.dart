@@ -5,15 +5,15 @@ import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 class PlotYAxisLabelWidget extends StatelessWidget {
   final double normalizedValue;
   final Map<String, ChannelSetting> channels;
-  final double? defaultMin;
-  final double? defaultMax;
+  final double defaultMinY;
+  final double defaultMaxY;
 
   const PlotYAxisLabelWidget({
     super.key,
     required this.normalizedValue,
     required this.channels,
-    this.defaultMin,
-    this.defaultMax,
+    this.defaultMinY = 0,
+    this.defaultMaxY = 1,
   });
 
   @override
@@ -39,12 +39,8 @@ class PlotYAxisLabelWidget extends StatelessWidget {
   double _calculateValue(String channelName) {
     final channel = channels[channelName];
     if (channel != null && channel.isLogScale) {
-      final logMin =
-          channel.displayedMinY ??
-          (defaultMin != null ? log(defaultMin!) : log(1));
-      final logMax =
-          channel.displayedMaxY ??
-          (defaultMax != null ? log(defaultMax!) : log(10));
+      final logMin = channel.displayedMinY ?? log(1);
+      final logMax = channel.displayedMaxY ?? log(10);
 
       // Calculate the log value at this normalized position
       final logValue = normalizedValue * (logMax - logMin) + logMin;
@@ -54,8 +50,8 @@ class PlotYAxisLabelWidget extends StatelessWidget {
 
       return linearValue;
     } else {
-      final min = channel?.labelMinY ?? defaultMin ?? 0;
-      final max = channel?.labelMaxY ?? defaultMax ?? 1;
+      final min = channel?.labelMinY ?? defaultMinY;
+      final max = channel?.labelMaxY ?? defaultMaxY;
 
       return normalizedValue * (max - min) + min;
     }
