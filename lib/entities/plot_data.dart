@@ -233,6 +233,7 @@ class PlotData {
                 if (!isPersistent) {
                   // Clear all events.
                   _clearSegments(segments);
+                  flchartCache.clearChannel(channelName);
                   channelSetting?.displayedMinY = null;
                   channelSetting?.displayedMaxY = null;
                 }
@@ -658,6 +659,8 @@ class PlotData {
             segments.removeRange(0, segments.length - 1);
           }
         }
+        // Clear the cache since segments were removed.
+        flchartCache.clearAll();
         // Potential clean up for scalar data. Recaluclate limits for all points.
         findLimitsWithXRange();
         _recalculateDataForAllPoints();
