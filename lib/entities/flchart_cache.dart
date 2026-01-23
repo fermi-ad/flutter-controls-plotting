@@ -557,4 +557,11 @@ class FlchartCache {
     _dLoggerApplyPredictiveReduction = false;
     reducedPoints = null;
   }
+
+  // Clears cached spots for a specific channel.
+  void clearChannel(String channelName) {
+    spots.remove(channelName);
+    lastProcessedIndex.remove(channelName);
+    tempSpot.remove(channelName);
+  }
 }
