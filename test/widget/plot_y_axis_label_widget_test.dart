@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_controls_plotting/entities/channel_metadata.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/test_harness/assertions.dart';
 import 'package:flutter_controls_plotting/widgets/plot_y_axis_label_widget.dart';
@@ -15,7 +16,11 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: PlotYAxisLabelWidget(
-              channels: {"Test": ChannelSetting(lineColor: Colors.red)},
+              channels: {
+                "Test": ChannelMetadata(
+                  channelSetting: ChannelSetting(lineColor: Colors.red),
+                ),
+              },
               normalizedValue: 1.0,
             ),
           ),
@@ -36,10 +41,12 @@ void main() {
         // Given a set of PlotYAxisLabelWidgets with min: 0 and max: 10
         // When I build the PlotYAxisLabelWidget with a normalizedValue of 0, 0.1, 0.5 and 1
         final channels = {
-          "Test": ChannelSetting(
-            labelMinY: 0,
-            labelMaxY: 10,
-            lineColor: Colors.red,
+          "Test": ChannelMetadata(
+            channelSetting: ChannelSetting(
+              labelMinY: 0,
+              labelMaxY: 10,
+              lineColor: Colors.red,
+            ),
           ),
         };
         await tester.pumpWidget(
@@ -99,10 +106,12 @@ void main() {
         // Given a set of PlotYAxisLabelWidgets with min: -10 and max: 10
         // When I build the PlotYAxisLabelWidget with a normalizedValue of 0, 0.1, 0.5 and 1
         final channels = {
-          "Test": ChannelSetting(
-            labelMinY: -10,
-            labelMaxY: 10,
-            lineColor: Colors.red,
+          "Test": ChannelMetadata(
+            channelSetting: ChannelSetting(
+              labelMinY: -10,
+              labelMaxY: 10,
+              lineColor: Colors.red,
+            ),
           ),
         };
         await tester.pumpWidget(
@@ -170,12 +179,16 @@ void main() {
       (WidgetTester tester) async {
         // Given a list of channels with varying y-scales
         final channels = {
-          "Test1": ChannelSetting(
-            lineColor: Colors.red,
-            labelMinY: -10,
-            labelMaxY: 10,
+          "Test1": ChannelMetadata(
+            channelSetting: ChannelSetting(
+              lineColor: Colors.red,
+              labelMinY: -10,
+              labelMaxY: 10,
+            ),
           ),
-          "Test3": ChannelSetting(lineColor: Colors.green),
+          "Test3": ChannelMetadata(
+            channelSetting: ChannelSetting(lineColor: Colors.green),
+          ),
         };
 
         // When I build the PlotYAxisLabelWidgets for normalized values of 0 and 1 and global min/max of 0 to 5
@@ -232,10 +245,12 @@ void main() {
       (WidgetTester tester) async {
         // Given a channel with a large min/max y
         final channels = {
-          "Test1": ChannelSetting(
-            lineColor: Colors.red,
-            labelMinY: -10000,
-            labelMaxY: 10000,
+          "Test1": ChannelMetadata(
+            channelSetting: ChannelSetting(
+              lineColor: Colors.red,
+              labelMinY: -10000,
+              labelMaxY: 10000,
+            ),
           ),
         };
 
@@ -279,10 +294,12 @@ void main() {
       (WidgetTester tester) async {
         // Given a channel with a large min/max y
         final channels = {
-          "Test1": ChannelSetting(
-            lineColor: Colors.red,
-            labelMinY: 0.00001,
-            labelMaxY: 0.0001,
+          "Test1": ChannelMetadata(
+            channelSetting: ChannelSetting(
+              lineColor: Colors.red,
+              labelMinY: 0.00001,
+              labelMaxY: 0.0001,
+            ),
           ),
         };
 

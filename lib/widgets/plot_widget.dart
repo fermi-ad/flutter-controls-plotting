@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/entities/channel_metadata.dart';
 import 'package:flutter_controls_plotting/entities/plotting_point.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
@@ -18,7 +19,7 @@ import 'package:flutter_controls_plotting/widgets/plot_widget_error_banner.dart'
 enum PlotImplementation { flCharts, graphic, fermi }
 
 class PlotWidget extends StatefulWidget {
-  final Map<String, ChannelSetting> plotChannels;
+  final Map<String, ChannelMetadata> plotChannels;
 
   final PlotDAQService daqService;
   final PlotData plotData;
@@ -70,7 +71,7 @@ class PlotWidget extends StatefulWidget {
 
   const PlotWidget({
     super.key,
-    this.plotChannels = const <String, ChannelSetting>{},
+    this.plotChannels = const <String, ChannelMetadata>{},
     this.chXAxis,
     required this.daqService,
     required this.plotData,
@@ -551,7 +552,7 @@ class PlotState extends State<PlotWidget> {
       confMinX: widget.confMinX,
       confMaxX: widget.confMaxX,
       timeDelta: widget.scalarDataOptions?.timeDelta,
-      channelSettings: widget.plotChannels,
+      channelMetadatas: widget.plotChannels,
       triggerTimestamp: _plotReply!.triggerTimestamp,
       isPersistent: widget.isPersistent,
     );
@@ -575,7 +576,7 @@ class PlotState extends State<PlotWidget> {
       isOneShot: widget.nAcquisitions == 1,
       plotChannels: plotChannels,
       triggerTimestamp: _plotReply!.triggerTimestamp,
-      channelSettings: widget.plotChannels,
+      channelMetadatas: widget.plotChannels,
     );
   }
 

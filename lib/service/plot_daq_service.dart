@@ -192,7 +192,10 @@ class StandardPlotDAQ implements PlotDAQService {
       int eventDuration = 0;
 
       // Calculate event if appliable
-      if (triggerEvent != null && (triggerEvent == plotEvent00 || triggerEvent == plotEvent10 || triggerEvent == plotEvent20)) {
+      if (triggerEvent != null &&
+          (triggerEvent == plotEvent00 ||
+              triggerEvent == plotEvent10 ||
+              triggerEvent == plotEvent20)) {
         eventAcquisitionCount = 0;
 
         // Points per second.
@@ -807,6 +810,9 @@ class StandardPlotDAQ implements PlotDAQService {
           t: currentEpochTime,
         ),
       ];
+    } else if (forChannel == GenPlots.statusError.name) {
+      // This channel will return null data to trigger status error
+      data = null;
     }
     return (xAxisUnits, data);
   }
@@ -884,7 +890,8 @@ enum GenPlots {
   sine("PLOT TEST SINE"),
   sine64k("PLOT TEST SINE 64K"),
   sine32k("PLOT TEST SINE 32K"),
-  normal("PLOT TEST NORMAL");
+  normal("PLOT TEST NORMAL"),
+  statusError("PLOT TEST STATUS ERROR");
 
   const GenPlots(this.name, {this.minUpdateDelay});
   final String name;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_controls_plotting/entities/channel_metadata.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
 import 'package:flutter_controls_plotting/entities/scalar_data_options.dart';
@@ -64,7 +65,9 @@ class PlotDemoState extends State<PlotDemoWidget> {
       implementation: _implementation,
       plotData: PlotData(),
       daqService: StandardPlotDAQ(),
-      plotChannels: {"PLOT TEST PARABOLA": ChannelSetting()},
+      plotChannels: {
+        "PLOT TEST PARABOLA": ChannelMetadata(channelSetting: ChannelSetting()),
+      },
     ),
   );
 
@@ -75,8 +78,10 @@ class PlotDemoState extends State<PlotDemoWidget> {
       plotData: PlotData(),
       daqService: StandardPlotDAQ(),
       plotChannels: {
-        "PLOT TEST RAND RAMP": ChannelSetting(),
-        "PLOT TEST NORMAL": ChannelSetting(),
+        "PLOT TEST RAND RAMP": ChannelMetadata(
+          channelSetting: ChannelSetting(),
+        ),
+        "PLOT TEST NORMAL": ChannelMetadata(channelSetting: ChannelSetting()),
       },
     ),
   );
@@ -89,7 +94,11 @@ class PlotDemoState extends State<PlotDemoWidget> {
       daqService: StandardPlotDAQ(),
       scalarDataOptions: ScalarDataOptions(isOneShot: false, timeDelta: null),
       updateDelay: 500000,
-      plotChannels: {"PLOT TEST SCALAR RAND RAMP": ChannelSetting()},
+      plotChannels: {
+        "PLOT TEST SCALAR RAND RAMP": ChannelMetadata(
+          channelSetting: ChannelSetting(),
+        ),
+      },
     ),
   );
 

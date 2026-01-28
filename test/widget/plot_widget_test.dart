@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/entities/channel_metadata.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
 import 'package:flutter_controls_plotting/entities/scalar_data_options.dart';
@@ -21,7 +22,9 @@ void main() {
       final service = FakeACSysService();
 
       // ... and a channel list containing API TEST CONSTANT
-      final channelList = {"API TEST CONSTANT": ChannelSetting()};
+      final channelList = {
+        "API TEST CONSTANT": ChannelMetadata(channelSetting: ChannelSetting()),
+      };
 
       // When I build the PlotWidget
       await tester.pumpWidget(_buildPlotWidget(channelList, service: service));
@@ -38,7 +41,11 @@ void main() {
         final service = FakeACSysService();
 
         // ... and a channel list containing API TEST CONSTANT
-        final channelList = {"API TEST CONSTANT": ChannelSetting()};
+        final channelList = {
+          "API TEST CONSTANT": ChannelMetadata(
+            channelSetting: ChannelSetting(),
+          ),
+        };
 
         // ... and I have built the PlotWidget one time
         await tester.pumpWidget(
@@ -47,7 +54,9 @@ void main() {
         await waitForPlotDataToLoad(tester);
 
         // When I add a channel
-        channelList["API TEST RAMP"] = ChannelSetting();
+        channelList["API TEST RAMP"] = ChannelMetadata(
+          channelSetting: ChannelSetting(),
+        );
 
         // ... amd rebuild the PlotWidget
         await tester.pumpWidget(
@@ -67,7 +76,11 @@ void main() {
         final service = FakeACSysService();
 
         // ... and a channel list containing API TEST CONSTANT
-        final channelList = {"API TEST CONSTANT": ChannelSetting()};
+        final channelList = {
+          "API TEST CONSTANT": ChannelMetadata(
+            channelSetting: ChannelSetting(),
+          ),
+        };
 
         // ... and I have built the PlotWidget one time
         await tester.pumpWidget(
@@ -93,7 +106,11 @@ void main() {
         final service = FakeACSysService();
 
         // ... and a channel list containing API TEST CONSTANT
-        final channelList = {"API TEST CONSTANT": ChannelSetting()};
+        final channelList = {
+          "API TEST CONSTANT": ChannelMetadata(
+            channelSetting: ChannelSetting(),
+          ),
+        };
 
         // ... and I have built the PlotWidget one time
         await tester.pumpWidget(
@@ -119,7 +136,11 @@ void main() {
         final service = FakeACSysService();
 
         // ... and a channel list containing API TEST CONSTANT
-        final channelList = {"API TEST CONSTANT": ChannelSetting()};
+        final channelList = {
+          "API TEST CONSTANT": ChannelMetadata(
+            channelSetting: ChannelSetting(),
+          ),
+        };
 
         // When I build PlotWidget without specifying nAcquisitions
         await tester.pumpWidget(
@@ -139,7 +160,11 @@ void main() {
         final service = FakeACSysService();
 
         // ... and a channel list containing API TEST CONSTANT
-        final channelList = {"API TEST CONSTANT": ChannelSetting()};
+        final channelList = {
+          "API TEST CONSTANT": ChannelMetadata(
+            channelSetting: ChannelSetting(),
+          ),
+        };
 
         // When I build PlotWidget with nAcquisitions = 1
         await tester.pumpWidget(
@@ -159,7 +184,11 @@ void main() {
         final service = FakeACSysService();
 
         // ... and a channel list containing API TEST CONSTANT
-        final channelList = {"API TEST CONSTANT": ChannelSetting()};
+        final channelList = {
+          "API TEST CONSTANT": ChannelMetadata(
+            channelSetting: ChannelSetting(),
+          ),
+        };
 
         // ... and I have built the PlotWidget one time
         await tester.pumpWidget(
@@ -187,7 +216,11 @@ void main() {
         PlotReply? lastUpdate;
 
         // ... and a channel list containing API TEST CONSTANT
-        final channelList = {"API TEST CONSTANT": ChannelSetting()};
+        final channelList = {
+          "API TEST CONSTANT": ChannelMetadata(
+            channelSetting: ChannelSetting(),
+          ),
+        };
 
         // ... and I have built the PlotWidget supplying it with an onPlotUpdate handler
         await tester.pumpWidget(
@@ -221,7 +254,11 @@ void main() {
       WidgetTester tester,
     ) async {
       // Given I tried to plot a channel that had an error
-      final channelList = {"PLOT TEST DOESN'T EXIST": ChannelSetting()};
+      final channelList = {
+        "PLOT TEST DOESN'T EXIST": ChannelMetadata(
+          channelSetting: ChannelSetting(),
+        ),
+      };
       await tester.pumpWidget(_buildPlotWidget(channelList));
       await waitForPlotDataToLoad(tester);
 
@@ -245,8 +282,8 @@ void main() {
         const errorChannel = "PLOT TEST DOESN'T EXIST";
         const errorMessage =
             "An error occured when attempting to acquire data for $errorChannel";
-        Map<String, ChannelSetting> channelList = {
-          errorChannel: ChannelSetting(),
+        Map<String, ChannelMetadata> channelList = {
+          errorChannel: ChannelMetadata(channelSetting: ChannelSetting()),
         };
         await tester.pumpWidget(_buildPlotWidget(channelList));
         await waitForPlotDataToLoad(tester);
@@ -260,7 +297,9 @@ void main() {
         expect(find.text(errorMessage), findsNothing);
 
         channelList.clear();
-        channelList = {errorChannel: ChannelSetting()};
+        channelList = {
+          errorChannel: ChannelMetadata(channelSetting: ChannelSetting()),
+        };
         await tester.pumpWidget(_buildPlotWidget(channelList));
         await waitForPlotDataToLoad(tester);
 
@@ -273,8 +312,12 @@ void main() {
       (WidgetTester tester) async {
         // Given a channel list with one channel name that doesn't exist
         final channelList = {
-          "PLOT TEST CONSTANT": ChannelSetting(),
-          "PLOT TEST DOESN'T EXIST": ChannelSetting(),
+          "PLOT TEST CONSTANT": ChannelMetadata(
+            channelSetting: ChannelSetting(),
+          ),
+          "PLOT TEST DOESN'T EXIST": ChannelMetadata(
+            channelSetting: ChannelSetting(),
+          ),
         };
 
         // When I try to plot both channels
@@ -307,7 +350,9 @@ void main() {
         // Given a scalar ramp channel
         var channelName = "PLOT TEST SCALAR RAMP";
         final channelList = {
-          channelName: ChannelSetting(lineColor: PlotColor.blue.color),
+          channelName: ChannelMetadata(
+            channelSetting: ChannelSetting(lineColor: PlotColor.blue.color),
+          ),
         };
 
         // And daq service with scalar ramp point count limit of 10 points.
@@ -362,7 +407,9 @@ void main() {
       // And a channel list containing "PLOT TEST SCALAR RAMP".
       String channelName = "PLOT TEST SCALAR RAMP";
       final channelList = {
-        channelName: ChannelSetting(lineColor: PlotColor.blue.color),
+        channelName: ChannelMetadata(
+          channelSetting: ChannelSetting(lineColor: PlotColor.blue.color),
+        ),
       };
 
       // And daq service with scalar ramp point count limit of 10 points.
@@ -407,7 +454,9 @@ void main() {
         // Given a scalar ramp channel
         var channelName = "PLOT TEST SCALAR RAMP";
         final channelList = {
-          channelName: ChannelSetting(lineColor: PlotColor.blue.color),
+          channelName: ChannelMetadata(
+            channelSetting: ChannelSetting(lineColor: PlotColor.blue.color),
+          ),
         };
 
         // And daq service with scalar ramp point count limit of 10 points.
@@ -483,7 +532,9 @@ void main() {
       WidgetTester tester,
     ) async {
       // Given a channel list containing "PLOT TEST CONSTANT"
-      final channelList = {"PLOT TEST CONSTANT": ChannelSetting()};
+      final channelList = {
+        "PLOT TEST CONSTANT": ChannelMetadata(channelSetting: ChannelSetting()),
+      };
 
       // When I build the PlotWidget
       await tester.pumpWidget(_buildPlotWidget(channelList));
@@ -525,7 +576,9 @@ void main() {
       "Plot PLOT TEST RAMP, get a ramp starting at Y=0.0 and ending at y = 500.0",
       (WidgetTester tester) async {
         // Given a channel list containing "PLOT TEST RAMP"
-        final channelList = {"PLOT TEST RAMP": ChannelSetting()};
+        final channelList = {
+          "PLOT TEST RAMP": ChannelMetadata(channelSetting: ChannelSetting()),
+        };
 
         // When I build the PlotWidget
         await tester.pumpWidget(_buildPlotWidget(channelList));
@@ -569,7 +622,9 @@ void main() {
       "Plot multiple plots and ensure that the Y and X axis limits are adjusted",
       (WidgetTester tester) async {
         final channelList = {
-          "PLOT TEST SINE": ChannelSetting(lineColor: Colors.blue),
+          "PLOT TEST SINE": ChannelMetadata(
+            channelSetting: ChannelSetting(lineColor: Colors.blue),
+          ),
         };
         // When I build the PlotWidget
         await tester.pumpWidget(_buildPlotWidget(channelList));
@@ -595,8 +650,8 @@ void main() {
         );
 
         // Plot a second channel.
-        channelList["PLOT TEST CONSTANT"] = ChannelSetting(
-          lineColor: Colors.red,
+        channelList["PLOT TEST CONSTANT"] = ChannelMetadata(
+          channelSetting: ChannelSetting(lineColor: Colors.red),
         );
         await tester.pumpWidget(_buildPlotWidget(channelList));
         await waitForPlotDataToLoad(tester);
@@ -626,7 +681,11 @@ void main() {
       "Plot PLOT TEST PARABOLA, get a parabola starting at X=-50 and ending at X=50",
       (WidgetTester tester) async {
         // Given a channel list containing "PLOT TEST PARABOLA"
-        final channelList = {"PLOT TEST PARABOLA": ChannelSetting()};
+        final channelList = {
+          "PLOT TEST PARABOLA": ChannelMetadata(
+            channelSetting: ChannelSetting(),
+          ),
+        };
 
         // When I build the PlotWidget
         await tester.pumpWidget(_buildPlotWidget(channelList));
@@ -659,7 +718,9 @@ void main() {
       "Plot PLOT TEST SINE, get a sine wave starting at X=-250 and ending at X=250",
       (WidgetTester tester) async {
         // Given a channel list containing "PLOT TEST SINE"
-        final channelList = {"PLOT TEST SINE": ChannelSetting()};
+        final channelList = {
+          "PLOT TEST SINE": ChannelMetadata(channelSetting: ChannelSetting()),
+        };
 
         // When I build the PlotWidget
         await tester.pumpWidget(_buildPlotWidget(channelList));
@@ -688,7 +749,9 @@ void main() {
       "Plot PLOT TEST SINE, get a progress indicator while data is fetched",
       (WidgetTester tester) async {
         // Given a channel list containing "PLOT TEST SINE"
-        final channelList = {"PLOT TEST SINE": ChannelSetting()};
+        final channelList = {
+          "PLOT TEST SINE": ChannelMetadata(channelSetting: ChannelSetting()),
+        };
 
         // When I build the PlotWidget
         await tester.pumpWidget(_buildPlotWidget(channelList));
@@ -703,7 +766,11 @@ void main() {
       "Plot PLOT TEST PARABOLA 64K, get a parabola starting at X=-32767 and ending at X=32767",
       (WidgetTester tester) async {
         // Given a channel list containing "PLOT TEST PARABOLA"
-        final channelList = {"PLOT TEST PARABOLA 64K": ChannelSetting()};
+        final channelList = {
+          "PLOT TEST PARABOLA 64K": ChannelMetadata(
+            channelSetting: ChannelSetting(),
+          ),
+        };
 
         // When I build the PlotWidget
         await tester.pumpWidget(_buildPlotWidget(channelList));
@@ -736,7 +803,9 @@ void main() {
       "Plot PLOT TEST NORMAL, get a normal distribution centered around 250",
       (WidgetTester tester) async {
         // Given a channel list containing "PLOT TEST PARABOLA"
-        final channelList = {"PLOT TEST NORMAL": ChannelSetting()};
+        final channelList = {
+          "PLOT TEST NORMAL": ChannelMetadata(channelSetting: ChannelSetting()),
+        };
 
         // When I build the PlotWidget
         await tester.pumpWidget(_buildPlotWidget(channelList));
@@ -769,7 +838,9 @@ void main() {
       WidgetTester tester,
     ) async {
       // Given a channel list containing "PLOT TEST PARABOLA"
-      final channelList = {"API TEST CONSTANT": ChannelSetting()};
+      final channelList = {
+        "API TEST CONSTANT": ChannelMetadata(channelSetting: ChannelSetting()),
+      };
 
       // When I build the PlotWidget with an AcsysProvider
       await tester.pumpWidget(_buildPlotWidget(channelList));
@@ -801,7 +872,9 @@ void main() {
       WidgetTester tester,
     ) async {
       // Given a channel list containing "PLOT TEST PARABOLA"
-      final channelList = {"PLOT TEST CONSTANT": ChannelSetting()};
+      final channelList = {
+        "PLOT TEST CONSTANT": ChannelMetadata(channelSetting: ChannelSetting()),
+      };
 
       // ... and we are rendering for a small display
       await setSmallScreenSize(tester);
@@ -823,7 +896,9 @@ void main() {
     ) async {
       // Given a channel list containing "PLOT TEST PARABOLA"
       final channelList = {
-        "PLOT TEST CONSTANT": ChannelSetting(lineColor: PlotColor.blue.color),
+        "PLOT TEST CONSTANT": ChannelMetadata(
+          channelSetting: ChannelSetting(lineColor: PlotColor.blue.color),
+        ),
       };
 
       // When I build the PlotWidget
@@ -839,15 +914,19 @@ void main() {
       (WidgetTester tester) async {
         // Given a channel list with two channels and independent y-scales
         final channelList = {
-          "PLOT TEST CONSTANT": ChannelSetting(
-            lineColor: PlotColor.red.color,
-            confMinY: 0.00,
-            confMaxY: 10.00,
+          "PLOT TEST CONSTANT": ChannelMetadata(
+            channelSetting: ChannelSetting(
+              lineColor: PlotColor.red.color,
+              confMinY: 0.00,
+              confMaxY: 10.00,
+            ),
           ),
-          "PLOT TEST RAMP": ChannelSetting(
-            lineColor: PlotColor.blue.color,
-            confMinY: -5.00,
-            confMaxY: 5.00,
+          "PLOT TEST RAMP": ChannelMetadata(
+            channelSetting: ChannelSetting(
+              lineColor: PlotColor.blue.color,
+              confMinY: -5.00,
+              confMaxY: 5.00,
+            ),
           ),
         };
 
@@ -888,15 +967,19 @@ void main() {
 
         // ... and a channel list with two channels and independent y-scales
         final channelList = {
-          "PLOT TEST CONSTANT": ChannelSetting(
-            lineColor: PlotColor.red.color,
-            confMinY: 0.00,
-            confMaxY: 10.00,
+          "PLOT TEST CONSTANT": ChannelMetadata(
+            channelSetting: ChannelSetting(
+              lineColor: PlotColor.red.color,
+              confMinY: 0.00,
+              confMaxY: 10.00,
+            ),
           ),
-          "PLOT TEST RAMP": ChannelSetting(
-            lineColor: PlotColor.blue.color,
-            confMinY: -5.00,
-            confMaxY: 5.00,
+          "PLOT TEST RAMP": ChannelMetadata(
+            channelSetting: ChannelSetting(
+              lineColor: PlotColor.blue.color,
+              confMinY: -5.00,
+              confMaxY: 5.00,
+            ),
           ),
         };
 
@@ -917,25 +1000,33 @@ void main() {
 
         // ... and a channel list with two channels and independent y-scales
         final channelList = {
-          "PLOT TEST CONSTANT": ChannelSetting(
-            lineColor: PlotColor.red.color,
-            confMinY: 0.00,
-            confMaxY: 10.00,
+          "PLOT TEST CONSTANT": ChannelMetadata(
+            channelSetting: ChannelSetting(
+              lineColor: PlotColor.red.color,
+              confMinY: 0.00,
+              confMaxY: 10.00,
+            ),
           ),
-          "PLOT TEST RAMP": ChannelSetting(
-            lineColor: PlotColor.blue.color,
-            confMinY: -5.00,
-            confMaxY: 5.00,
+          "PLOT TEST RAMP": ChannelMetadata(
+            channelSetting: ChannelSetting(
+              lineColor: PlotColor.blue.color,
+              confMinY: -5.00,
+              confMaxY: 5.00,
+            ),
           ),
-          "PLOT TEST RAND RAMP": ChannelSetting(
-            lineColor: PlotColor.green.color,
-            confMinY: 0.00,
-            confMaxY: 5.00,
+          "PLOT TEST RAND RAMP": ChannelMetadata(
+            channelSetting: ChannelSetting(
+              lineColor: PlotColor.green.color,
+              confMinY: 0.00,
+              confMaxY: 5.00,
+            ),
           ),
-          "PLOT TEST SINE": ChannelSetting(
-            lineColor: PlotColor.yellow.color,
-            confMinY: 0.00,
-            confMaxY: 5.00,
+          "PLOT TEST SINE": ChannelMetadata(
+            channelSetting: ChannelSetting(
+              lineColor: PlotColor.yellow.color,
+              confMinY: 0.00,
+              confMaxY: 5.00,
+            ),
           ),
         };
 
@@ -953,7 +1044,9 @@ void main() {
       (WidgetTester tester) async {
         // Given a channel list containing "PLOT TEST PARABOLA"
         final channelList = {
-          "PLOT TEST PARABOLA": ChannelSetting(lineColor: PlotColor.blue.color),
+          "PLOT TEST PARABOLA": ChannelMetadata(
+            channelSetting: ChannelSetting(lineColor: PlotColor.blue.color),
+          ),
         };
 
         // When I build the PlotWidget with xMin = -249.1 and xMax = 249.1
@@ -973,10 +1066,12 @@ void main() {
         // Given a channel list containing "PLOT TEST CONTANT"
         //   ... and y-min and y-max set to a range of 0.2
         final channelList = {
-          "PLOT TEST CONSTANT": ChannelSetting(
-            lineColor: PlotColor.blue.color,
-            displayedMinY: 4.9,
-            displayedMaxY: 5.1,
+          "PLOT TEST CONSTANT": ChannelMetadata(
+            channelSetting: ChannelSetting(
+              lineColor: PlotColor.blue.color,
+              displayedMinY: 4.9,
+              displayedMaxY: 5.1,
+            ),
           ),
         };
 
@@ -1015,7 +1110,9 @@ void main() {
       WidgetTester tester,
     ) async {
       // Given a channel list containing "PLOT TEST CONSTANT"
-      final channelList = {"PLOT TEST CONSTANT": ChannelSetting()};
+      final channelList = {
+        "PLOT TEST CONSTANT": ChannelMetadata(channelSetting: ChannelSetting()),
+      };
 
       // When I build the PlotWidget with the Graphic implementation
       await tester.pumpWidget(
@@ -1054,7 +1151,9 @@ void main() {
       "Plot PLOT TEST RAMP, get a ramp starting at Y=0.0 and ending at y = 500.0",
       (WidgetTester tester) async {
         // Given a channel list containing "PLOT TEST RAMP"
-        final channelList = {"PLOT TEST RAMP": ChannelSetting()};
+        final channelList = {
+          "PLOT TEST RAMP": ChannelMetadata(channelSetting: ChannelSetting()),
+        };
 
         // When I build the PlotWidget with implementation = Graphic
         await tester.pumpWidget(
@@ -1089,7 +1188,9 @@ void main() {
     testWidgets(
       "Plot multiple plots and ensure that the Y and X axis limits are adjusted",
       (WidgetTester tester) async {
-        final channelList = {"PLOT TEST SINE": ChannelSetting()};
+        final channelList = {
+          "PLOT TEST SINE": ChannelMetadata(channelSetting: ChannelSetting()),
+        };
 
         // When I build the PlotWidget
         await tester.pumpWidget(
@@ -1107,7 +1208,9 @@ void main() {
         );
 
         // Plot a second channel.
-        channelList["PLOT TEST CONSTANT"] = ChannelSetting();
+        channelList["PLOT TEST CONSTANT"] = ChannelMetadata(
+          channelSetting: ChannelSetting(),
+        );
         await tester.pumpWidget(_buildPlotWidget(channelList));
         await waitForPlotDataToLoad(tester);
 
@@ -1126,7 +1229,11 @@ void main() {
       "Plot PLOT TEST PARABOLA, get a parabola starting at X=-50 and ending at X=50",
       (WidgetTester tester) async {
         // Given a channel list containing "PLOT TEST PARABOLA"
-        final channelList = {"PLOT TEST PARABOLA": ChannelSetting()};
+        final channelList = {
+          "PLOT TEST PARABOLA": ChannelMetadata(
+            channelSetting: ChannelSetting(),
+          ),
+        };
 
         // When I build the PlotWidget
         await tester.pumpWidget(
@@ -1161,7 +1268,9 @@ void main() {
       "Plot PLOT TEST SINE, get a sine wave starting at X=-250 and ending at X=250",
       (WidgetTester tester) async {
         // Given a channel list containing "PLOT TEST SINE"
-        final channelList = {"PLOT TEST SINE": ChannelSetting()};
+        final channelList = {
+          "PLOT TEST SINE": ChannelMetadata(channelSetting: ChannelSetting()),
+        };
 
         // When I build the PlotWidget
         await tester.pumpWidget(
@@ -1192,7 +1301,9 @@ void main() {
       "Plot PLOT TEST SINE, get a progress indicator while data is fetched",
       (WidgetTester tester) async {
         // Given a channel list containing "PLOT TEST SINE"
-        final channelList = {"PLOT TEST SINE": ChannelSetting()};
+        final channelList = {
+          "PLOT TEST SINE": ChannelMetadata(channelSetting: ChannelSetting()),
+        };
 
         // When I build the PlotWidget
         await tester.pumpWidget(
@@ -1209,7 +1320,11 @@ void main() {
       "Plot PLOT TEST PARABOLA 64K, get a parabola starting at X=-32767 and ending at X=32767",
       (WidgetTester tester) async {
         // Given a channel list containing "PLOT TEST PARABOLA"
-        final channelList = {"PLOT TEST PARABOLA 64K": ChannelSetting()};
+        final channelList = {
+          "PLOT TEST PARABOLA 64K": ChannelMetadata(
+            channelSetting: ChannelSetting(),
+          ),
+        };
 
         // When I build the PlotWidget
         await tester.pumpWidget(
@@ -1244,7 +1359,9 @@ void main() {
       "Plot PLOT TEST NORMAL, get a normal distribution centered around 250",
       (WidgetTester tester) async {
         // Given a channel list containing "PLOT TEST PARABOLA"
-        final channelList = {"PLOT TEST NORMAL": ChannelSetting()};
+        final channelList = {
+          "PLOT TEST NORMAL": ChannelMetadata(channelSetting: ChannelSetting()),
+        };
 
         // When I build the PlotWidget
         await tester.pumpWidget(
@@ -1279,7 +1396,9 @@ void main() {
       WidgetTester tester,
     ) async {
       // Given a channel list containing "PLOT TEST PARABOLA"
-      final channelList = {"API TEST CONSTANT": ChannelSetting()};
+      final channelList = {
+        "API TEST CONSTANT": ChannelMetadata(channelSetting: ChannelSetting()),
+      };
 
       // When I build the PlotWidget with an AcsysProvider
       await tester.pumpWidget(
@@ -1314,7 +1433,9 @@ void main() {
     ) async {
       // Given a channel list containing "PLOT TEST PARABOLA"
       final channelList = {
-        "PLOT TEST CONSTANT": ChannelSetting(lineColor: PlotColor.blue.color),
+        "PLOT TEST CONSTANT": ChannelMetadata(
+          channelSetting: ChannelSetting(lineColor: PlotColor.blue.color),
+        ),
       };
 
       // When I build the PlotWidget
@@ -1344,7 +1465,7 @@ void assertPlotImplementationIs(
 }
 
 Widget _buildPlotWidget(
-  Map<String, ChannelSetting> channelList, {
+  Map<String, ChannelMetadata> channelList, {
   PlotImplementation impl = PlotImplementation.flCharts,
   int updateDelay = 0,
   int nAcquisitions = 0,

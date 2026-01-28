@@ -1,10 +1,10 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter_controls_plotting/entities/channel_setting.dart';
+import 'package:flutter_controls_plotting/entities/channel_metadata.dart';
 
 class PlotYAxisLabelWidget extends StatelessWidget {
   final double normalizedValue;
-  final Map<String, ChannelSetting> channels;
+  final Map<String, ChannelMetadata> channels;
   final double defaultMinY;
   final double defaultMaxY;
 
@@ -24,7 +24,12 @@ class PlotYAxisLabelWidget extends StatelessWidget {
       final label = _formatValue(_calculateValue(channelName));
 
       labels.add(
-        Text(label, style: TextStyle(color: channels[channelName]!.lineColor)),
+        Text(
+          label,
+          style: TextStyle(
+            color: channels[channelName]!.channelSetting.lineColor,
+          ),
+        ),
       );
     }
 
@@ -37,7 +42,8 @@ class PlotYAxisLabelWidget extends StatelessWidget {
       : v.toStringAsFixed(2);
 
   double _calculateValue(String channelName) {
-    final channel = channels[channelName];
+    final channelMetadata = channels[channelName];
+    final channel = channelMetadata?.channelSetting;
     if (channel != null && channel.isLogScale) {
       final logMin = channel.displayedMinY ?? log(1);
       final logMax = channel.displayedMaxY ?? log(10);

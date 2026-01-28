@@ -231,9 +231,10 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   double getPixelY(LineBarSpot touchedSpot, Size viewSize) {
     // Get the channel name from the bar index
     final channelName = _barIndexToChannelName[touchedSpot.barIndex];
-    final channel = channelName != null
+    final channelMetadata = channelName != null
         ? plotWidget.plotChannels[channelName]
         : null;
+    final channel = channelMetadata?.channelSetting;
 
     // Use per-channel Y limits (normalized 0-1 range)
     final minY = channel?.displayedMinY ?? 0;
@@ -277,13 +278,15 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
           // Old way for fetching the channel name.
           plotWidget.plotChannels.keys.toList()[channelIndex];
 
-      final min = plotWidget.plotChannels[channelName]?.displayedMinY ?? 0;
-      final max = plotWidget.plotChannels[channelName]?.displayedMaxY ?? 1;
+      final channelSetting =
+          plotWidget.plotChannels[channelName]?.channelSetting;
+      final min = channelSetting?.displayedMinY ?? 0;
+      final max = channelSetting?.displayedMaxY ?? 1;
       final yValue = _scaleY(
         y,
         min: min,
         max: max,
-        isLogScale: plotWidget.plotChannels[channelName]?.isLogScale,
+        isLogScale: channelSetting?.isLogScale,
       );
 
       tooltips.add(
@@ -404,7 +407,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         var spots = cache.toSpots(
           points: pointSegment,
           channelName: channelName,
-          channelSetting: plotWidget.plotChannels[channelName]!,
+          channelSetting: plotWidget.plotChannels[channelName]!.channelSetting,
           segmentIndex: segmentIndex,
           minX: plotWidget.confMinX,
           maxX: plotWidget.confMaxX,
