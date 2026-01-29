@@ -580,15 +580,26 @@ class PlotState extends State<PlotWidget> {
   }
 
   String? _plotReplyHasErrors() {
+    String? errorChNames;
     if (_plotReply != null) {
       for (PlotChannelData chData in _plotReply!.data as List) {
+        final channelName = chData.name;
+        final chMetadata = widget.plotChannels[channelName];
+        final chStatus = chMetadata?.channelStatus;
         if (channelHasError(chData)) {
-          return chData.name;
+          chStatus?.setError(chData.status, chData.statusString);
+          if (errorChNames == null) {
+            errorChNames = channelName;
+          } else {
+            errorChNames = "$errorChNames, $channelName";
+          }
+        } else {
+          chStatus?.clearError();
         }
       }
     }
 
-    return null;
+    return errorChNames;
   }
 
   void _updateStreamConnectionChanged(ConnectionState state) {
