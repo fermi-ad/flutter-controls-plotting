@@ -1,8 +1,8 @@
-class ChannelError {
+class ChannelStatus {
   final int statusCode;
   final String? statusMessage;
 
-  const ChannelError({required this.statusCode, this.statusMessage});
+  const ChannelStatus({required this.statusCode, this.statusMessage});
 
   @override
   String toString() {
