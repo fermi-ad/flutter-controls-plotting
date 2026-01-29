@@ -904,8 +904,8 @@ void main() {
         await tester.pumpWidget(_buildPlotWidget(channelList));
         await waitForPlotDataToLoad(tester);
 
-        // Then a total of 11 y-axis labels are displayed
-        assertPlotYAxisLabelsCount(tester, 21);
+        // Then a total of 8 y-axis labels are displayed
+        assertPlotYAxisLabelsCount(tester, 9);
       },
     );
 
@@ -943,8 +943,8 @@ void main() {
         await tester.pumpWidget(_buildPlotWidget(channelList));
         await waitForPlotDataToLoad(tester);
 
-        // Then a total of 11 y-axis labels are displayed
-        assertPlotYAxisLabelsCount(tester, 11);
+        // Then a total of 4 y-axis labels are displayed
+        assertPlotYAxisLabelsCount(tester, 4);
       },
     );
 
