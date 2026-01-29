@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/entities/channel_metadata.dart';
 import 'package:flutter_controls_plotting/entities/plotting_point.dart';
-import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
 import 'package:flutter_controls_plotting/entities/plot_metadata.dart';
 import 'package:flutter_controls_plotting/entities/plot_stream_metadata.dart';
@@ -625,7 +624,7 @@ class PlotState extends State<PlotWidget> {
 
   Stream<PlotReply>? _plotStream;
 
-  Map<String, ChannelSetting> _channels = {};
+  Map<String, ChannelMetadata> _channels = {};
 
   ConnectionState? get lastConnectionState =>
       _plotStreamMetadata.lastConnectionState;
