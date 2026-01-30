@@ -562,11 +562,6 @@ void main() {
         min: 4.5,
         max: 5.5,
       );
-      assertPlotYAxisLabel(
-        isVisible: true,
-        color: Colors.red,
-        withText: "5.00",
-      );
 
       // ... and the X-axis is labeled...
       assertPlotXAxisTitle(tester, title: "Index");
@@ -987,8 +982,8 @@ void main() {
         await tester.pumpWidget(_buildPlotWidget(channelList));
         await waitForPlotDataToLoad(tester);
 
-        // Then a total of 11 y-axis labels are displayed
-        assertPlotYAxisLabelsCount(tester, 21);
+        // Then a total of 6 y-axis labels are displayed
+        assertPlotYAxisLabelsCount(tester, 6);
       },
     );
 
@@ -1034,8 +1029,8 @@ void main() {
         await tester.pumpWidget(_buildPlotWidget(channelList));
         await waitForPlotDataToLoad(tester);
 
-        // Then a total of 11 y-axis labels are displayed
-        assertPlotYAxisLabelsCount(tester, 11);
+        // Then a total of 4 y-axis labels are displayed
+        assertPlotYAxisLabelsCount(tester, 4);
       },
     );
 

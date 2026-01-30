@@ -53,6 +53,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         titlesData: _buildTitlesData(
           plotReply: plotReply,
           wide: constraints.maxWidth > 600,
+          height: constraints.maxHeight.toInt(),
         ),
       ),
     ),
@@ -95,6 +96,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   FlTitlesData _buildTitlesData({
     required PlotReply? plotReply,
     required bool wide,
+    required int height,
   }) {
     // List<String> channelNames, List<String> channelUnits, String xAxisLabel) {
     if (plotReply == null) {
@@ -137,9 +139,12 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
           showTitles: isShowLabels,
           interval: _calculateYAxisLabelInterval(
             forNChannels: plotReply.data.length,
+            height: height,
           ),
           reservedSize: 80,
           getTitlesWidget: _buildYLabelWidget,
+          minIncluded: true,
+          maxIncluded: true,
         ),
       );
 
@@ -151,6 +156,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
           showTitles: isShowLabels,
           interval: _calculateYAxisLabelInterval(
             forNChannels: plotReply.data.length,
+            height: height,
           ),
           reservedSize: 80,
           getTitlesWidget: _buildYLabelWidget,
@@ -495,17 +501,10 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     return lineChartList;
   }
 
-  double _calculateYAxisLabelInterval({required int forNChannels}) {
-    if (forNChannels < 3) {
-      return 0.05;
-    } else if (forNChannels < 5) {
-      return 0.1;
-    } else if (forNChannels < 7) {
-      return 0.2;
-    } else {
-      return 0.25;
-    }
-  }
+  double _calculateYAxisLabelInterval({
+    required int forNChannels,
+    required int height,
+  }) => 1 / ((height - 130) / ((forNChannels) * 65));
 }
 
 FlDotData _selectFlDotData(int plotMarker, Color channelColor) {
