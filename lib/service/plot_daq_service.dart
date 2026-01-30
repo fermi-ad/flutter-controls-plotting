@@ -517,11 +517,20 @@ class StandardPlotDAQ implements PlotDAQService {
                 points: data,
               );
             } else {
+              String? statusString;
+              int status = -1;
+
+              if (forChannel == GenPlots.statusError.name) {
+                statusString = "Generated Error Message Channel";
+                status = 123;
+              }
+
               newChannel = PlotChannelData(
                 name: forChannel,
                 rate: chRate,
                 units: "",
-                status: -1,
+                status: status,
+                statusString: statusString,
               );
             }
             internalDaqData.add(newChannel);
@@ -903,7 +912,7 @@ const int plotEvent10 = 16;
 const int plotEvent20 = 32;
 
 bool channelHasError(PlotChannelData chData) {
-  return chData.status < 0;
+  return chData.status != 0;
 }
 
 bool channelHasErrorOrNoPoints(PlotChannelData chData) {
