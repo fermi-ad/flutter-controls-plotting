@@ -35,6 +35,7 @@ class StandardPlotDAQ implements PlotDAQService {
 
   // Test variables
   int scalarRampCount = 0;
+  int statusIntErrorCount = 0;
   int tclkEvent00Duration = 2;
   int tclkEvent10Duration = 5;
   int tclkEvent20Duration = 10;
@@ -523,6 +524,9 @@ class StandardPlotDAQ implements PlotDAQService {
               if (forChannel == GenPlots.statusError.name) {
                 statusString = "Generated Error Message Channel";
                 status = 123;
+              } else if (forChannel == GenPlots.statusIntError.name) {
+                statusString = "Intermittent connection simulation channel";
+                status = 456;
               }
 
               newChannel = PlotChannelData(
@@ -822,6 +826,25 @@ class StandardPlotDAQ implements PlotDAQService {
     } else if (forChannel == GenPlots.statusError.name) {
       // This channel will return null data to trigger status error
       data = null;
+    } else if (forChannel == GenPlots.statusIntError.name) {
+      // This channel alternates between returning a value and null (intermittent error)
+      statusIntErrorCount++;
+      if (statusIntErrorCount % 2 == 0) {
+        // Return null on even counts to simulate intermittent connection error
+        data = null;
+      } else {
+        // Return a value on odd counts (alternating 0 and 1)
+        var value = ((statusIntErrorCount / 2).floor() % 2).toDouble();
+        var x = eventX ?? currentEpochTime;
+        if (xAxisValue != null) {
+          data = [
+            PlotPoint(t: x, value: DevTimeSeries([(xAxisValue, value)])),
+          ];
+        } else {
+          xAxisUnits = 'Time';
+          data = [PlotPoint(value: DevScalar(value), t: x)];
+        }
+      }
     }
     return (xAxisUnits, data);
   }
@@ -900,7 +923,8 @@ enum GenPlots {
   sine64k("PLOT TEST SINE 64K"),
   sine32k("PLOT TEST SINE 32K"),
   normal("PLOT TEST NORMAL"),
-  statusError("PLOT TEST STATUS ERROR");
+  statusError("PLOT TEST STATUS ERROR"),
+  statusIntError("PLOT TEST STATUS INT ERROR");
 
   const GenPlots(this.name, {this.minUpdateDelay});
   final String name;
