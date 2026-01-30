@@ -11,14 +11,14 @@ class ChannelStatus extends ChangeNotifier {
     if (statusCode != 0 || statusMessage != null) {
       statusCode = 0;
       statusMessage = null;
-      notifyListeners();
+      Future.delayed(Duration.zero, () => {notifyListeners()});
     }
   }
 
   void setError(int code, [String? message]) {
     statusCode = code;
     statusMessage = message;
-    notifyListeners();
+    Future.delayed(Duration.zero, () => {notifyListeners()});
   }
 
   @override
