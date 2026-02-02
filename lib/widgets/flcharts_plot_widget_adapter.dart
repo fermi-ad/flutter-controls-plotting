@@ -501,7 +501,15 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   double _calculateYAxisLabelInterval({
     required int forNChannels,
     required int height,
-  }) => 1 / ((height - 130) / ((forNChannels) * 65));
+  }) {
+    if (forNChannels == 0) {
+      return 0.05;
+    } else if (height <= 130) {
+      return 1;
+    } else {
+      return 1 / ((height - 130) / ((forNChannels) * 65));
+    }
+  }
 }
 
 FlDotData _selectFlDotData(int plotMarker, Color channelColor) {
