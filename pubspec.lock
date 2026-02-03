@@ -235,8 +235,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: wasm-test
-      resolved-ref: "23f6d690195fa2fd6eb058c747fb6791bac1e890"
+      ref: main
+      resolved-ref: "352d34ecacc6e8e57e05d5dc8f8b3ada061648dc"
       url: "https://github.com/fermi-ad/flutter-controls-core.git"
     source: git
     version: "0.3.1"
