@@ -527,6 +527,9 @@ class StandardPlotDAQ implements PlotDAQService {
               } else if (forChannel == GenPlots.statusIntError.name) {
                 statusString = "Intermittent connection simulation channel";
                 status = -456;
+              } else if (forChannel == GenPlots.statusWarn.name) {
+                statusString = "Signal value is delayed";
+                status = 1; // Positive status for warning
               }
 
               newChannel = PlotChannelData(
@@ -845,6 +848,25 @@ class StandardPlotDAQ implements PlotDAQService {
           data = [PlotPoint(value: DevScalar(value), t: x)];
         }
       }
+    } else if (forChannel == GenPlots.statusWarn.name) {
+      // This channel returns a sine wave with a slight delay (phase shift)
+      // to simulate a warning condition or timing discrepancy
+      repetetiveScalarPlotEpochTime ??= currentEpochTime;
+      var difference = currentEpochTime - repetetiveScalarPlotEpochTime!;
+
+      // Add a 0.5 second delay (phase shift) to the sine wave
+      var delayedDifference = difference - 0.5;
+      double value = calculateSineByDifference(delayedDifference);
+
+      var x = eventX ?? currentEpochTime;
+      if (xAxisValue != null) {
+        data = [
+          PlotPoint(t: x, value: DevTimeSeries([(xAxisValue, value)])),
+        ];
+      } else {
+        xAxisUnits = 'Time';
+        data = [PlotPoint(value: DevScalar(value), t: x)];
+      }
     }
     return (xAxisUnits, data);
   }
@@ -924,7 +946,8 @@ enum GenPlots {
   sine32k("PLOT TEST SINE 32K"),
   normal("PLOT TEST NORMAL"),
   statusError("PLOT TEST STATUS ERROR"),
-  statusIntError("PLOT TEST STATUS INT ERROR");
+  statusIntError("PLOT TEST STATUS INT ERROR"),
+  statusWarn("PLOT TEST STATUS WARN SINE");
 
   const GenPlots(this.name, {this.minUpdateDelay});
   final String name;
@@ -937,6 +960,10 @@ const int plotEvent20 = 32;
 
 bool channelHasError(PlotChannelData chData) {
   return chData.status < 0;
+}
+
+bool channelHasWarning(PlotChannelData chData) {
+  return chData.status > 0;
 }
 
 bool channelHasErrorOrNoPoints(PlotChannelData chData) {

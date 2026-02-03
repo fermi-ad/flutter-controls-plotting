@@ -590,6 +590,8 @@ class PlotState extends State<PlotWidget> {
           chStatus?.setError(chData.status, chData.statusString);
           errorChNames ??= {};
           errorChNames.add(channelName);
+        } else if (channelHasWarning(chData)) {
+          chStatus?.setWarning(chData.status, chData.statusString);
         } else {
           chStatus?.clearError();
         }
