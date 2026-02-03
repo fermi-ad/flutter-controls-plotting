@@ -523,10 +523,10 @@ class StandardPlotDAQ implements PlotDAQService {
 
               if (forChannel == GenPlots.statusError.name) {
                 statusString = "Generated Error Message Channel";
-                status = 123;
+                status = -123;
               } else if (forChannel == GenPlots.statusIntError.name) {
                 statusString = "Intermittent connection simulation channel";
-                status = 456;
+                status = -456;
               }
 
               newChannel = PlotChannelData(
@@ -936,7 +936,7 @@ const int plotEvent10 = 16;
 const int plotEvent20 = 32;
 
 bool channelHasError(PlotChannelData chData) {
-  return chData.status != 0;
+  return chData.status < 0;
 }
 
 bool channelHasErrorOrNoPoints(PlotChannelData chData) {
