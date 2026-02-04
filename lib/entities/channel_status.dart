@@ -1,24 +1,22 @@
 import 'package:flutter/material.dart';
 
-enum ChannelStatusType {
-  OK,
-  WARN,
-  ERROR,
-}
+enum ChannelStatusType { ok, warn, error }
 
 class ChannelStatus extends ChangeNotifier {
   // Status code of null means the channel hasn't been addressed yet.
   int? statusCode;
   String? statusMessage;
-  ChannelStatusType statusType = ChannelStatusType.OK;
+  ChannelStatusType statusType = ChannelStatusType.ok;
 
   ChannelStatus();
 
   void clearError() {
-    if (statusCode != 0 || statusMessage != null || statusType != ChannelStatusType.OK) {
+    if (statusCode != 0 ||
+        statusMessage != null ||
+        statusType != ChannelStatusType.ok) {
       statusCode = 0;
       statusMessage = null;
-      statusType = ChannelStatusType.OK;
+      statusType = ChannelStatusType.ok;
       Future.delayed(Duration.zero, () => {notifyListeners()});
     }
   }
@@ -26,14 +24,14 @@ class ChannelStatus extends ChangeNotifier {
   void setError(int code, [String? message]) {
     statusCode = code;
     statusMessage = message;
-    statusType = ChannelStatusType.ERROR;
+    statusType = ChannelStatusType.error;
     Future.delayed(Duration.zero, () => {notifyListeners()});
   }
 
   void setWarning(int code, [String? message]) {
     statusCode = code;
     statusMessage = message;
-    statusType = ChannelStatusType.WARN;
+    statusType = ChannelStatusType.warn;
     Future.delayed(Duration.zero, () => {notifyListeners()});
   }
 
