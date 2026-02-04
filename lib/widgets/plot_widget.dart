@@ -254,6 +254,7 @@ class PlotState extends State<PlotWidget> {
 
       return plot;
     }
+    final errorOnChannel = _plotReplyHasErrors();
     if (_plotStream != null) {
       if (_plotStreamMetadata.lastStreamError != null) {
         var error = _plotStreamMetadata.lastStreamError;
@@ -262,7 +263,7 @@ class PlotState extends State<PlotWidget> {
           child: _buildEmptyPlot(),
         );
       }
-      final errorOnChannel = _plotReplyHasErrors();
+
       if (errorOnChannel != null) {
         return _buildWithErrorMessage(
           "An error occured when attempting to acquire data for $errorOnChannel",
@@ -311,6 +312,7 @@ class PlotState extends State<PlotWidget> {
     _plotStreamMetadata.resetVarsForNewAcquisition();
     _initializeStream();
   }
+
   void _initializeStream() {
     _resetStream();
     _plotStreamSubscription?.cancel();
