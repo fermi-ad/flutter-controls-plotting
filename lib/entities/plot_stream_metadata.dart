@@ -71,6 +71,16 @@ class PlotStreamMetadata extends ChangeNotifier {
 
   int get failedReconnectCount => _failedReconnectCount;
 
+  void resetVarsForNewAcquisition() {
+    _lastConnectionState = null;
+    _plotReply = null;
+    lastStreamError = null;
+    _failedReconnectCount = 0;
+    _lastTriggered = null;
+    tearDownBlinkTimer();
+    notifyListeners();
+  }
+
   @override
   void notifyListeners() {
     _lastTriggered = DateTime.now().millisecondsSinceEpoch.toDouble();

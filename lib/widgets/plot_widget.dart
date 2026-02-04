@@ -168,7 +168,7 @@ class PlotState extends State<PlotWidget> {
   @override
   void didChangeDependencies() {
     _resetAdapter();
-    _initializeStream();
+    _initializeNewStream();
     super.didChangeDependencies();
   }
 
@@ -177,7 +177,7 @@ class PlotState extends State<PlotWidget> {
     _resetAdapter();
 
     if (_streamShouldReset) {
-      _initializeStream();
+      _initializeNewStream();
     } else if (_plotStreamMetadata.plotReply != null) {
       // Simulate last plot reply to reload plot data with potntially new configuration.
       // This mimics the behavior of stream builder.
@@ -307,6 +307,10 @@ class PlotState extends State<PlotWidget> {
     _plotStreamMetadata.incrementFailedReconnectCount();
   }
 
+  void _initializeNewStream() {
+    _plotStreamMetadata.resetVarsForNewAcquisition();
+    _initializeStream();
+  }
   void _initializeStream() {
     _resetStream();
     _plotStreamSubscription?.cancel();
