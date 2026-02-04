@@ -510,16 +510,16 @@ class StandardPlotDAQ implements PlotDAQService {
           (channelData) => channelData.name == forChannel,
           orElse: () {
             PlotChannelData newChannel;
+
+            int status = 0;
+            String? statusString;
+            String? units;
+
             if (data != null) {
-              newChannel = PlotChannelData(
-                name: forChannel,
-                rate: chRate,
-                units: "V",
-                points: data,
-              );
+              units = "V";
             } else {
-              String? statusString;
-              int status = -1;
+              // No data. Set appropriate messages if available.
+              status = -1;
 
               if (forChannel == GenPlots.statusError.name) {
                 statusString = "Generated Error Message Channel";
@@ -527,19 +527,24 @@ class StandardPlotDAQ implements PlotDAQService {
               } else if (forChannel == GenPlots.statusIntError.name) {
                 statusString = "Intermittent connection simulation channel";
                 status = -456;
-              } else if (forChannel == GenPlots.statusWarn.name) {
-                statusString = "Signal value is delayed";
-                status = 1; // Positive status for warning
               }
-
-              newChannel = PlotChannelData(
-                name: forChannel,
-                rate: chRate,
-                units: "",
-                status: status,
-                statusString: statusString,
-              );
             }
+
+            // Simulate warning channel with data.
+            if (forChannel == GenPlots.statusWarn.name) {
+              statusString = "Signal value is delayed";
+              status = 1; // Positive status for warning
+            }
+
+            newChannel = PlotChannelData(
+              name: forChannel,
+              units: units ?? "",
+              rate: chRate,
+              statusString: statusString,
+              status: status,
+              points: data ?? const [],
+            );
+
             internalDaqData.add(newChannel);
             newChannelAdded = true;
             return newChannel;
