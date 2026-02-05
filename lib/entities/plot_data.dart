@@ -13,8 +13,8 @@ const int _plotPointsByteSize = 3 * 8;
 const int _defaultPurgeDataSize = 5 * 1024 * 1024;
 
 class PlotData {
-  // min/max XY that is currently displayed on the plot.
-  double? _minY, _maxY, _minX, _maxX;
+  // min/max X that is currently displayed on the plot.
+  double? _minX, _maxX;
 
   double? closestSpotX, closestSpotY;
 
@@ -24,6 +24,9 @@ class PlotData {
   double? arrayTimeStep;
 
   int? _lastPlotReplyHash;
+
+  double? _blinkTimestamp;
+  bool _blinkState = false;
 
   // Map of channel name and points split into segments.
   Map<String, List<List<PlottingPoint>>> points = {};
@@ -101,20 +104,6 @@ class PlotData {
     return _maxX;
   }
 
-  double? get minY {
-    if (points.isEmpty) {
-      return 0;
-    }
-    return _minY;
-  }
-
-  double? get maxY {
-    if (points.isEmpty) {
-      return 3.0;
-    }
-    return _maxY;
-  }
-
   int? get maxDataBytes => _maxDataBytes;
 
   set maxDataBytes(int? maxBytes) {
@@ -151,7 +140,9 @@ class PlotData {
   ) {
     List<List<PlottingPoint>> points = [];
 
-    if (plotPoints.isNotEmpty && plotPoints.first.value is DevScalar) {
+    if (plotPoints.isNotEmpty &&
+        (plotPoints.first.value is DevScalar ||
+            plotPoints.first.value is DevTimeSeries)) {
       points.add([]);
     }
 
@@ -179,14 +170,24 @@ class PlotData {
 
           points.last.add(PlottingPoint(x: x.toDouble(), y: y, t: time));
         }
-      } else if (deviceValue is DevScalar) {
+      } else if (deviceValue is DevScalar || deviceValue is DevTimeSeries) {
         var t = time;
 
         if (triggerTimestamp != null) {
           t = triggerTimestamp + t;
         }
 
-        points[0].add(PlottingPoint(x: time, y: deviceValue.value, t: t));
+        if (deviceValue is DevTimeSeries) {
+          points[0].add(
+            PlottingPoint(
+              x: deviceValue.values[0].$1,
+              y: deviceValue.values[0].$2,
+              t: t,
+            ),
+          );
+        } else if (deviceValue is DevScalar) {
+          points[0].add(PlottingPoint(x: time, y: deviceValue.value, t: t));
+        }
       } else {
         throw Exception(
           'Unsupported device value type: ${deviceValue.runtimeType}',
@@ -215,8 +216,9 @@ class PlotData {
         if (!points.containsKey(plotChannel.name)) {
           points[plotChannel.name] = [[]];
         }
-
-        var segments = points[plotChannel.name]!;
+        final channelName = plotChannel.name;
+        ChannelSetting? channelSetting = channelSettings?[channelName];
+        var segments = points[channelName]!;
         var pointsList = segments.last;
         bool oneShotCleared = false;
 
@@ -231,9 +233,12 @@ class PlotData {
                 if (!isPersistent) {
                   // Clear all events.
                   _clearSegments(segments);
+                  flchartCache.clearChannel(channelName);
+                  channelSetting?.displayedMinY = null;
+                  channelSetting?.displayedMaxY = null;
                 }
                 // Reset point limits based on the current data since data is being removed.
-                findPointsLimits(channelSettings: channelSettings);
+                findLimitsWithXRange(channelSettings: channelSettings);
                 // New event
                 segments.add([]);
                 // Reload pointsList
@@ -247,6 +252,8 @@ class PlotData {
               if (isOneShot && !oneShotCleared) {
                 _clearSegments(segments);
                 oneShotCleared = true;
+                channelSetting?.displayedMinY = null;
+                channelSetting?.displayedMaxY = null;
               }
               // Reload pointsList
               pointsList = [];
@@ -298,6 +305,35 @@ class PlotData {
     return dataSize;
   }
 
+  void _recalculateArrayStartTimeIfApplicable() {
+    if (minArrayTime == null) {
+      // No need to recaluclate.
+      return;
+    }
+
+    minArrayTime = null;
+
+    for (var segments in points.values) {
+      if (segments.isEmpty || segments.first.isEmpty) {
+        continue;
+      }
+
+      var firstPoint = segments.first.first;
+      if (firstPoint.t != null) {
+        if (minArrayTime == null) {
+          minArrayTime = firstPoint.t;
+        } else {
+          minArrayTime = min(minArrayTime!, firstPoint.t!);
+        }
+      }
+    }
+
+    // Update the selected time when its less than min.
+    if (_selectedArrayTime != null && minArrayTime != null) {
+      _selectedArrayTime = max(_selectedArrayTime!, minArrayTime!);
+    }
+  }
+
   void _recalculateDataForAllPoints() {
     plotMetadata.plotDataBytes = 0;
 
@@ -339,16 +375,18 @@ class PlotData {
           segmentsToRemove += 1;
           pointsToPurgePerCh -= segment.length;
         }
-        if (segmentsToRemove > 0) {
-          segments.removeRange(0, segmentsToRemove);
-        }
+      }
+      if (segmentsToRemove > 0) {
+        segments.removeRange(0, segmentsToRemove);
       }
     }
 
+    flchartCache.clearAll();
+    _recalculateArrayStartTimeIfApplicable();
     _recalculateDataForAllPoints();
   }
 
-  void findPointsLimits({
+  void findLimitsWithXRange({
     double? xRangeMin,
     double? xRangeMax,
     Map<String, ChannelSetting>? channelSettings,
@@ -361,9 +399,17 @@ class PlotData {
 
       // Access channel setting for this channel
       ChannelSetting? channelSetting = channelSettings?[channelName];
+      minY = channelSetting?.displayedMinY;
+      maxY = channelSetting?.displayedMaxY;
+
+      // Skip calculating yLimits for channels with conf Y limits set.
+      if (channelSetting?.confMinY != null ||
+          channelSetting?.confMaxY != null) {
+        continue;
+      }
 
       for (var pointList in segments) {
-        (minY, maxY, minX, maxX) = _getLimitsPerPoints(
+        (minX, maxX) = _getLimitsPerPoints(
           points: pointList,
           minY: minY,
           maxY: maxY,
@@ -376,21 +422,18 @@ class PlotData {
       }
     }
 
-    setLimits(minX: minX, maxX: maxX, minY: minY, maxY: maxY);
+    setXLimits(minX: minX, maxX: maxX);
   }
 
   void findLimits({
     required List<PlotChannelData> plotChannels,
-    required double? confMinY,
-    required double? confMaxY,
     required double? confMinX,
     required double? confMaxX,
     required double? timeDelta,
     required double? triggerTimestamp,
+    required bool isPersistent,
     Map<String, ChannelSetting>? channelSettings,
   }) {
-    double? minY = _minY;
-    double? maxY = _maxY;
     double? minX = _minX;
     double? maxX = _maxX;
 
@@ -408,18 +451,15 @@ class PlotData {
 
         // Access channel setting for this channel
         ChannelSetting? channelSetting = channelSettings?[name];
+        double? minY = channelSetting?.displayedMinY;
+        double? maxY = channelSetting?.displayedMaxY;
 
-        (minY, maxY, minX, maxX) = _getLimitsPerPoints(
+        (minX, maxX) = _getLimitsPerPoints(
           points: points,
-
           minY: minY,
-
           maxY: maxY,
-
           minX: minX,
-
           maxX: maxX,
-
           channelSetting: channelSetting,
         );
       }
@@ -445,29 +485,17 @@ class PlotData {
         }
         minX = maxX! - timeDelta;
         // Calculate y based on points displayed.
-        if (confMinY == null && confMaxY == null) {
-          findPointsLimits(
-            xRangeMin: minX,
-            xRangeMax: maxX,
-            channelSettings: channelSettings,
-          );
-          minY = _minY;
-          maxY = _maxY;
-        }
+        findLimitsWithXRange(
+          xRangeMin: minX,
+          xRangeMax: maxX,
+          channelSettings: channelSettings,
+        );
       }
     }
-
-    // Override configuration
-    if (confMinY != null) {
-      minY = confMinY;
-    }
-    if (confMaxY != null) {
-      maxY = confMaxY;
-    }
-    setLimits(minX: minX, maxX: maxX, minY: minY, maxY: maxY);
+    setXLimits(minX: minX, maxX: maxX);
   }
 
-  (double?, double?, double?, double?) _getLimitsPerPoints({
+  (double?, double?) _getLimitsPerPoints({
     required List<PlottingPoint> points,
     required double? minY,
     required double? maxY,
@@ -477,10 +505,18 @@ class PlotData {
     double? xRangeMax,
     ChannelSetting? channelSetting,
   }) {
-    minY = null;
-    maxY = null;
     double? logMinY;
     double? logMaxY;
+
+    // reset minY and maxY for constant data
+    bool resetYLimits =
+        channelSetting != null && channelSetting.constantY != null;
+
+    if (resetYLimits) {
+      minY = channelSetting.constantY;
+      maxY = channelSetting.constantY;
+      channelSetting.constantY = null;
+    }
 
     for (int i = points.length - 1; i >= 0; i--) {
       final point = points[i];
@@ -539,30 +575,63 @@ class PlotData {
     if (channelSetting != null) {
       // Handle the y limits for constant data.
       if (minY != null && maxY != null && minY == maxY) {
+        channelSetting.constantY = minY;
         (minY, maxY) = adjustMinMaxForConstant(minY);
         if (channelSetting.isLogScale) {
           (logMinY, logMaxY) = adjustMinMaxForConstant(logMinY!);
         }
       }
 
-      // Priority: user-defined confMinY/confMaxY > calculated values
       if (channelSetting.confMinY != null) {
-        channelSetting.displayedMinY = channelSetting.confMinY;
+        // Use user-configured values
+        if (channelSetting.isLogScale) {
+          if (channelSetting.confMinY! > 0) {
+            channelSetting.displayedMinY = log(channelSetting.confMinY!);
+          } else {
+            channelSetting.displayedMinY =
+                logMinY ?? log(0.001); // Use small positive default
+          }
+        } else {
+          channelSetting.displayedMinY = channelSetting.confMinY;
+        }
         channelSetting.labelMinY = channelSetting.confMinY;
       } else {
-        channelSetting.displayedMinY = logMinY ?? minY;
-        channelSetting.labelMinY = minY;
+        // Use calculated values
+        if (channelSetting.isLogScale) {
+          channelSetting.displayedMinY = logMinY;
+          channelSetting.labelMinY = exp(logMinY as num);
+        } else {
+          channelSetting.displayedMinY = minY;
+          channelSetting.labelMinY = minY;
+        }
       }
 
       if (channelSetting.confMaxY != null) {
-        channelSetting.displayedMaxY = channelSetting.confMaxY;
+        // Use user-configured values
+        if (channelSetting.isLogScale) {
+          if (channelSetting.confMaxY! > 0) {
+            channelSetting.displayedMaxY = log(channelSetting.confMaxY!);
+          } else {
+            channelSetting.displayedMaxY =
+                logMaxY ?? log(1000); // Use reasonable positive default
+          }
+        } else {
+          channelSetting.displayedMaxY = channelSetting.confMaxY;
+        }
         channelSetting.labelMaxY = channelSetting.confMaxY;
       } else {
-        channelSetting.displayedMaxY = logMaxY ?? maxY;
-        channelSetting.labelMaxY = maxY;
+        // Use calculated values
+        if (channelSetting.isLogScale) {
+          channelSetting.displayedMaxY = logMaxY;
+          channelSetting.labelMaxY = exp(logMaxY as num);
+        } else {
+          channelSetting.displayedMaxY = maxY;
+          channelSetting.labelMaxY = maxY;
+        }
       }
     }
-    return (minY, maxY, minX, maxX);
+
+    return (minX, maxX);
   }
 
   (double, double) adjustMinMaxForConstant(double constantValue) {
@@ -590,8 +659,10 @@ class PlotData {
             segments.removeRange(0, segments.length - 1);
           }
         }
+        // Clear the cache since segments were removed.
+        flchartCache.clearAll();
         // Potential clean up for scalar data. Recaluclate limits for all points.
-        findPointsLimits();
+        findLimitsWithXRange();
         _recalculateDataForAllPoints();
       }
     }
@@ -624,19 +695,36 @@ class PlotData {
     }
   }
 
-  void resetMinMaxXY() {
+  void resetMinMaxXY({Map<String, ChannelSetting>? channels}) {
     _minX = null;
     _maxX = null;
-    _minY = null;
-    _maxY = null;
+
+    // Reset y-limits for all channels
+    if (channels != null) {
+      for (final channelName in channels.keys) {
+        final channel = channels[channelName];
+        if (channel != null) {
+          channel.displayedMinY = null;
+          channel.displayedMaxY = null;
+        }
+      }
+    }
   }
 
-  void setLimits({double? minY, double? maxY, double? minX, double? maxX}) {
-    _minY = minY;
-    _maxY = maxY;
+  void setXLimits({double? minX, double? maxX}) {
     _minX = minX;
     _maxX = maxX;
     plotMetadata.xMin = _minX;
     plotMetadata.xMax = _maxX;
+  }
+
+  bool get blinkState => _blinkState;
+
+  set blinkState(bool value) {
+    final now = DateTime.now().millisecondsSinceEpoch / 1000.0;
+    if (_blinkTimestamp == null || (now - _blinkTimestamp!) >= 0.450) {
+      _blinkState = value;
+      _blinkTimestamp = now;
+    }
   }
 }

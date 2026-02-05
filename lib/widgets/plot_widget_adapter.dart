@@ -2,11 +2,14 @@
 
 library plotadapter;
 
+import 'dart:math';
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
+import 'package:flutter_controls_plotting/entities/plotting_fl_spot.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 import 'package:flutter_controls_plotting/widgets/plot_channel_title.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
@@ -26,7 +29,7 @@ abstract class PlotWidgetAdapter {
 
   Widget buildPlot();
 
-  Color lineColorForChannel(String channelName) {
+  Color lineColorForChannel(String channelName, {bool dim = false}) {
     var plotChannels = plotWidget.plotChannels;
     ChannelSetting setting = plotChannels[channelName]!;
 
@@ -57,7 +60,13 @@ abstract class PlotWidgetAdapter {
       plotWidget.onInternalChannelSettingChange?.call(channelName);
     }
 
-    return setting.lineColor!;
+    var color = setting.lineColor!;
+
+    if (dim) {
+      return color.withValues(alpha: 0.3);
+    }
+
+    return color;
   }
 
   int markerIndexForChannel(String channelName) {

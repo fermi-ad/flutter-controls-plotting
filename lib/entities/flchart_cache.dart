@@ -9,6 +9,7 @@ class FlchartCache {
   static const int minimumNumberOfReducedPoints = 8000;
 
   final Map<String, List<List<PlottingFlSpot>>> spots = {};
+  final Map<String, PlottingFlSpot> tempSpot = {};
   final Map<String, List<int>> lastProcessedIndex = {};
 
   int? reducedPoints;
@@ -23,6 +24,7 @@ class FlchartCache {
   // Datalogger skip cache spots.
   double? _dataLoggerStartTime;
   double? _dataLoggerEndTime;
+  bool _dLoggerApplyPredictiveReduction = false;
   final Map<String, double> _dLoggerEstimatedNumberOfPointsPerCh = {};
   double? __dLoggerEstimatedNumberOfPoints;
   int? __dLoggerPointSkipCount;
@@ -38,6 +40,8 @@ class FlchartCache {
     double? maxY,
     bool exitForScalar = false,
     bool appendExistingArrayPoints = false,
+    // Last point will have its own segment for blinking puprposes created outside of cache.
+    bool skipLastPoint = false,
   }) {
     if (!_resetCache) {
       _resetCache = shouldResetCache(
@@ -108,7 +112,11 @@ class FlchartCache {
     int? maxYPairIndex;
 
     List<PlottingFlSpot> newSpots = [];
-    for (int i = points.length - 1; i >= startIndex; i--) {
+    if (points.length == 1) {
+      skipLastPoint = false;
+    }
+    final int endIndex = skipLastPoint ? points.length - 1 : points.length;
+    for (int i = endIndex - 1; i >= startIndex; i--) {
       PlottingPoint point = points[i];
       var x = point.x;
       var y = point.y;
@@ -214,16 +222,39 @@ class FlchartCache {
 
     flSpots.addAll(newSpots);
 
+    if (skipLastPoint && points.isNotEmpty) {
+      PlottingPoint lastPoint = points[points.length - 1];
+      var lastX = lastPoint.x;
+      var lastY = lastPoint.y;
+
+      if (channelSetting.isLogScale) {
+        if (lastY > 0) {
+          lastY = log(lastY);
+        }
+      }
+
+      PlottingFlSpot? existingSpot;
+      if (tempSpot.containsKey(channelName)) {
+        existingSpot = tempSpot[channelName];
+      }
+
+      if (existingSpot == null ||
+          existingSpot.x != lastX ||
+          existingSpot.y != lastY) {
+        if (existingSpot != null) {
+          flSpots.add(existingSpot);
+        }
+
+        tempSpot[channelName] = PlottingFlSpot(lastX, lastY);
+      }
+    }
+
     spots[channelName]![segmentIndex] = flSpots;
     lastProcessedIndex[channelName]![segmentIndex] = points.length - 1;
     return flSpots;
   }
 
-  void normalizeCacheSpots({
-    required Map<String, ChannelSetting> channels,
-    required double? minY,
-    required double? maxY,
-  }) {
+  void normalizeCacheSpots({required Map<String, ChannelSetting> channels}) {
     for (var entry in spots.entries) {
       var channelName = entry.key;
       var channelSpots = entry.value;
@@ -233,23 +264,24 @@ class FlchartCache {
           var normalizedY = _normalizeY(
             spot.originalY,
             channelSetting: channelSetting,
-            minY: minY,
-            maxY: maxY,
           );
           spot.normalizedY = normalizedY;
         }
       }
+      if (tempSpot.containsKey(channelName)) {
+        var spot = tempSpot[channelName]!;
+        var normalizedY = _normalizeY(
+          spot.originalY,
+          channelSetting: channelSetting,
+        );
+        spot.normalizedY = normalizedY;
+      }
     }
   }
 
-  double _normalizeY(
-    double y, {
-    required ChannelSetting channelSetting,
-    required double? minY,
-    required double? maxY,
-  }) {
-    final max = channelSetting.displayedMaxY ?? maxY ?? 1;
-    final min = channelSetting.displayedMinY ?? minY ?? 0;
+  double _normalizeY(double y, {required ChannelSetting channelSetting}) {
+    final max = channelSetting.displayedMaxY ?? 1;
+    final min = channelSetting.displayedMinY ?? 0;
 
     if (min == max) {
       return 0;
@@ -291,10 +323,24 @@ class FlchartCache {
   int? reduceSpots({
     int minimumPointsNeeded = minimumNumberOfReducedPoints,
     int maxiumumPointsDisplayed = 10000,
+    int minimumPointsPerSegment = 50,
+    Map<String, List<int>> displayedSegments = const {},
   }) {
     int numberOfPoints = 0;
-    for (var channelSpots in spots.values) {
-      for (var segmentSpots in channelSpots) {
+    for (var entry in spots.entries) {
+      var channelName = entry.key;
+      var channelSpots = entry.value;
+      var segmentsToDisplay = displayedSegments[channelName] ?? [];
+      for (
+        var segmentIndex = 0;
+        segmentIndex < channelSpots.length;
+        segmentIndex++
+      ) {
+        if (segmentsToDisplay.isNotEmpty &&
+            !segmentsToDisplay.contains(segmentIndex)) {
+          continue;
+        }
+        var segmentSpots = channelSpots[segmentIndex];
         numberOfPoints += segmentSpots.length;
       }
     }
@@ -307,11 +353,25 @@ class FlchartCache {
         return reducedPoints;
       }
       reducedPoints ??= 0;
-      for (var channelSpots in spots.values) {
-        for (var spots in channelSpots) {
+      for (var entry in spots.entries) {
+        var channelName = entry.key;
+        var channelSpots = entry.value;
+        var segmentsToDisplay = displayedSegments[channelName] ?? [];
+        for (
+          var segmentIndex = 0;
+          segmentIndex < channelSpots.length;
+          segmentIndex++
+        ) {
+          if (segmentsToDisplay.isNotEmpty &&
+              !segmentsToDisplay.contains(segmentIndex)) {
+            continue;
+          }
+          var spots = channelSpots[segmentIndex];
           var spotsPercentage = spots.length / numberOfPoints;
-          var maxSpots = minimumPointsNeeded * spotsPercentage;
-          __reduceSpots(spots: spots, maxPoints: maxSpots.ceil());
+          var maxSpots = (minimumPointsNeeded * spotsPercentage).ceil();
+          // The reduction should never be less than specified points per segment.
+          maxSpots = max(minimumPointsPerSegment, maxSpots);
+          __reduceSpots(spots: spots, maxPoints: maxSpots);
           reducedPoints = reducedPoints! + spots.length;
         }
       }
@@ -345,8 +405,14 @@ class FlchartCache {
     return spots;
   }
 
-  void prepareDataLoggerAcquisition({double? startTime, double? endTime}) {
+  void prepareDataLoggerAcquisition({
+    double? startTime,
+    double? endTime,
+    bool applyPredictiveReduction = true,
+  }) {
     clearDataLogger();
+
+    _dLoggerApplyPredictiveReduction = applyPredictiveReduction;
 
     if (startTime == null) {
       return;
@@ -426,6 +492,10 @@ class FlchartCache {
       return;
     }
 
+    if (!_dLoggerApplyPredictiveReduction) {
+      return;
+    }
+
     if (_dLoggerEstimatedNumberOfPointsPerCh.containsKey(channelName)) {
       return;
     }
@@ -484,6 +554,14 @@ class FlchartCache {
     _dataLoggerEndTime = null;
     _dLoggerEstimatedNumberOfPointsPerCh.clear();
     _dLoggerEstimatedNumberOfPoints = null;
+    _dLoggerApplyPredictiveReduction = false;
     reducedPoints = null;
+  }
+
+  // Clears cached spots for a specific channel.
+  void clearChannel(String channelName) {
+    spots.remove(channelName);
+    lastProcessedIndex.remove(channelName);
+    tempSpot.remove(channelName);
   }
 }
