@@ -525,7 +525,7 @@ class StandardPlotDAQ implements PlotDAQService {
                 statusString = "Generated Error Message Channel";
                 status = -123;
               } else if (forChannel == GenPlots.statusIntError.name) {
-                statusString = "Intermittent connection simulation channel";
+                statusString = "Intermittent error simulation channel";
                 status = -456;
               }
             }
