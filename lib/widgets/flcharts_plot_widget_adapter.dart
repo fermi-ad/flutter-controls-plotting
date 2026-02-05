@@ -5,6 +5,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
 
   final int maxiumumPointsDisplayed = 10000;
 
+  // Add a map to track barIndex to channel name mapping
+  final Map<int, String> _barIndexToChannelName = {};
+
   FlchartsPlotWidgetAdapter({
     required super.plotWidget,
     required this.isShowLabels,
@@ -50,6 +53,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         titlesData: _buildTitlesData(
           plotReply: plotReply,
           wide: constraints.maxWidth > 600,
+          height: constraints.maxHeight.toInt(),
         ),
       ),
     ),
@@ -75,6 +79,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         final px = getPixelX(spot, chartSize);
         final py = getPixelY(spot, chartSize);
         final spotOffset = Offset(px, py);
+        // calculate distance at pixel level
         final distance = (touchPosition - spotOffset).distance;
         if (distance < minDistance) {
           minDistance = distance;
@@ -91,6 +96,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   FlTitlesData _buildTitlesData({
     required PlotReply? plotReply,
     required bool wide,
+    required int height,
   }) {
     // List<String> channelNames, List<String> channelUnits, String xAxisLabel) {
     if (plotReply == null) {
@@ -131,8 +137,14 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         axisNameWidget: axisNameWidget,
         sideTitles: SideTitles(
           showTitles: isShowLabels,
-          reservedSize: 60,
+          interval: _calculateYAxisLabelInterval(
+            forNChannels: plotReply.data.length,
+            height: height,
+          ),
+          reservedSize: 80,
           getTitlesWidget: _buildYLabelWidget,
+          minIncluded: true,
+          maxIncluded: true,
         ),
       );
 
@@ -142,7 +154,11 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       leftTitles = AxisTitles(
         sideTitles: SideTitles(
           showTitles: isShowLabels,
-          reservedSize: 60,
+          interval: _calculateYAxisLabelInterval(
+            forNChannels: plotReply.data.length,
+            height: height,
+          ),
+          reservedSize: 80,
           getTitlesWidget: _buildYLabelWidget,
         ),
       );
@@ -189,8 +205,6 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         child: PlotYAxisLabelWidget(
           channels: plotWidget.plotChannels,
           normalizedValue: value,
-          defaultMin: plotWidget.plotData.minY,
-          defaultMax: plotWidget.plotData.maxY,
         ),
       );
 
@@ -221,12 +235,22 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   // Converts a LineBarSpot's Y data value to pixel position,
   // assuming full widget size is used for the plot area.
   double getPixelY(LineBarSpot touchedSpot, Size viewSize) {
-    final deltaY = plotWidget.plotData.maxY! - plotWidget.plotData.minY!;
+    // Get the channel name from the bar index
+    final channelName = _barIndexToChannelName[touchedSpot.barIndex];
+    final channel = channelName != null
+        ? plotWidget.plotChannels[channelName]
+        : null;
+
+    // Use per-channel Y limits (normalized 0-1 range)
+    final minY = channel?.displayedMinY ?? 0;
+    final maxY = channel?.displayedMaxY ?? 1;
+
+    final deltaY = maxY - minY;
     if (deltaY == 0.0) {
-      return 0;
+      return viewSize.height / 2;
     }
     // Flip the Y axis, the smallest Y is at the top.
-    final normalizedY = (touchedSpot.y - plotWidget.plotData.minY!) / deltaY;
+    final normalizedY = (touchedSpot.y - minY) / deltaY;
     return viewSize.height * (1 - normalizedY);
   }
 
@@ -252,17 +276,21 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         xString = x.toString();
       }
 
-      final channelIndex = touchedSpots.indexOf(touchedSpot);
-      final channelName = plotWidget.plotChannels.keys.toList()[channelIndex];
-      final min =
-          plotWidget.plotChannels[channelName]?.labelMinY ??
-          plotWidget.plotData.minY ??
-          0;
-      final max =
-          plotWidget.plotChannels[channelName]?.labelMaxY ??
-          plotWidget.plotData.maxY ??
-          1;
-      final yValue = _scaleY(y, min: min, max: max);
+      final channelIndex = touchedSpot.barIndex;
+      // Use the mapping to get the correct channel name
+      String? channelName =
+          _barIndexToChannelName[touchedSpot.barIndex] ??
+          // Old way for fetching the channel name.
+          plotWidget.plotChannels.keys.toList()[channelIndex];
+
+      final min = plotWidget.plotChannels[channelName]?.displayedMinY ?? 0;
+      final max = plotWidget.plotChannels[channelName]?.displayedMaxY ?? 1;
+      final yValue = _scaleY(
+        y,
+        min: min,
+        max: max,
+        isLogScale: plotWidget.plotChannels[channelName]?.isLogScale,
+      );
 
       tooltips.add(
         LineTooltipItem('$xString, ${yValue.toStringAsFixed(2)}', textStyle),
@@ -276,9 +304,11 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     double yNormalized, {
     required double min,
     required double max,
+    required isLogScale,
   }) {
     final ySpan = max - min;
-    return (yNormalized * ySpan + min);
+    final y = (yNormalized * ySpan + min);
+    return isLogScale ? exp(y) : y;
   }
 
   List<LineChartBarData> _toLineChartBarDataList(
@@ -287,6 +317,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   ) {
     List<LineChartBarData> lineChartList = [];
 
+    // Clear the mapping at the start of each rebuild
+    _barIndexToChannelName.clear();
+
     var points = plotData.points;
 
     // Timed X axis and no xMax defined will exit upon last out of range value.
@@ -294,17 +327,36 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     var cache = plotWidget.plotData.flchartCache;
     var arrayNonPersistentData =
         (!plotWidget.isTimedScalarData && !plotWidget.isPersistent);
-
     var arrayPersistentData =
         (!plotWidget.isTimedScalarData && plotWidget.isPersistent);
 
+    Map<String, List<int>> displayedSegments = {};
+
+    bool possibleSkippedSegments =
+        (arrayNonPersistentData || arrayPersistentData);
+
+    if (possibleSkippedSegments) {
+      cache.totalPoints = 0;
+      cache.reducedPoints = null;
+    }
+
+    var isBlinkSegment = plotWidget.isBlinkLatestSegment;
+
+    var isSkipLastPointForBlink =
+        isBlinkSegment && plotWidget.triggerEvent == null;
+
+    bool blinkState = false;
+    if (isBlinkSegment) {
+      blinkState = plotData.blinkState = !plotData.blinkState;
+    }
+
     plotChannels.asMap().forEach((index, plotChannel) {
-      if (_channelHasError(plotChannel) ||
-          !points.containsKey(plotChannel.name)) {
+      var channelName = plotChannel.name;
+      if (_channelHasError(plotChannel) || !points.containsKey(channelName)) {
         return;
       }
 
-      int nearestSegmentIndex = points[plotChannel.name]!.length - 1;
+      int nearestSegmentIndex = points[channelName]!.length - 1;
       if (arrayNonPersistentData || arrayPersistentData) {
         // Array data
         var selectedTime = plotData.selectedArrayTime;
@@ -312,7 +364,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
           // Find the segment index nearest to selectedArrayTime
           double minTimeDiff = double.infinity;
 
-          for (var (idx, segment) in points[plotChannel.name]!.indexed) {
+          for (var (idx, segment) in points[channelName]!.indexed) {
             var t = segment.first.t;
             if (t != null) {
               var timeDiff = (t - selectedTime).abs();
@@ -324,67 +376,108 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
           }
         }
       }
+      var segmentsForChannel = points[channelName]!;
 
-      for (var (segmentIndex, pointSegment)
-          in points[plotChannel.name]!.indexed) {
-        if (arrayNonPersistentData) {
-          // Array data
-          if (nearestSegmentIndex != segmentIndex) {
-            continue;
+      for (var (segmentIndex, pointSegment) in segmentsForChannel.indexed) {
+        if (possibleSkippedSegments) {
+          if (arrayNonPersistentData) {
+            // Array data
+            if (nearestSegmentIndex != segmentIndex) {
+              continue;
+            }
+
+            plotWidget.plotMetadata.displayedArrayTime = pointSegment.first.t;
           }
 
-          plotWidget.plotMetadata.displayedArrayTime = pointSegment.first.t;
-        }
+          if (arrayPersistentData) {
+            if (nearestSegmentIndex < segmentIndex) {
+              // All done, index is larger
+              break;
+            }
 
-        if (arrayPersistentData) {
-          if (nearestSegmentIndex < segmentIndex) {
-            // All done, index is larger
-            break;
+            plotWidget.plotMetadata.displayedArrayTime = pointSegment.first.t;
           }
 
-          plotWidget.plotMetadata.displayedArrayTime = pointSegment.first.t;
+          displayedSegments[channelName] ??= [];
+          displayedSegments[channelName]!.add(segmentIndex);
         }
 
-        if (arrayPersistentData) {
-          if (nearestSegmentIndex < segmentIndex) {
-            // All done, index is larger
-            break;
-          }
-
-          plotWidget.plotMetadata.displayedArrayTime = pointSegment.first.t;
-        }
+        // the segment would dim in this itteration as well as the segment is the last one.
+        var blinkingSegment =
+            blinkState && segmentIndex == segmentsForChannel.length - 1;
 
         // min and max y is not passed in for limiting points. This can cause behavior where poitns in the middle of axis are dropped.
         var spots = cache.toSpots(
           points: pointSegment,
-          channelName: plotChannel.name,
-          channelSetting: plotWidget.plotChannels[plotChannel.name]!,
+          channelName: channelName,
+          channelSetting: plotWidget.plotChannels[channelName]!,
           segmentIndex: segmentIndex,
           minX: plotWidget.confMinX,
           maxX: plotWidget.confMaxX,
           exitForScalar: exitForScalar,
           appendExistingArrayPoints:
               arrayNonPersistentData || arrayPersistentData,
+          skipLastPoint: isSkipLastPointForBlink,
         );
 
+        var segmentColor = lineColorForChannel(
+          channelName,
+          dim: blinkingSegment && !isSkipLastPointForBlink,
+        );
+
+        double barWidth =
+            markerIndexForChannel(channelName) == 0 ||
+                markerIndexForChannel(channelName) == 1
+            ? 3
+            : 0;
+        var dotData = _selectFlDotData(
+          markerIndexForChannel(channelName),
+          segmentColor,
+        );
+
+        // Keep index of channel name for new bar data.
+        _barIndexToChannelName[lineChartList.length] = channelName;
         lineChartList.add(
           LineChartBarData(
-            color: lineColorForChannel(plotChannel.name),
+            color: segmentColor,
             spots: spots,
             isCurved: false,
             belowBarData: BarAreaData(show: false),
-            barWidth:
-                markerIndexForChannel(plotChannel.name) == 0 ||
-                    markerIndexForChannel(plotChannel.name) == 1
-                ? 3
-                : 0,
-            //dotData: _selectFlDotData(int.parse(widget.plotMarker.markerIndex)  , lineColorForChannel(plotChannel.name)),
-            dotData: _selectFlDotData(
-              markerIndexForChannel(plotChannel.name),
-              lineColorForChannel(plotChannel.name),
-            ),
+            barWidth: barWidth,
+            dotData: dotData,
           ),
         );
+
+        // Blinked last spot when its split into its own list
+        if (isSkipLastPointForBlink) {
+          if (!cache.tempSpot.containsKey(channelName)) {
+            continue;
+          }
+          List<PlottingFlSpot> tempSpot = [cache.tempSpot[channelName]!];
+
+          var segmentColor = lineColorForChannel(
+            channelName,
+            dim: blinkingSegment,
+          );
+
+          var dotData = _selectFlDotData(
+            markerIndexForChannel(channelName),
+            segmentColor,
+          );
+
+          _barIndexToChannelName[lineChartList.length] = channelName;
+
+          lineChartList.add(
+            LineChartBarData(
+              color: segmentColor,
+              spots: tempSpot,
+              isCurved: false,
+              belowBarData: BarAreaData(show: false),
+              barWidth: barWidth,
+              dotData: dotData,
+            ),
+          );
+        }
 
         if (arrayNonPersistentData) {
           // Array data
@@ -394,17 +487,28 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     });
 
     // Verify if points reduction should be performed.
-    int? reducedPoints = cache.reduceSpots();
-    cache.normalizeCacheSpots(
-      channels: plotWidget.plotChannels,
-      minY: plotWidget.plotData.minY,
-      maxY: plotWidget.plotData.maxY,
+    int? reducedPoints = cache.reduceSpots(
+      displayedSegments: displayedSegments,
     );
+    cache.normalizeCacheSpots(channels: plotWidget.plotChannels);
 
     plotWidget.plotMetadata.reducedPoints = reducedPoints;
     plotWidget.plotMetadata.numberOfPoints = cache.totalPoints;
 
     return lineChartList;
+  }
+
+  double _calculateYAxisLabelInterval({
+    required int forNChannels,
+    required int height,
+  }) {
+    if (forNChannels == 0) {
+      return 0.05;
+    } else if (height <= 130) {
+      return 1;
+    } else {
+      return 1 / ((height - 130) / ((forNChannels) * 65));
+    }
   }
 }
 

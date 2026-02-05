@@ -19,6 +19,7 @@ class ChannelSetting {
   double? confMinY;
   double? confMaxY;
   bool isLogScale;
+  double? constantY;
 
   ChannelSetting({
     this.lineColor,
@@ -30,6 +31,7 @@ class ChannelSetting {
     this.confMinY,
     this.confMaxY,
     this.isLogScale = false,
+    this.constantY,
   });
 
   // Clone functionality.
@@ -44,6 +46,7 @@ class ChannelSetting {
       confMinY: setting.confMinY,
       confMaxY: setting.confMaxY,
       isLogScale: setting.isLogScale,
+      constantY: setting.constantY,
     );
     return newChannelSetting;
   }
@@ -85,4 +88,11 @@ enum PlotMarker {
   const PlotMarker(this.name, this.markerIndex); // Ensure this line is correct
   final String name;
   final int markerIndex; // Ensure this line is correct
+
+  static PlotMarker getPlotMarkerForIndex(int index) {
+    return PlotMarker.values.firstWhere(
+      (marker) => marker.markerIndex == index,
+      orElse: () => PlotMarker.line,
+    );
+  }
 }

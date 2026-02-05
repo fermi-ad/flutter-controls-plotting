@@ -1,18 +1,19 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 
 class PlotYAxisLabelWidget extends StatelessWidget {
   final double normalizedValue;
   final Map<String, ChannelSetting> channels;
-  final double? defaultMin;
-  final double? defaultMax;
+  final double defaultMinY;
+  final double defaultMaxY;
 
   const PlotYAxisLabelWidget({
     super.key,
     required this.normalizedValue,
     required this.channels,
-    this.defaultMin,
-    this.defaultMax,
+    this.defaultMinY = 0,
+    this.defaultMaxY = 1,
   });
 
   @override
@@ -20,7 +21,7 @@ class PlotYAxisLabelWidget extends StatelessWidget {
     List<Text> labels = [];
 
     for (final channelName in channels.keys) {
-      final label = _calculateValue(channelName).toStringAsFixed(2);
+      final label = _formatValue(_calculateValue(channelName));
 
       labels.add(
         Text(label, style: TextStyle(color: channels[channelName]!.lineColor)),
@@ -30,13 +31,29 @@ class PlotYAxisLabelWidget extends StatelessWidget {
     return Column(children: labels);
   }
 
-  double _calculateValue(String channelName) =>
-      normalizedValue * (_max(channelName) - _min(channelName)) +
-      _min(channelName);
+  String _formatValue(double v) =>
+      v.abs() >= 10000 || (v.abs() > 0 && v.abs() <= 0.01)
+      ? v.toStringAsExponential(2)
+      : v.toStringAsFixed(2);
 
-  double _min(String channelName) =>
-      channels[channelName]?.labelMinY ?? defaultMin ?? 0;
+  double _calculateValue(String channelName) {
+    final channel = channels[channelName];
+    if (channel != null && channel.isLogScale) {
+      final logMin = channel.displayedMinY ?? log(1);
+      final logMax = channel.displayedMaxY ?? log(10);
 
-  double _max(String channelName) =>
-      channels[channelName]?.labelMaxY ?? defaultMax ?? 1;
+      // Calculate the log value at this normalized position
+      final logValue = normalizedValue * (logMax - logMin) + logMin;
+
+      // Convert back to linear scale for display
+      final linearValue = exp(logValue);
+
+      return linearValue;
+    } else {
+      final min = channel?.labelMinY ?? defaultMinY;
+      final max = channel?.labelMaxY ?? defaultMaxY;
+
+      return normalizedValue * (max - min) + min;
+    }
+  }
 }

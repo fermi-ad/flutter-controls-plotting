@@ -43,6 +43,8 @@ class FakeACSysService implements ACSysServiceAPI {
     int? updateRate,
     int? nAcquisitions,
     int? triggerEvent,
+    int? sampleOnEvent,
+    String? chXAxis,
   }) {
     startPlotCount++;
 
@@ -119,9 +121,7 @@ class FakeACSysService implements ACSysServiceAPI {
   }
 
   @override
-  Future<PlotConfigurationSnapshot> retrieveLastUserConfiguration(
-    String? user,
-  ) {
+  Future<PlotConfigurationSnapshot> retrieveLastUserConfiguration() {
     throw UnimplementedError();
   }
 
@@ -151,6 +151,11 @@ class FakeACSysService implements ACSysServiceAPI {
 
   @override
   Future<List<Reading>> readDevices(List<String> devices) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Stream<Alarms> monitorAlarms() {
     throw UnimplementedError();
   }
 }
