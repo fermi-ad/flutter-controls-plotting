@@ -129,6 +129,7 @@ class PlotState extends State<PlotWidget> {
 
   @override
   void dispose() {
+    _plotStreamSubscription?.cancel();
     _focusNode.dispose();
     super.dispose();
   }
@@ -308,9 +309,10 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _initializeStream() {
-    _resetStream();
     _plotStreamSubscription?.cancel();
     _plotReply = null;
+
+    _resetStream();
 
     if (widget.plotChannels.isNotEmpty) {
       _updateStreamConnectionChanged(ConnectionState.waiting);
