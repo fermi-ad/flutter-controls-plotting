@@ -111,20 +111,7 @@ class PlotWidget extends StatefulWidget {
     return false;
   }
 
-  Duration get plotAnimationDuration {
-    if (isTimedScalarData) {
-      return Duration.zero;
-    }
-
-    // No animation for frequency over 15Hz.
-    if (updateDelay < 66666) {
-      return Duration.zero;
-    }
-
-    // 50ms for frequency over 1Hz. 150 for 1Hz or slower.
-    int animationMs = updateDelay < 1000000 ? 50 : 150;
-    return Duration(milliseconds: animationMs);
-  }
+  Duration get plotAnimationDuration => Duration.zero;
 
   PlotMetadata get plotMetadata => plotData.plotMetadata;
 }
@@ -142,6 +129,7 @@ class PlotState extends State<PlotWidget> {
 
   @override
   void dispose() {
+    _plotStreamSubscription?.cancel();
     _focusNode.dispose();
     super.dispose();
   }
@@ -321,9 +309,10 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _initializeStream() {
-    _resetStream();
     _plotStreamSubscription?.cancel();
     _plotReply = null;
+
+    _resetStream();
 
     if (widget.plotChannels.isNotEmpty) {
       _updateStreamConnectionChanged(ConnectionState.waiting);

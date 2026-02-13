@@ -153,4 +153,14 @@ class FakeACSysService implements ACSysServiceAPI {
   Future<List<Reading>> readDevices(List<String> devices) {
     throw UnimplementedError();
   }
+
+  @override
+  Stream<AlarmMessage> monitorAlarms() {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<AlarmMessage>> getAlarmsSnapshot() {
+    throw UnimplementedError();
+  }
 }
