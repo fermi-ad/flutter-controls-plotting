@@ -155,7 +155,12 @@ class FakeACSysService implements ACSysServiceAPI {
   }
 
   @override
-  Stream<Alarms> monitorAlarms() {
+  Stream<AlarmMessage> monitorAlarms() {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<AlarmMessage>> getAlarmsSnapshot() {
     throw UnimplementedError();
   }
 }
