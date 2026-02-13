@@ -543,6 +543,7 @@ class PlotState extends State<PlotWidget> {
       channelSettings: widget.plotChannels,
       triggerTimestamp: _plotReply!.triggerTimestamp,
       isPersistent: widget.isPersistent,
+      isTriggered: widget.triggerEvent != null,
     );
   }
 
@@ -565,6 +566,7 @@ class PlotState extends State<PlotWidget> {
       plotChannels: plotChannels,
       triggerTimestamp: _plotReply!.triggerTimestamp,
       channelSettings: widget.plotChannels,
+      isTriggered: widget.triggerEvent != null,
     );
   }
 
