@@ -192,10 +192,10 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   Widget _bottomTitleWidgets(double value, TitleMeta meta) {
     if (plotWidget.isTimedXAxis) {
       final showMillis = _isNarrowTimeRange();
-      return SideTitleWidget(
+      return TimeSideTitleWidget(
+        showMillis: showMillis,
         meta: meta,
-        angle: -1.57, // -90 * 3.14 / 180,
-        child: Text(parseDaqTimeAsString(value, showMillis: showMillis)),
+        value: value,
       );
     }
 
