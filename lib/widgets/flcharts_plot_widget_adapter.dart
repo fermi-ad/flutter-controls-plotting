@@ -176,7 +176,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         axisNameWidget: Text(xAxisLabel, style: const TextStyle()),
         sideTitles: SideTitles(
           showTitles: isShowLabels,
-          reservedSize: plotWidget.isTimedXAxis ? 80 : 40,
+          reservedSize: plotWidget.isTimedXAxis
+              ? (_isNarrowTimeRange() ? 95 : 80)
+              : 40,
           getTitlesWidget: (value, meta) {
             return _bottomTitleWidgets(value, meta);
           },
@@ -189,14 +191,22 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
 
   Widget _bottomTitleWidgets(double value, TitleMeta meta) {
     if (plotWidget.isTimedXAxis) {
-      return SideTitleWidget(
+      final showMillis = _isNarrowTimeRange();
+      return TimeSideTitleWidget(
+        showMillis: showMillis,
         meta: meta,
-        angle: -1.57, // -90 * 3.14 / 180,
-        child: Text(parseDaqTimeAsString(value)),
+        value: value,
       );
     }
 
     return defaultGetTitle(value, meta);
+  }
+
+  bool _isNarrowTimeRange() {
+    final minX = plotWidget.plotData.minX;
+    final maxX = plotWidget.plotData.maxX;
+    if (minX == null || maxX == null) return false;
+    return (maxX - minX) < 60;
   }
 
   SideTitleWidget _buildYLabelWidget(double value, TitleMeta meta) =>
@@ -271,7 +281,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
 
       String xString;
       if (plotWidget.isTimedXAxis) {
-        xString = parseDaqTimeAsString(x);
+        xString = parseDaqTimeAsString(x, showMillis: true);
       } else {
         xString = x.toString();
       }
