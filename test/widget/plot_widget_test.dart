@@ -397,7 +397,9 @@ void main() {
     ) async {
       var channelName = "PLOT TEST SCALAR RAMP";
       final channelList = {
-        channelName: ChannelSetting(lineColor: PlotColor.blue.color),
+        channelName: ChannelMetadata(
+          channelSetting: ChannelSetting(lineColor: PlotColor.blue.color),
+        ),
       };
       StandardPlotDAQ daqService = StandardPlotDAQ();
       daqService.scalarRampCountLimit = 10;
@@ -448,7 +450,9 @@ void main() {
     ) async {
       var channelName = "PLOT TEST SCALAR RAMP";
       final channelList = {
-        channelName: ChannelSetting(lineColor: PlotColor.blue.color),
+        channelName: ChannelMetadata(
+          channelSetting: ChannelSetting(lineColor: PlotColor.blue.color),
+        ),
       };
       StandardPlotDAQ daqService = StandardPlotDAQ();
       daqService.scalarRampCountLimit = 10;
