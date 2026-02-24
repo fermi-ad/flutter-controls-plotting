@@ -235,8 +235,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: statusStringSupport
-      resolved-ref: "0aae1a946905d3aac6960b039f2dac764ee48a00"
+      ref: main
+      resolved-ref: "5c4c6a8de0974d34aa3d864a2fb9942f917a1c96"
       url: "https://github.com/fermi-ad/flutter-controls-core.git"
     source: git
     version: "0.3.1"
