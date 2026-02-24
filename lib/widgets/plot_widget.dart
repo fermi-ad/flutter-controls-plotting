@@ -129,6 +129,7 @@ class PlotState extends State<PlotWidget> {
 
   @override
   void dispose() {
+    _plotStreamSubscription?.cancel();
     _focusNode.dispose();
     super.dispose();
   }
@@ -314,9 +315,10 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _initializeStream() {
-    _resetStream();
     _plotStreamSubscription?.cancel();
     _plotReply = null;
+
+    _resetStream();
 
     if (widget.plotChannels.isNotEmpty) {
       _updateStreamConnectionChanged(ConnectionState.waiting);
@@ -547,6 +549,7 @@ class PlotState extends State<PlotWidget> {
       channelMetadatas: widget.plotChannels,
       triggerTimestamp: _plotReply!.triggerTimestamp,
       isPersistent: widget.isPersistent,
+      isTriggered: widget.triggerEvent != null,
     );
   }
 
@@ -569,6 +572,7 @@ class PlotState extends State<PlotWidget> {
       plotChannels: plotChannels,
       triggerTimestamp: _plotReply!.triggerTimestamp,
       channelMetadatas: widget.plotChannels,
+      isTriggered: widget.triggerEvent != null,
     );
   }
 

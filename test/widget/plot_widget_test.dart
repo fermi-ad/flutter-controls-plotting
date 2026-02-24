@@ -11,6 +11,7 @@ import 'package:flutter_controls_plotting/test_harness/assertions.dart';
 import 'package:flutter_controls_plotting/test_harness/setup.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 import 'package:flutter_controls_plotting/widgets/plot_y_axis_label_widget.dart';
+import 'package:flutter_controls_plotting/widgets/time_side_title_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -390,6 +391,119 @@ void main() {
         await tester.pumpAndSettle();
       },
     );
+
+    testWidgets("Narrow time range shows milliseconds on X-axis labels", (
+      WidgetTester tester,
+    ) async {
+      var channelName = "PLOT TEST SCALAR RAMP";
+      final channelList = {
+        channelName: ChannelSetting(lineColor: PlotColor.blue.color),
+      };
+      StandardPlotDAQ daqService = StandardPlotDAQ();
+      daqService.scalarRampCountLimit = 10;
+
+      ConnectionState connectionState = ConnectionState.none;
+
+      await tester.pumpWidget(
+        _buildPlotWidget(
+          channelList,
+          updateDelay: 100000, // 0.1s per point, ~1s total (< 60s)
+          scalarDataOptions: ScalarDataOptions(
+            isOneShot: false,
+            timeDelta: null,
+          ),
+          daqService: daqService,
+          onStreamConnectionStateChange: (state) => connectionState = state,
+        ),
+      );
+
+      await waitForPlotDataToLoad(tester);
+      while (connectionState != ConnectionState.done) {
+        await tester.pump(const Duration(milliseconds: 10));
+      }
+
+      // X-axis labels should contain millisecond format: HH:mm:ss.mmm
+      final millisPattern = RegExp(r'\d{2}:\d{2}:\d{2}\.\d{3}');
+      final timeSideTitleWidgets = find.byType(TimeSideTitleWidget);
+      final textWidget = find.descendant(
+        of: timeSideTitleWidgets,
+        matching: find.byType(Text),
+      );
+
+      // Verify at least one time label with milliseconds exists
+      expect(textWidget, findsWidgets);
+      final textData = tester.widget<Text>(textWidget.first).data ?? '';
+      expect(
+        millisPattern.hasMatch(textData),
+        isTrue,
+        reason:
+            'Expected X-axis label with milliseconds (HH:mm:ss.mmm) for narrow time range, but found: $textData',
+      );
+
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets("Wide time range does not show milliseconds on X-axis labels", (
+      WidgetTester tester,
+    ) async {
+      var channelName = "PLOT TEST SCALAR RAMP";
+      final channelList = {
+        channelName: ChannelSetting(lineColor: PlotColor.blue.color),
+      };
+      StandardPlotDAQ daqService = StandardPlotDAQ();
+      daqService.scalarRampCountLimit = 10;
+
+      ConnectionState connectionState = ConnectionState.none;
+
+      await tester.pumpWidget(
+        _buildPlotWidget(
+          channelList,
+          updateDelay: 100000,
+          scalarDataOptions: ScalarDataOptions(
+            isOneShot: false,
+            timeDelta: 120, // Force 120-second display window (>= 60s)
+          ),
+          daqService: daqService,
+          onStreamConnectionStateChange: (state) => connectionState = state,
+        ),
+      );
+
+      await waitForPlotDataToLoad(tester);
+      while (connectionState != ConnectionState.done) {
+        await tester.pump(const Duration(milliseconds: 10));
+      }
+
+      // X-axis labels should show HH:mm:ss without milliseconds
+      final millisPattern = RegExp(r'\d{2}:\d{2}:\d{2}\.\d{3}');
+      final timePattern = RegExp(r'\d{2}:\d{2}:\d{2}$');
+      final timeSideTitleWidgets = find.byType(TimeSideTitleWidget);
+      final textWidget = find.descendant(
+        of: timeSideTitleWidgets,
+        matching: find.byType(Text),
+      );
+
+      // Verify at least one time label exists
+      expect(textWidget, findsWidgets);
+      final textData = tester.widget<Text>(textWidget.first).data ?? '';
+
+      // Time label should NOT have milliseconds
+      expect(
+        millisPattern.hasMatch(textData),
+        isFalse,
+        reason:
+            'Expected no milliseconds in X-axis label for wide time range, but found: $textData',
+      );
+
+      // But should match HH:mm:ss format
+      expect(
+        timePattern.hasMatch(textData),
+        isTrue,
+        reason:
+            'Expected time label in HH:mm:ss format for wide time range, but found: $textData',
+      );
+
+      await tester.pumpAndSettle();
+    });
 
     testWidgets("Verify support of the panning plot behaviour", (
       WidgetTester tester,

@@ -206,6 +206,7 @@ class PlotData {
     required List<PlotChannelData> plotChannels,
     Map<String, ChannelMetadata>? channelMetadatas,
     required double? triggerTimestamp,
+    bool? isTriggered,
   }) {
     for (final plotChannel in plotChannels) {
       if (!channelHasErrorOrNoPoints(plotChannel)) {
@@ -240,7 +241,10 @@ class PlotData {
                   channelSetting?.displayedMaxY = null;
                 }
                 // Reset point limits based on the current data since data is being removed.
-                findLimitsWithXRange(channelMetadatas: channelMetadatas);
+                findLimitsWithXRange(
+                  channelMetadatas: channelMetadatas,
+                  isTriggered: isTriggered,
+                );
                 // New event
                 segments.add([]);
                 // Reload pointsList
@@ -392,6 +396,7 @@ class PlotData {
     double? xRangeMin,
     double? xRangeMax,
     Map<String, ChannelMetadata>? channelMetadatas,
+    bool? isTriggered,
   }) {
     double? minY, maxY, minX, maxX;
 
@@ -421,6 +426,7 @@ class PlotData {
           xRangeMin: xRangeMin,
           xRangeMax: xRangeMax,
           channelSetting: channelSetting,
+          isTriggered: isTriggered,
         );
       }
     }
@@ -435,6 +441,7 @@ class PlotData {
     required double? timeDelta,
     required double? triggerTimestamp,
     required bool isPersistent,
+    required bool isTriggered,
     Map<String, ChannelMetadata>? channelMetadatas,
   }) {
     double? minX = _minX;
@@ -449,6 +456,7 @@ class PlotData {
         plotChannel.points,
         triggerTimestamp,
       );
+
       for (final points in segments) {
         final name = plotChannel.name;
 
@@ -465,6 +473,7 @@ class PlotData {
           minX: minX,
           maxX: maxX,
           channelSetting: channelSetting,
+          isTriggered: isTriggered,
         );
       }
     }
@@ -493,6 +502,7 @@ class PlotData {
           xRangeMin: minX,
           xRangeMax: maxX,
           channelMetadatas: channelMetadatas,
+          isTriggered: isTriggered,
         );
       }
     }
@@ -508,6 +518,7 @@ class PlotData {
     double? xRangeMin,
     double? xRangeMax,
     ChannelSetting? channelSetting,
+    bool? isTriggered,
   }) {
     double? logMinY;
     double? logMaxY;
@@ -515,6 +526,11 @@ class PlotData {
     // reset minY and maxY for constant data
     bool resetYLimits =
         channelSetting != null && channelSetting.constantY != null;
+
+    if (!isTriggered!) {
+      minY = null;
+      maxY = null;
+    }
 
     if (resetYLimits) {
       minY = channelSetting.constantY;
@@ -653,6 +669,7 @@ class PlotData {
   void persistenceCleanUp({
     required bool isTimedScalarData,
     required bool isPersistent,
+    required bool isTriggered,
   }) {
     if (isTimedScalarData) {
       // Scalar Reading Mode
@@ -666,7 +683,7 @@ class PlotData {
         // Clear the cache since segments were removed.
         flchartCache.clearAll();
         // Potential clean up for scalar data. Recaluclate limits for all points.
-        findLimitsWithXRange();
+        findLimitsWithXRange(isTriggered: isTriggered);
         _recalculateDataForAllPoints();
       }
     }
