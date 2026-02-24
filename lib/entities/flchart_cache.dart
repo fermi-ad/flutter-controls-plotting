@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter_controls_plotting/entities/channel_metadata.dart';
 import 'package:flutter_controls_plotting/entities/plotting_point.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plotting_fl_spot.dart';
@@ -254,11 +255,11 @@ class FlchartCache {
     return flSpots;
   }
 
-  void normalizeCacheSpots({required Map<String, ChannelSetting> channels}) {
+  void normalizeCacheSpots({required Map<String, ChannelMetadata> channels}) {
     for (var entry in spots.entries) {
       var channelName = entry.key;
       var channelSpots = entry.value;
-      var channelSetting = channels[channelName]!;
+      var channelSetting = channels[channelName]!.channelSetting;
       for (var segmentSpots in channelSpots) {
         for (var spot in segmentSpots) {
           var normalizedY = _normalizeY(

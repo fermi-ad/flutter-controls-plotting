@@ -105,8 +105,9 @@ void assertPlotYAxisLimits(
   required double max,
 }) {
   final plotWidget = tester.widget<PlotWidget>(find.byType(PlotWidget));
-  expect(plotWidget.plotChannels[channelName]!.labelMinY, closeTo(min, 0.01));
-  expect(plotWidget.plotChannels[channelName]!.labelMaxY, closeTo(max, 0.01));
+  final channelSetting = plotWidget.plotChannels[channelName]!.channelSetting;
+  expect(channelSetting.labelMinY, closeTo(min, 0.01));
+  expect(channelSetting.labelMaxY, closeTo(max, 0.01));
 }
 
 void assertPlotYAxisLabel({

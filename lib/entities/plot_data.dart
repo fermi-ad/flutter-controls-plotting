@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/entities/channel_metadata.dart';
 import 'package:flutter_controls_plotting/entities/plotting_point.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/flchart_cache.dart';
@@ -203,7 +204,7 @@ class PlotData {
     required bool isPersistent,
     required bool isOneShot,
     required List<PlotChannelData> plotChannels,
-    Map<String, ChannelSetting>? channelSettings,
+    Map<String, ChannelMetadata>? channelMetadatas,
     required double? triggerTimestamp,
     bool? isTriggered,
   }) {
@@ -218,7 +219,8 @@ class PlotData {
           points[plotChannel.name] = [[]];
         }
         final channelName = plotChannel.name;
-        ChannelSetting? channelSetting = channelSettings?[channelName];
+        ChannelSetting? channelSetting =
+            channelMetadatas?[channelName]?.channelSetting;
         var segments = points[channelName]!;
         var pointsList = segments.last;
         bool oneShotCleared = false;
@@ -239,7 +241,10 @@ class PlotData {
                   channelSetting?.displayedMaxY = null;
                 }
                 // Reset point limits based on the current data since data is being removed.
-                findLimitsWithXRange(channelSettings: channelSettings, isTriggered: isTriggered);
+                findLimitsWithXRange(
+                  channelMetadatas: channelMetadatas,
+                  isTriggered: isTriggered,
+                );
                 // New event
                 segments.add([]);
                 // Reload pointsList
@@ -390,7 +395,7 @@ class PlotData {
   void findLimitsWithXRange({
     double? xRangeMin,
     double? xRangeMax,
-    Map<String, ChannelSetting>? channelSettings,
+    Map<String, ChannelMetadata>? channelMetadatas,
     bool? isTriggered,
   }) {
     double? minY, maxY, minX, maxX;
@@ -400,7 +405,8 @@ class PlotData {
       List<List<PlottingPoint>> segments = entry.value;
 
       // Access channel setting for this channel
-      ChannelSetting? channelSetting = channelSettings?[channelName];
+      ChannelSetting? channelSetting =
+          channelMetadatas?[channelName]?.channelSetting;
       minY = channelSetting?.displayedMinY;
       maxY = channelSetting?.displayedMaxY;
 
@@ -436,7 +442,7 @@ class PlotData {
     required double? triggerTimestamp,
     required bool isPersistent,
     required bool isTriggered,
-    Map<String, ChannelSetting>? channelSettings,
+    Map<String, ChannelMetadata>? channelMetadatas,
   }) {
     double? minX = _minX;
     double? maxX = _maxX;
@@ -455,7 +461,8 @@ class PlotData {
         final name = plotChannel.name;
 
         // Access channel setting for this channel
-        ChannelSetting? channelSetting = channelSettings?[name];
+        ChannelSetting? channelSetting =
+            channelMetadatas?[name]?.channelSetting;
         double? minY = channelSetting?.displayedMinY;
         double? maxY = channelSetting?.displayedMaxY;
 
@@ -494,7 +501,7 @@ class PlotData {
         findLimitsWithXRange(
           xRangeMin: minX,
           xRangeMax: maxX,
-          channelSettings: channelSettings,
+          channelMetadatas: channelMetadatas,
           isTriggered: isTriggered,
         );
       }
@@ -519,7 +526,6 @@ class PlotData {
     // reset minY and maxY for constant data
     bool resetYLimits =
         channelSetting != null && channelSetting.constantY != null;
-
 
     if (!isTriggered!) {
       minY = null;
@@ -663,7 +669,7 @@ class PlotData {
   void persistenceCleanUp({
     required bool isTimedScalarData,
     required bool isPersistent,
-    required bool isTriggered
+    required bool isTriggered,
   }) {
     if (isTimedScalarData) {
       // Scalar Reading Mode
@@ -710,7 +716,7 @@ class PlotData {
     }
   }
 
-  void resetMinMaxXY({Map<String, ChannelSetting>? channels}) {
+  void resetMinMaxXY({Map<String, ChannelMetadata>? channels}) {
     _minX = null;
     _maxX = null;
 
@@ -719,8 +725,9 @@ class PlotData {
       for (final channelName in channels.keys) {
         final channel = channels[channelName];
         if (channel != null) {
-          channel.displayedMinY = null;
-          channel.displayedMaxY = null;
+          final channelSetting = channel.channelSetting;
+          channelSetting.displayedMinY = null;
+          channelSetting.displayedMaxY = null;
         }
       }
     }

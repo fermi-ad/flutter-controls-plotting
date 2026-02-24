@@ -32,13 +32,14 @@ abstract class PlotWidgetAdapter {
 
   Color lineColorForChannel(String channelName, {bool dim = false}) {
     var plotChannels = plotWidget.plotChannels;
-    ChannelSetting setting = plotChannels[channelName]!;
+    ChannelSetting setting = plotChannels[channelName]!.channelSetting;
 
     // Find unique color
     if (setting.lineColor == null) {
       Color? candidateColor;
       List<Color> displayedColors = [];
-      plotChannels.forEach((name, setting) {
+      plotChannels.forEach((name, channelMetadata) {
+        final setting = channelMetadata.channelSetting;
         if (name != channelName) {
           if (setting.lineColor != null) {
             displayedColors.add(setting.lineColor!);
@@ -72,7 +73,7 @@ abstract class PlotWidgetAdapter {
 
   int markerIndexForChannel(String channelName) {
     var plotChannels = plotWidget.plotChannels;
-    ChannelSetting setting = plotChannels[channelName]!;
+    ChannelSetting setting = plotChannels[channelName]!.channelSetting;
     return setting.plotMarker.markerIndex;
   }
 

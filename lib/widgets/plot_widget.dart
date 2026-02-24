@@ -5,8 +5,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_controls_plotting/entities/channel_metadata.dart';
 import 'package:flutter_controls_plotting/entities/plotting_point.dart';
-import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
 import 'package:flutter_controls_plotting/entities/plot_metadata.dart';
 import 'package:flutter_controls_plotting/entities/plot_stream_metadata.dart';
@@ -18,7 +18,7 @@ import 'package:flutter_controls_plotting/widgets/plot_widget_error_banner.dart'
 enum PlotImplementation { flCharts, graphic, fermi }
 
 class PlotWidget extends StatefulWidget {
-  final Map<String, ChannelSetting> plotChannels;
+  final Map<String, ChannelMetadata> plotChannels;
 
   final PlotDAQService daqService;
   final PlotData plotData;
@@ -70,7 +70,7 @@ class PlotWidget extends StatefulWidget {
 
   const PlotWidget({
     super.key,
-    this.plotChannels = const <String, ChannelSetting>{},
+    this.plotChannels = const <String, ChannelMetadata>{},
     this.chXAxis,
     required this.daqService,
     required this.plotData,
@@ -169,7 +169,7 @@ class PlotState extends State<PlotWidget> {
   @override
   void didChangeDependencies() {
     _resetAdapter();
-    _initializeStream();
+    _initializeNewStream();
     super.didChangeDependencies();
   }
 
@@ -178,7 +178,7 @@ class PlotState extends State<PlotWidget> {
     _resetAdapter();
 
     if (_streamShouldReset) {
-      _initializeStream();
+      _initializeNewStream();
     } else if (_plotStreamMetadata.plotReply != null) {
       // Simulate last plot reply to reload plot data with potntially new configuration.
       // This mimics the behavior of stream builder.
@@ -255,6 +255,7 @@ class PlotState extends State<PlotWidget> {
 
       return plot;
     }
+    final errorOnChannel = _plotReplyHasErrors();
     if (_plotStream != null) {
       if (_plotStreamMetadata.lastStreamError != null) {
         var error = _plotStreamMetadata.lastStreamError;
@@ -263,7 +264,7 @@ class PlotState extends State<PlotWidget> {
           child: _buildEmptyPlot(),
         );
       }
-      final errorOnChannel = _plotReplyHasErrors();
+
       if (errorOnChannel != null) {
         return _buildWithErrorMessage(
           "An error occured when attempting to acquire data for $errorOnChannel",
@@ -306,6 +307,11 @@ class PlotState extends State<PlotWidget> {
     }
 
     _plotStreamMetadata.incrementFailedReconnectCount();
+  }
+
+  void _initializeNewStream() {
+    _plotStreamMetadata.resetVarsForNewAcquisition();
+    _initializeStream();
   }
 
   void _initializeStream() {
@@ -540,7 +546,7 @@ class PlotState extends State<PlotWidget> {
       confMinX: widget.confMinX,
       confMaxX: widget.confMaxX,
       timeDelta: widget.scalarDataOptions?.timeDelta,
-      channelSettings: widget.plotChannels,
+      channelMetadatas: widget.plotChannels,
       triggerTimestamp: _plotReply!.triggerTimestamp,
       isPersistent: widget.isPersistent,
       isTriggered: widget.triggerEvent != null,
@@ -565,21 +571,31 @@ class PlotState extends State<PlotWidget> {
       isOneShot: widget.nAcquisitions == 1,
       plotChannels: plotChannels,
       triggerTimestamp: _plotReply!.triggerTimestamp,
-      channelSettings: widget.plotChannels,
+      channelMetadatas: widget.plotChannels,
       isTriggered: widget.triggerEvent != null,
     );
   }
 
   String? _plotReplyHasErrors() {
+    Set<String>? errorChNames;
     if (_plotReply != null) {
       for (PlotChannelData chData in _plotReply!.data as List) {
+        final channelName = chData.name;
+        final chMetadata = widget.plotChannels[channelName];
+        final chStatus = chMetadata?.channelStatus;
         if (channelHasError(chData)) {
-          return chData.name;
+          chStatus?.setError(chData.status, chData.statusString);
+          errorChNames ??= {};
+          errorChNames.add(channelName);
+        } else if (channelHasWarning(chData)) {
+          chStatus?.setWarning(chData.status, chData.statusString);
+        } else {
+          chStatus?.clearError();
         }
       }
     }
 
-    return null;
+    return errorChNames?.join(', ');
   }
 
   void _updateStreamConnectionChanged(ConnectionState state) {
@@ -615,7 +631,7 @@ class PlotState extends State<PlotWidget> {
 
   Stream<PlotReply>? _plotStream;
 
-  Map<String, ChannelSetting> _channels = {};
+  Map<String, ChannelMetadata> _channels = {};
 
   ConnectionState? get lastConnectionState =>
       _plotStreamMetadata.lastConnectionState;

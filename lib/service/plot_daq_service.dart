@@ -35,6 +35,7 @@ class StandardPlotDAQ implements PlotDAQService {
 
   // Test variables
   int scalarRampCount = 0;
+  int statusIntErrorCount = 0;
   int tclkEvent00Duration = 2;
   int tclkEvent10Duration = 5;
   int tclkEvent20Duration = 10;
@@ -192,7 +193,10 @@ class StandardPlotDAQ implements PlotDAQService {
       int eventDuration = 0;
 
       // Calculate event if appliable
-      if (triggerEvent != null && (triggerEvent == plotEvent00 || triggerEvent == plotEvent10 || triggerEvent == plotEvent20)) {
+      if (triggerEvent != null &&
+          (triggerEvent == plotEvent00 ||
+              triggerEvent == plotEvent10 ||
+              triggerEvent == plotEvent20)) {
         eventAcquisitionCount = 0;
 
         // Points per second.
@@ -506,21 +510,41 @@ class StandardPlotDAQ implements PlotDAQService {
           (channelData) => channelData.name == forChannel,
           orElse: () {
             PlotChannelData newChannel;
+
+            int status = 0;
+            String? statusString;
+            String? units;
+
             if (data != null) {
-              newChannel = PlotChannelData(
-                name: forChannel,
-                rate: chRate,
-                units: "V",
-                points: data,
-              );
+              units = "V";
             } else {
-              newChannel = PlotChannelData(
-                name: forChannel,
-                rate: chRate,
-                units: "",
-                status: -1,
-              );
+              // No data. Set appropriate messages if available.
+              status = -1;
+
+              if (forChannel == GenPlots.statusError.name) {
+                statusString = "Generated Error Message Channel";
+                status = -123;
+              } else if (forChannel == GenPlots.statusIntError.name) {
+                statusString = "Intermittent error simulation channel";
+                status = -456;
+              }
             }
+
+            // Simulate warning channel with data.
+            if (forChannel == GenPlots.statusWarn.name) {
+              statusString = "Signal value is delayed";
+              status = 1; // Positive status for warning
+            }
+
+            newChannel = PlotChannelData(
+              name: forChannel,
+              units: units ?? "",
+              rate: chRate,
+              statusString: statusString,
+              status: status,
+              points: data ?? const [],
+            );
+
             internalDaqData.add(newChannel);
             newChannelAdded = true;
             return newChannel;
@@ -807,6 +831,47 @@ class StandardPlotDAQ implements PlotDAQService {
           t: currentEpochTime,
         ),
       ];
+    } else if (forChannel == GenPlots.statusError.name) {
+      // This channel will return null data to trigger status error
+      data = null;
+    } else if (forChannel == GenPlots.statusIntError.name) {
+      // This channel alternates between returning a value and null (intermittent error)
+      statusIntErrorCount++;
+      if (statusIntErrorCount % 2 == 0) {
+        // Return null on even counts to simulate intermittent connection error
+        data = null;
+      } else {
+        // Return a value on odd counts (alternating 0 and 1)
+        var value = ((statusIntErrorCount / 2).floor() % 2).toDouble();
+        var x = eventX ?? currentEpochTime;
+        if (xAxisValue != null) {
+          data = [
+            PlotPoint(t: x, value: DevTimeSeries([(xAxisValue, value)])),
+          ];
+        } else {
+          xAxisUnits = 'Time';
+          data = [PlotPoint(value: DevScalar(value), t: x)];
+        }
+      }
+    } else if (forChannel == GenPlots.statusWarn.name) {
+      // This channel returns a sine wave with a slight delay (phase shift)
+      // to simulate a warning condition or timing discrepancy
+      repetetiveScalarPlotEpochTime ??= currentEpochTime;
+      var difference = currentEpochTime - repetetiveScalarPlotEpochTime!;
+
+      // Add a 0.5 second delay (phase shift) to the sine wave
+      var delayedDifference = difference - 0.5;
+      double value = calculateSineByDifference(delayedDifference);
+
+      var x = eventX ?? currentEpochTime;
+      if (xAxisValue != null) {
+        data = [
+          PlotPoint(t: x, value: DevTimeSeries([(xAxisValue, value)])),
+        ];
+      } else {
+        xAxisUnits = 'Time';
+        data = [PlotPoint(value: DevScalar(value), t: x)];
+      }
     }
     return (xAxisUnits, data);
   }
@@ -884,7 +949,10 @@ enum GenPlots {
   sine("PLOT TEST SINE"),
   sine64k("PLOT TEST SINE 64K"),
   sine32k("PLOT TEST SINE 32K"),
-  normal("PLOT TEST NORMAL");
+  normal("PLOT TEST NORMAL"),
+  statusError("PLOT TEST STATUS ERROR"),
+  statusIntError("PLOT TEST STATUS INT ERROR"),
+  statusWarn("PLOT TEST STATUS WARN SINE");
 
   const GenPlots(this.name, {this.minUpdateDelay});
   final String name;
@@ -897,6 +965,10 @@ const int plotEvent20 = 32;
 
 bool channelHasError(PlotChannelData chData) {
   return chData.status < 0;
+}
+
+bool channelHasWarning(PlotChannelData chData) {
+  return chData.status > 0;
 }
 
 bool channelHasErrorOrNoPoints(PlotChannelData chData) {
