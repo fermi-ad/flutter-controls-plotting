@@ -118,6 +118,7 @@ class StandardPlotDAQ implements PlotDAQService {
         rate: getRate(updateDelay),
         requestTime: requestTime,
         chXAxis: chXAxis,
+        waveformDuration: waveformDuration,
       );
 
       // Separate channels into mock and API categories
@@ -289,6 +290,7 @@ class StandardPlotDAQ implements PlotDAQService {
           markChannelNameErrors: true,
           eventXList: eventXList,
           chXAxis: chXAxis,
+          waveformDuration: waveformDuration,
         );
 
         validLoop = false;
@@ -423,6 +425,7 @@ class StandardPlotDAQ implements PlotDAQService {
     double? currentEpochTime,
     bool noDelay = false,
     String? chXAxis,
+    double? waveformDuration,
   }) async {
     var totalDuration = (apiDelay * pointCount);
 
@@ -507,6 +510,7 @@ class StandardPlotDAQ implements PlotDAQService {
           xAxisUnits: xAxisUnits,
           xAxisValue: xAxisValue,
           eventX: eventXList?[i],
+          waveformDuration: waveformDuration,
         );
 
         // Verify if plotChannelData already exists
@@ -598,6 +602,7 @@ class StandardPlotDAQ implements PlotDAQService {
     required String xAxisUnits,
     required double? xAxisValue,
     required double? eventX,
+    double? waveformDuration,
   }) {
     List<PlotPoint>? data;
     if (forChannel == GenPlots.constant.name) {
@@ -625,14 +630,25 @@ class StandardPlotDAQ implements PlotDAQService {
       ];
     } else if (forChannel == GenPlots.randRamp.name) {
       var rand = Random();
-      data = [
-        PlotPoint(
-          value: DevScalarArray(
-            List.generate(500, (i) => i + (rand.nextInt(50) - 25)),
+      if (waveformDuration != null) {
+        const int length = 500;
+        data = List.generate(
+          length,
+          (i) => PlotPoint(
+            value: DevScalar((i + (rand.nextInt(50) - 25)).toDouble()),
+            t: currentEpochTime - waveformDuration + (i / length) * waveformDuration,
           ),
-          t: currentEpochTime,
-        ),
-      ];
+        );
+      } else {
+        data = [
+          PlotPoint(
+            value: DevScalarArray(
+              List.generate(500, (i) => i + (rand.nextInt(50) - 25)),
+            ),
+            t: currentEpochTime,
+          ),
+        ];
+      }
     } else if (forChannel == GenPlots.scalarRamp.name ||
         forChannel == GenPlots.slowScalarRamp.name) {
       firstScalarRampEpochTime ??= currentEpochTime;
