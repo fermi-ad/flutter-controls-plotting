@@ -15,6 +15,7 @@ abstract class PlotDAQService {
     int? triggerEvent,
     int? sampleOnEvent,
     String? chXAxis,
+    double? waveformDuration,
   });
 }
 
@@ -57,6 +58,7 @@ class StandardPlotDAQ implements PlotDAQService {
     int? triggerEvent,
     int? sampleOnEvent,
     String? chXAxis,
+    double? waveformDuration,
   }) {
     var plotArgs = _PlotArgs(xMin: 0, xMax: 499, windowSize: 500);
     final channels = _separateChannels(forChannels);
@@ -73,6 +75,7 @@ class StandardPlotDAQ implements PlotDAQService {
         sampleOnEvent: sampleOnEvent,
         nAcquisitions: nAcquisitions == 0 ? null : nAcquisitions,
         chXAxis: chXAxis,
+        waveformDuration: waveformDuration
       );
     } else {
       // API only
@@ -88,6 +91,7 @@ class StandardPlotDAQ implements PlotDAQService {
         sampleOnEvent: sampleOnEvent,
         nAcquisitions: nAcquisitions == 0 ? null : nAcquisitions,
         chXAxis: chXAxis,
+        waveformDuration: waveformDuration,
       );
     }
   }
@@ -103,6 +107,7 @@ class StandardPlotDAQ implements PlotDAQService {
     int? sampleOnEvent,
     int? triggerEvent,
     String? chXAxis,
+    double? waveformDuration
   }) async* {
     var requestTime = getCurrentAcsysEpochTime();
     if (updateDelay == 0 && sampleOnEvent == null) {

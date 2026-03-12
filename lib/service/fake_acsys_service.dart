@@ -44,6 +44,7 @@ class FakeACSysService implements ACSysServiceAPI {
     int? nAcquisitions,
     int? triggerEvent,
     int? sampleOnEvent,
+    double? waveformDuration,
     String? chXAxis,
   }) {
     startPlotCount++;
