@@ -235,8 +235,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: array-as-time-series
-      resolved-ref: e10e55cdaee47eb0dc794cfccb4e562c3d0685ac
+      ref: main
+      resolved-ref: "086c2f7f2a1b2cf96f0a96e60bdf7f0e030477ba"
       url: "https://github.com/fermi-ad/flutter-controls-core.git"
     source: git
     version: "0.3.1"
