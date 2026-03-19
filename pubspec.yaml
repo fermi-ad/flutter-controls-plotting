@@ -46,7 +46,7 @@ dependencies:
     # path: ../flutter-controls-core
     git:
        url: https://github.com/fermi-ad/flutter-controls-core.git
-       ref: main
+       ref: array-as-time-series
 
   fl_chart: ^1.0.0
 
@@ -108,6 +108,7 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
 # dependency_overrides:
 #  flutter_controls_core: 
 #    path: ../flutter-controls-core

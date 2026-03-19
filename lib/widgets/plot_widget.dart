@@ -68,6 +68,8 @@ class PlotWidget extends StatefulWidget {
   /// Useful for testing to observe reconnection behavior.
   final int? reconnectionDelayMs;
 
+  final double? waveformDuration;
+
   const PlotWidget({
     super.key,
     this.plotChannels = const <String, ChannelMetadata>{},
@@ -98,6 +100,7 @@ class PlotWidget extends StatefulWidget {
     this.implementation = PlotImplementation.flCharts,
     this.forceStreamReset = false,
     this.reconnectionDelayMs,
+    this.waveformDuration,
   });
 
   @override
@@ -430,6 +433,8 @@ class PlotState extends State<PlotWidget> {
     _channels = Map.from(widget.plotChannels);
     _updateDelay = widget.updateDelay;
     _sampleOnEvent = widget.sampleOnEvent;
+    _waveformDuration = widget.waveformDuration;
+    
     _triggerEvent = widget.triggerEvent;
     _nAcquisitions = widget.nAcquisitions;
     var apiAcquisitions = _nAcquisitions;
@@ -482,6 +487,7 @@ class PlotState extends State<PlotWidget> {
         endTime: _dataLoggerEndTime,
         chXAxis: widget.chXAxis,
         sampleOnEvent: _sampleOnEvent,
+        waveformDuration: _waveformDuration,
       );
     }
   }
@@ -645,6 +651,8 @@ class PlotState extends State<PlotWidget> {
   int? _triggerEvent = 0;
 
   int? _sampleOnEvent;
+
+  double? _waveformDuration;
 
   int _nAcquisitions = 0;
 
