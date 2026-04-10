@@ -22,6 +22,10 @@ class FlchartCache {
   double? _spotsMinY;
   double? _spotsMaxY;
 
+  // Tracks the last Y limits used for normalization per channel.
+  // Allows normalizeCacheSpots to skip channels whose limits haven't changed.
+  final Map<String, ({double? minY, double? maxY})> _lastNormalizedLimits = {};
+
   // Datalogger skip cache spots.
   double? _dataLoggerStartTime;
   double? _dataLoggerEndTime;
@@ -81,7 +85,8 @@ class FlchartCache {
     }
 
     if (spots[channelName]![segmentIndex].isNotEmpty) {
-      flSpots = List.from(spots[channelName]![segmentIndex]);
+      // Use a direct reference — no copy needed since we mutate in place below.
+      flSpots = spots[channelName]![segmentIndex];
       startIndex = lastProcessedIndex[channelName]![segmentIndex] + 1;
 
       if (startIndex >= points.length) {
@@ -260,22 +265,35 @@ class FlchartCache {
       var channelName = entry.key;
       var channelSpots = entry.value;
       var channelSetting = channels[channelName]!.channelSetting;
+
+      final currentMinY = channelSetting.displayedMinY;
+      final currentMaxY = channelSetting.displayedMaxY;
+      final lastLimits = _lastNormalizedLimits[channelName];
+
+      // Skip full re-normalization if Y limits haven't changed since last frame.
+      if (lastLimits != null &&
+          lastLimits.minY == currentMinY &&
+          lastLimits.maxY == currentMaxY) {
+        continue;
+      }
+
+      // Y limits changed — re-normalize all cached spots for this channel.
+      _lastNormalizedLimits[channelName] = (minY: currentMinY, maxY: currentMaxY);
+
       for (var segmentSpots in channelSpots) {
         for (var spot in segmentSpots) {
-          var normalizedY = _normalizeY(
+          spot.normalizedY = _normalizeY(
             spot.originalY,
             channelSetting: channelSetting,
           );
-          spot.normalizedY = normalizedY;
         }
       }
       if (tempSpot.containsKey(channelName)) {
         var spot = tempSpot[channelName]!;
-        var normalizedY = _normalizeY(
+        spot.normalizedY = _normalizeY(
           spot.originalY,
           channelSetting: channelSetting,
         );
-        spot.normalizedY = normalizedY;
       }
     }
   }
@@ -537,6 +555,7 @@ class FlchartCache {
   void clearAll() {
     spots.clear();
     lastProcessedIndex.clear();
+    _lastNormalizedLimits.clear();
 
     _spotsMinX = null;
     _spotsMaxX = null;
@@ -564,5 +583,6 @@ class FlchartCache {
     spots.remove(channelName);
     lastProcessedIndex.remove(channelName);
     tempSpot.remove(channelName);
+    _lastNormalizedLimits.remove(channelName);
   }
 }
