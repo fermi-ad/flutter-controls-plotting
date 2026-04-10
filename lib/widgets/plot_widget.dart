@@ -492,7 +492,7 @@ class PlotState extends State<PlotWidget> {
     }
   }
 
-  void _receiveData(PlotReply plotReply) {
+  Future<void> _receiveData(PlotReply plotReply) async {
     if (widget.isPaused) {
       if (lastReply != null) {
         _plotReply = lastReply;
@@ -505,19 +505,24 @@ class PlotState extends State<PlotWidget> {
       }
 
       plotReplyList.add(plotReply);
-      if (plotReplyList.length > 1000000) {
+      if (plotReplyList.length > 100) {
         plotReplyList.removeAt(0);
       }
       return;
     } else {
-      for (final element in plotReplyList) {
-        _plotReply = element;
+      const chunkSize = 10;
+      for (int i = 0; i < plotReplyList.length; i++) {
+        _plotReply = plotReplyList[i];
 
         _filterPoints();
 
         _findLimits();
 
-        widget.onPlotUpdate?.call(element); // Use null check here
+        widget.onPlotUpdate?.call(plotReplyList[i]);
+
+        if ((i + 1) % chunkSize == 0) {
+          await Future.delayed(Duration.zero); // yield to event loop between chunks
+        }
       }
       plotReplyList.clear();
     }
