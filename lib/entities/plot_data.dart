@@ -376,11 +376,13 @@ class PlotData {
       int segmentsToRemove = 0;
       for (var segment in segments) {
         if (segment.length > pointsToPurgePerCh) {
-          // Remove all necessary points from this segemnt.
+          // Remove all necessary points from this segment and deduct their bytes directly.
+          plotMetadata.plotDataBytes -= pointsToPurgePerCh * _plotPointsByteSize;
           segment.removeRange(0, pointsToPurgePerCh);
           break;
         } else {
-          // Add segment for removal
+          // Entire segment will be removed — deduct its bytes now.
+          plotMetadata.plotDataBytes -= segment.length * _plotPointsByteSize;
           segmentsToRemove += 1;
           pointsToPurgePerCh -= segment.length;
         }
@@ -392,7 +394,6 @@ class PlotData {
 
     flchartCache.clearAll();
     _recalculateArrayStartTimeIfApplicable();
-    _recalculateDataForAllPoints();
     // Force Y limits to be recomputed on the next packet since old data was removed.
     _lastConfMaxX = null;
   }
