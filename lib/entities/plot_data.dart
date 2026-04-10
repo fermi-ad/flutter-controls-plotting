@@ -29,6 +29,9 @@ class PlotData {
   double? _blinkTimestamp;
   bool _blinkState = false;
 
+  // Tracks the last confMaxX value seen by findLimits so we can detect panning.
+  double? _lastConfMaxX;
+
   // Map of channel name and points split into segments.
   Map<String, List<List<PlottingPoint>>> points = {};
 
@@ -390,6 +393,8 @@ class PlotData {
     flchartCache.clearAll();
     _recalculateArrayStartTimeIfApplicable();
     _recalculateDataForAllPoints();
+    // Force Y limits to be recomputed on the next packet since old data was removed.
+    _lastConfMaxX = null;
   }
 
   void findLimitsWithXRange({
@@ -497,13 +502,25 @@ class PlotData {
           maxX = confMaxX;
         }
         minX = maxX! - timeDelta;
-        // Calculate y based on points displayed.
-        findLimitsWithXRange(
-          xRangeMin: minX,
-          xRangeMax: maxX,
-          channelMetadatas: channelMetadatas,
-          isTriggered: isTriggered,
-        );
+
+        // Only re-scan all stored points for Y limits when the visible window
+        // has actually changed. The window changes when:
+        //   (a) the user panned (confMaxX changed), or
+        //   (b) the leading edge of the window advanced with new data (maxX changed).
+        // When neither is true the window is stationary and Y limits are still valid.
+        final bool panned = confMaxX != _lastConfMaxX;
+        final bool windowAdvanced = maxX != _maxX;
+        _lastConfMaxX = confMaxX;
+
+        if (panned || windowAdvanced) {
+          // Calculate y based on points displayed.
+          findLimitsWithXRange(
+            xRangeMin: minX,
+            xRangeMax: maxX,
+            channelMetadatas: channelMetadatas,
+            isTriggered: isTriggered,
+          );
+        }
       }
     }
     setXLimits(minX: minX, maxX: maxX);
@@ -719,6 +736,7 @@ class PlotData {
   void resetMinMaxXY({Map<String, ChannelMetadata>? channels}) {
     _minX = null;
     _maxX = null;
+    _lastConfMaxX = null;
 
     // Reset y-limits for all channels
     if (channels != null) {
