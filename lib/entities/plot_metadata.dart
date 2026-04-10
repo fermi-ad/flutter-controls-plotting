@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
 const int _kb = 1024;
@@ -16,6 +17,17 @@ class PlotMetadata with ChangeNotifier {
   int plotDataBytes = 0;
   int _numberOfPoints = 0;
   int? reducedPoints;
+
+  bool _notifyScheduled = false;
+
+  void _scheduleNotify() {
+    if (_notifyScheduled) return;
+    _notifyScheduled = true;
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _notifyScheduled = false;
+      notifyListeners();
+    });
+  }
 
   PlotMetadata();
 
@@ -54,29 +66,29 @@ class PlotMetadata with ChangeNotifier {
 
   set latestRequestEpochTime(double? lastestRequestEpochTime) {
     _latestRequestEpochTime = lastestRequestEpochTime;
-    Future.delayed(Duration.zero, () => notifyListeners());
+    _scheduleNotify();
   }
 
   set latestDataEpochTime(double? latestDataEpochTime) {
     _latestDataEpochTime = latestDataEpochTime;
-    Future.delayed(Duration.zero, () => notifyListeners());
+    _scheduleNotify();
   }
 
   int get numberOfPoints => _numberOfPoints;
 
   set numberOfPoints(int numberOfPoints) {
     _numberOfPoints = numberOfPoints;
-    Future.delayed(Duration.zero, () => notifyListeners());
+    _scheduleNotify();
   }
 
   set xMin(double? xMin) {
     _xMin = xMin;
-    Future.delayed(Duration.zero, () => notifyListeners());
+    _scheduleNotify();
   }
 
   set xMax(double? xMax) {
     _xMax = xMax;
-    Future.delayed(Duration.zero, () => notifyListeners());
+    _scheduleNotify();
   }
 
   void cleanUp() {
