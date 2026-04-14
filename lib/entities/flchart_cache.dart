@@ -22,6 +22,10 @@ class FlchartCache {
   double? _spotsMinY;
   double? _spotsMaxY;
 
+  // Tracks the last Y limits used for normalization per channel.
+  // Allows normalizeCacheSpots to skip channels whose limits haven't changed.
+  final Map<String, ({double? minY, double? maxY})> _lastNormalizedLimits = {};
+
   // Datalogger skip cache spots.
   double? _dataLoggerStartTime;
   double? _dataLoggerEndTime;
@@ -81,7 +85,8 @@ class FlchartCache {
     }
 
     if (spots[channelName]![segmentIndex].isNotEmpty) {
-      flSpots = List.from(spots[channelName]![segmentIndex]);
+      // Use a direct reference — no copy needed since we mutate in place below.
+      flSpots = spots[channelName]![segmentIndex];
       startIndex = lastProcessedIndex[channelName]![segmentIndex] + 1;
 
       if (startIndex >= points.length) {
@@ -117,6 +122,13 @@ class FlchartCache {
       skipLastPoint = false;
     }
     final int endIndex = skipLastPoint ? points.length - 1 : points.length;
+
+    // First pass (newest-to-oldest): find boundary pairs and collect eligible
+    // point indices. Boundary pair *Index values are recorded as positions in
+    // the forward-ordered newSpots list we will build in the second pass.
+    // We do a single reverse scan to respect the existing early-exit logic
+    // (exitForScalar, xRangeMin break), then build newSpots oldest-to-newest.
+    final List<int> eligibleIndices = [];
     for (int i = endIndex - 1; i >= startIndex; i--) {
       PlottingPoint point = points[i];
       var x = point.x;
@@ -153,11 +165,11 @@ class FlchartCache {
         if ((maxX != null && x > maxX) &&
             (maxXPair == null || maxXPair.x > x)) {
           maxXPair = PlottingPoint(x: x, y: y);
-          maxXPairIndex = newSpots.length;
+          maxXPairIndex = eligibleIndices.length;
         } else if ((minX != null && x < minX) &&
             (minXPair == null || minXPair.x < x)) {
           minXPair = PlottingPoint(x: x, y: y);
-          minXPairIndex = newSpots.length;
+          minXPairIndex = eligibleIndices.length;
           if (exitForScalar) {
             // The last relevant time was reached. No need to check rest of points.
             break;
@@ -170,43 +182,53 @@ class FlchartCache {
         if ((maxY != null && y > maxY) &&
             (maxYPair == null || maxYPair.y > y)) {
           maxYPair = PlottingPoint(x: x, y: y);
-          maxYPairIndex = newSpots.length;
+          maxYPairIndex = eligibleIndices.length;
         } else if ((minY != null && y < minY) &&
             (minYPair == null || minYPair.y < y)) {
           minYPair = PlottingPoint(x: x, y: y);
-          minYPairIndex = newSpots.length;
+          minYPairIndex = eligibleIndices.length;
         }
         addPoint = false;
       }
 
       if (addPoint) {
-        PlottingFlSpot flSpot = PlottingFlSpot(x, y);
-        newSpots.insert(0, flSpot);
+        eligibleIndices.add(i);
       }
+    }
+
+    // Second pass: build newSpots oldest-to-newest using add() (O(1) amortized)
+    // instead of insert(0,...) which was O(k²) across the loop.
+    for (int i = eligibleIndices.length - 1; i >= 0; i--) {
+      final point = points[eligibleIndices[i]];
+      var y = point.y;
+      if (channelSetting.isLogScale && y > 0) y = log(y);
+      final flSpot = PlottingFlSpot(point.x, y);
+      flSpot.normalizedY = _normalizeY(y, channelSetting: channelSetting);
+      newSpots.add(flSpot);
     }
 
     // Collect the indices and corresponding FlSpot objects
     final List<MapEntry<int, PlottingFlSpot>> spotsToInsert = [];
 
     if (minXPairIndex != null) {
-      spotsToInsert.add(
-        MapEntry(minXPairIndex, PlottingFlSpot(minXPair!.x, minXPair.y)),
-      );
+      final s = PlottingFlSpot(minXPair!.x, minXPair.y);
+      s.normalizedY = _normalizeY(minXPair.y, channelSetting: channelSetting);
+      spotsToInsert.add(MapEntry(minXPairIndex, s));
     }
     if (maxXPairIndex != null) {
-      spotsToInsert.add(
-        MapEntry(maxXPairIndex, PlottingFlSpot(maxXPair!.x, maxXPair.y)),
-      );
+      final s = PlottingFlSpot(maxXPair!.x, maxXPair.y);
+      s.normalizedY = _normalizeY(maxXPair.y, channelSetting: channelSetting);
+      spotsToInsert.add(MapEntry(maxXPairIndex, s));
     }
     if (minYPairIndex != null) {
-      spotsToInsert.add(
-        MapEntry(minYPairIndex, PlottingFlSpot(minYPair!.x, minYPair.y)),
-      );
+      final s = PlottingFlSpot(minYPair!.x, minYPair.y);
+      s.normalizedY = _normalizeY(minYPair.y, channelSetting: channelSetting);
+      spotsToInsert.add(MapEntry(minYPairIndex, s));
     }
     if (maxYPairIndex != null) {
-      spotsToInsert.add(
-        MapEntry(maxYPairIndex, PlottingFlSpot(maxYPair!.x, maxYPair.y)),
-      );
+      final s = PlottingFlSpot(maxYPair!.x, maxYPair.y);
+      s.normalizedY = _normalizeY(maxYPair.y, channelSetting: channelSetting);
+      spotsToInsert.add(MapEntry(maxYPairIndex, s));
     }
 
     // Sort the list by indices in descending order
@@ -246,7 +268,9 @@ class FlchartCache {
           flSpots.add(existingSpot);
         }
 
-        tempSpot[channelName] = PlottingFlSpot(lastX, lastY);
+        final newTempSpot = PlottingFlSpot(lastX, lastY);
+        newTempSpot.normalizedY = _normalizeY(lastY, channelSetting: channelSetting);
+        tempSpot[channelName] = newTempSpot;
       }
     }
 
@@ -260,22 +284,35 @@ class FlchartCache {
       var channelName = entry.key;
       var channelSpots = entry.value;
       var channelSetting = channels[channelName]!.channelSetting;
+
+      final currentMinY = channelSetting.displayedMinY;
+      final currentMaxY = channelSetting.displayedMaxY;
+      final lastLimits = _lastNormalizedLimits[channelName];
+
+      // Skip full re-normalization if Y limits haven't changed since last frame.
+      if (lastLimits != null &&
+          lastLimits.minY == currentMinY &&
+          lastLimits.maxY == currentMaxY) {
+        continue;
+      }
+
+      // Y limits changed — re-normalize all cached spots for this channel.
+      _lastNormalizedLimits[channelName] = (minY: currentMinY, maxY: currentMaxY);
+
       for (var segmentSpots in channelSpots) {
         for (var spot in segmentSpots) {
-          var normalizedY = _normalizeY(
+          spot.normalizedY = _normalizeY(
             spot.originalY,
             channelSetting: channelSetting,
           );
-          spot.normalizedY = normalizedY;
         }
       }
       if (tempSpot.containsKey(channelName)) {
         var spot = tempSpot[channelName]!;
-        var normalizedY = _normalizeY(
+        spot.normalizedY = _normalizeY(
           spot.originalY,
           channelSetting: channelSetting,
         );
-        spot.normalizedY = normalizedY;
       }
     }
   }
@@ -348,10 +385,11 @@ class FlchartCache {
 
     if (numberOfPoints > maxiumumPointsDisplayed) {
       if (reducedPoints != null) {
-        // Already reduced, will reduce on next itteration.
-        reducedPoints = numberOfPoints;
-        _resetCache = true;
-        return reducedPoints;
+        // Cache was already reduced and new data has grown it back above the
+        // threshold. Re-reduce in place without triggering a full cache reset.
+        // The old code set _resetCache=true here which caused a full rebuild
+        // of all raw points on every frame — that was the root cause of jank.
+        reducedPoints = null;
       }
       reducedPoints ??= 0;
       for (var entry in spots.entries) {
@@ -537,6 +575,7 @@ class FlchartCache {
   void clearAll() {
     spots.clear();
     lastProcessedIndex.clear();
+    _lastNormalizedLimits.clear();
 
     _spotsMinX = null;
     _spotsMaxX = null;
@@ -564,5 +603,6 @@ class FlchartCache {
     spots.remove(channelName);
     lastProcessedIndex.remove(channelName);
     tempSpot.remove(channelName);
+    _lastNormalizedLimits.remove(channelName);
   }
 }
