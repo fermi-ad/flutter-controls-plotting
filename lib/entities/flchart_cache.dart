@@ -122,6 +122,13 @@ class FlchartCache {
       skipLastPoint = false;
     }
     final int endIndex = skipLastPoint ? points.length - 1 : points.length;
+
+    // First pass (newest-to-oldest): find boundary pairs and collect eligible
+    // point indices. Boundary pair *Index values are recorded as positions in
+    // the forward-ordered newSpots list we will build in the second pass.
+    // We do a single reverse scan to respect the existing early-exit logic
+    // (exitForScalar, xRangeMin break), then build newSpots oldest-to-newest.
+    final List<int> eligibleIndices = [];
     for (int i = endIndex - 1; i >= startIndex; i--) {
       PlottingPoint point = points[i];
       var x = point.x;
@@ -158,11 +165,11 @@ class FlchartCache {
         if ((maxX != null && x > maxX) &&
             (maxXPair == null || maxXPair.x > x)) {
           maxXPair = PlottingPoint(x: x, y: y);
-          maxXPairIndex = newSpots.length;
+          maxXPairIndex = eligibleIndices.length;
         } else if ((minX != null && x < minX) &&
             (minXPair == null || minXPair.x < x)) {
           minXPair = PlottingPoint(x: x, y: y);
-          minXPairIndex = newSpots.length;
+          minXPairIndex = eligibleIndices.length;
           if (exitForScalar) {
             // The last relevant time was reached. No need to check rest of points.
             break;
@@ -175,20 +182,29 @@ class FlchartCache {
         if ((maxY != null && y > maxY) &&
             (maxYPair == null || maxYPair.y > y)) {
           maxYPair = PlottingPoint(x: x, y: y);
-          maxYPairIndex = newSpots.length;
+          maxYPairIndex = eligibleIndices.length;
         } else if ((minY != null && y < minY) &&
             (minYPair == null || minYPair.y < y)) {
           minYPair = PlottingPoint(x: x, y: y);
-          minYPairIndex = newSpots.length;
+          minYPairIndex = eligibleIndices.length;
         }
         addPoint = false;
       }
 
       if (addPoint) {
-        PlottingFlSpot flSpot = PlottingFlSpot(x, y);
-        flSpot.normalizedY = _normalizeY(y, channelSetting: channelSetting);
-        newSpots.insert(0, flSpot);
+        eligibleIndices.add(i);
       }
+    }
+
+    // Second pass: build newSpots oldest-to-newest using add() (O(1) amortized)
+    // instead of insert(0,...) which was O(k²) across the loop.
+    for (int i = eligibleIndices.length - 1; i >= 0; i--) {
+      final point = points[eligibleIndices[i]];
+      var y = point.y;
+      if (channelSetting.isLogScale && y > 0) y = log(y);
+      final flSpot = PlottingFlSpot(point.x, y);
+      flSpot.normalizedY = _normalizeY(y, channelSetting: channelSetting);
+      newSpots.add(flSpot);
     }
 
     // Collect the indices and corresponding FlSpot objects
@@ -369,10 +385,11 @@ class FlchartCache {
 
     if (numberOfPoints > maxiumumPointsDisplayed) {
       if (reducedPoints != null) {
-        // Already reduced, will reduce on next itteration.
-        reducedPoints = numberOfPoints;
-        _resetCache = true;
-        return reducedPoints;
+        // Cache was already reduced and new data has grown it back above the
+        // threshold. Re-reduce in place without triggering a full cache reset.
+        // The old code set _resetCache=true here which caused a full rebuild
+        // of all raw points on every frame — that was the root cause of jank.
+        reducedPoints = null;
       }
       reducedPoints ??= 0;
       for (var entry in spots.entries) {
