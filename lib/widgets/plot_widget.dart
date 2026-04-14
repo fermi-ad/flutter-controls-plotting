@@ -561,6 +561,7 @@ class PlotState extends State<PlotWidget> {
       triggerTimestamp: _plotReply!.triggerTimestamp,
       isPersistent: widget.isPersistent,
       isTriggered: widget.triggerEvent != null,
+      waveformDuration: widget.waveformDuration,
     );
   }
 
@@ -584,6 +585,7 @@ class PlotState extends State<PlotWidget> {
       triggerTimestamp: _plotReply!.triggerTimestamp,
       channelMetadatas: widget.plotChannels,
       isTriggered: widget.triggerEvent != null,
+      waveformDuration: widget.waveformDuration,
     );
   }
 

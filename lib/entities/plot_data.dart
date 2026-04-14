@@ -140,8 +140,9 @@ class PlotData {
 
   List<List<PlottingPoint>> __processDeviceValue(
     List<PlotPoint> plotPoints,
-    double? triggerTimestamp,
-  ) {
+    double? triggerTimestamp, {
+    double? waveformDuration,
+  }) {
     List<List<PlottingPoint>> points = [];
 
     if (plotPoints.isNotEmpty &&
@@ -155,24 +156,38 @@ class PlotData {
       var time = plotPoint.t;
 
       if (deviceValue is DevScalarArray) {
-        if (minArrayTime == null) {
-          minArrayTime = time;
-          maxArrayTime = time;
-          arrayTimeStep = 1;
-        } else {
-          var curStep = time - maxArrayTime!;
-          if (curStep > 0) {
-            arrayTimeStep = min(arrayTimeStep!, curStep);
-            maxArrayTime = time;
+        if (waveformDuration != null) {
+          // Array-as-time-series mode: expand the array into individual scalar
+          // points, computing a timestamp for each one from the waveform's
+          // acquisition timestamp and the user-supplied total duration.
+          // t_i = t_waveform - waveformDuration + (i / n) * waveformDuration
+          var array = deviceValue.value;
+          var n = array.length;
+          points.add([]);
+          for (var i = 0; i < n; i++) {
+            var pointTime = time - waveformDuration + (i / n) * waveformDuration;
+            points.last.add(PlottingPoint(x: pointTime, y: array[i], t: pointTime));
           }
-        }
+        } else {
+          if (minArrayTime == null) {
+            minArrayTime = time;
+            maxArrayTime = time;
+            arrayTimeStep = 1;
+          } else {
+            var curStep = time - maxArrayTime!;
+            if (curStep > 0) {
+              arrayTimeStep = min(arrayTimeStep!, curStep);
+              maxArrayTime = time;
+            }
+          }
 
-        var array = deviceValue.value;
-        points.add([]);
-        for (var x = 0; x < array.length; x++) {
-          var y = array[x];
+          var array = deviceValue.value;
+          points.add([]);
+          for (var x = 0; x < array.length; x++) {
+            var y = array[x];
 
-          points.last.add(PlottingPoint(x: x.toDouble(), y: y, t: time));
+            points.last.add(PlottingPoint(x: x.toDouble(), y: y, t: time));
+          }
         }
       } else if (deviceValue is DevScalar || deviceValue is DevTimeSeries) {
         var t = time;
@@ -210,12 +225,14 @@ class PlotData {
     Map<String, ChannelMetadata>? channelMetadatas,
     required double? triggerTimestamp,
     bool? isTriggered,
+    double? waveformDuration,
   }) {
     for (final plotChannel in plotChannels) {
       if (!channelHasErrorOrNoPoints(plotChannel)) {
         var newSegments = __processDeviceValue(
           plotChannel.points,
           triggerTimestamp,
+          waveformDuration: waveformDuration,
         );
 
         if (!points.containsKey(plotChannel.name)) {
@@ -449,6 +466,7 @@ class PlotData {
     required bool isPersistent,
     required bool isTriggered,
     Map<String, ChannelMetadata>? channelMetadatas,
+    double? waveformDuration,
   }) {
     double? minX = _minX;
     double? maxX = _maxX;
@@ -461,6 +479,7 @@ class PlotData {
       final segments = __processDeviceValue(
         plotChannel.points,
         triggerTimestamp,
+        waveformDuration: waveformDuration,
       );
 
       for (final points in segments) {
