@@ -186,6 +186,7 @@ class FlchartCache {
 
       if (addPoint) {
         PlottingFlSpot flSpot = PlottingFlSpot(x, y);
+        flSpot.normalizedY = _normalizeY(y, channelSetting: channelSetting);
         newSpots.insert(0, flSpot);
       }
     }
@@ -194,24 +195,24 @@ class FlchartCache {
     final List<MapEntry<int, PlottingFlSpot>> spotsToInsert = [];
 
     if (minXPairIndex != null) {
-      spotsToInsert.add(
-        MapEntry(minXPairIndex, PlottingFlSpot(minXPair!.x, minXPair.y)),
-      );
+      final s = PlottingFlSpot(minXPair!.x, minXPair.y);
+      s.normalizedY = _normalizeY(minXPair.y, channelSetting: channelSetting);
+      spotsToInsert.add(MapEntry(minXPairIndex, s));
     }
     if (maxXPairIndex != null) {
-      spotsToInsert.add(
-        MapEntry(maxXPairIndex, PlottingFlSpot(maxXPair!.x, maxXPair.y)),
-      );
+      final s = PlottingFlSpot(maxXPair!.x, maxXPair.y);
+      s.normalizedY = _normalizeY(maxXPair.y, channelSetting: channelSetting);
+      spotsToInsert.add(MapEntry(maxXPairIndex, s));
     }
     if (minYPairIndex != null) {
-      spotsToInsert.add(
-        MapEntry(minYPairIndex, PlottingFlSpot(minYPair!.x, minYPair.y)),
-      );
+      final s = PlottingFlSpot(minYPair!.x, minYPair.y);
+      s.normalizedY = _normalizeY(minYPair.y, channelSetting: channelSetting);
+      spotsToInsert.add(MapEntry(minYPairIndex, s));
     }
     if (maxYPairIndex != null) {
-      spotsToInsert.add(
-        MapEntry(maxYPairIndex, PlottingFlSpot(maxYPair!.x, maxYPair.y)),
-      );
+      final s = PlottingFlSpot(maxYPair!.x, maxYPair.y);
+      s.normalizedY = _normalizeY(maxYPair.y, channelSetting: channelSetting);
+      spotsToInsert.add(MapEntry(maxYPairIndex, s));
     }
 
     // Sort the list by indices in descending order
@@ -251,7 +252,9 @@ class FlchartCache {
           flSpots.add(existingSpot);
         }
 
-        tempSpot[channelName] = PlottingFlSpot(lastX, lastY);
+        final newTempSpot = PlottingFlSpot(lastX, lastY);
+        newTempSpot.normalizedY = _normalizeY(lastY, channelSetting: channelSetting);
+        tempSpot[channelName] = newTempSpot;
       }
     }
 
