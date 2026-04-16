@@ -240,7 +240,12 @@ class StandardPlotDAQ implements PlotDAQService {
 
       String rate = getRate(updateDelay);
 
-      Stopwatch? acquisitionStopwatch;
+      // Capture the limit at stream-construction time so that changes to
+      // limitAcquisitionMs after the stream starts don't affect this generation.
+      final int? streamLimitMs = limitAcquisitionMs;
+      final Stopwatch? acquisitionStopwatch = streamLimitMs != null
+          ? (Stopwatch()..start())
+          : null;
       while (validLoop) {
         if (apiDelay == 0) {
           await Future.delayed(Duration(microseconds: updateDelay));
@@ -302,9 +307,8 @@ class StandardPlotDAQ implements PlotDAQService {
           validLoop = false;
         }
 
-        if (limitAcquisitionMs != null) {
-          acquisitionStopwatch ??= Stopwatch()..start();
-          if (limitAcquisitionMs! <= acquisitionStopwatch.elapsedMilliseconds) {
+        if (streamLimitMs != null) {
+          if (streamLimitMs <= acquisitionStopwatch!.elapsedMilliseconds) {
             validLoop = false;
           }
         }
