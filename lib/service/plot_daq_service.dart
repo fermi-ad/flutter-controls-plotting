@@ -75,7 +75,7 @@ class StandardPlotDAQ implements PlotDAQService {
         sampleOnEvent: sampleOnEvent,
         nAcquisitions: nAcquisitions == 0 ? null : nAcquisitions,
         chXAxis: chXAxis,
-        waveformDuration: waveformDuration
+        waveformDuration: waveformDuration,
       );
     } else {
       // API only
@@ -107,7 +107,7 @@ class StandardPlotDAQ implements PlotDAQService {
     int? sampleOnEvent,
     int? triggerEvent,
     String? chXAxis,
-    double? waveformDuration
+    double? waveformDuration,
   }) async* {
     var requestTime = getCurrentAcsysEpochTime();
     if (updateDelay == 0 && sampleOnEvent == null) {
@@ -241,10 +241,6 @@ class StandardPlotDAQ implements PlotDAQService {
       String rate = getRate(updateDelay);
 
       Stopwatch? acquisitionStopwatch;
-      if (limitAcquisitionMs != null) {
-        acquisitionStopwatch = Stopwatch();
-        acquisitionStopwatch.start();
-      }
       while (validLoop) {
         if (apiDelay == 0) {
           await Future.delayed(Duration(microseconds: updateDelay));
@@ -307,8 +303,8 @@ class StandardPlotDAQ implements PlotDAQService {
         }
 
         if (limitAcquisitionMs != null) {
-          var msSinceStart = acquisitionStopwatch!.elapsedMilliseconds;
-          if (limitAcquisitionMs! <= msSinceStart) {
+          acquisitionStopwatch ??= Stopwatch()..start();
+          if (limitAcquisitionMs! <= acquisitionStopwatch.elapsedMilliseconds) {
             validLoop = false;
           }
         }
@@ -636,7 +632,10 @@ class StandardPlotDAQ implements PlotDAQService {
           length,
           (i) => PlotPoint(
             value: DevScalar((i + (rand.nextInt(50) - 25)).toDouble()),
-            t: currentEpochTime - waveformDuration + (i / length) * waveformDuration,
+            t:
+                currentEpochTime -
+                waveformDuration +
+                (i / length) * waveformDuration,
           ),
         );
       } else {
