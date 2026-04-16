@@ -420,13 +420,25 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
             blinkState && segmentIndex == segmentsForChannel.length - 1;
 
         // min and max y is not passed in for limiting points. This can cause behavior where poitns in the middle of axis are dropped.
+        // For array-as-time-series the X axis is a rolling timestamp window.
+        // Use the computed window bounds (plotData.minX/maxX) rather than the
+        // user-set conf limits so that toSpots can discard out-of-window points
+        // via the exitForScalar early-exit path, preventing unbounded cache growth.
+        final bool isArrayAsTimeSeries =
+            plotWidget.isTimedScalarData && plotWidget.waveformDuration != null;
+        final effectiveMinX = isArrayAsTimeSeries
+            ? plotData.minX
+            : plotWidget.confMinX;
+        final effectiveMaxX = isArrayAsTimeSeries
+            ? plotData.maxX
+            : plotWidget.confMaxX;
         var spots = cache.toSpots(
           points: pointSegment,
           channelName: channelName,
           channelSetting: plotWidget.plotChannels[channelName]!.channelSetting,
           segmentIndex: segmentIndex,
-          minX: plotWidget.confMinX,
-          maxX: plotWidget.confMaxX,
+          minX: effectiveMinX,
+          maxX: effectiveMaxX,
           exitForScalar: exitForScalar,
           appendExistingArrayPoints:
               arrayNonPersistentData || arrayPersistentData,
