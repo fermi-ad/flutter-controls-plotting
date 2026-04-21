@@ -2,18 +2,26 @@ import 'package:fl_chart/fl_chart.dart';
 
 class PlottingFlSpot extends FlSpot {
   final double originalY;
-  final _FlSpotExtension _ext = _FlSpotExtension();
+  final double? _normalizedY;
 
-  PlottingFlSpot(super.x, super.y) : originalY = y;
+  PlottingFlSpot(double x, double y)
+    : originalY = y,
+      _normalizedY = null,
+      super(x, y);
+
+  const PlottingFlSpot._normalized(
+    double x,
+    double originalY,
+    double? normalizedY,
+  ) : originalY = originalY,
+      _normalizedY = normalizedY,
+      super(x, normalizedY ?? originalY);
 
   @override
   // Returns the normalized Y value if it exists, otherwise returns the original Y value
-  double get y => _ext._normalizedY ?? originalY;
+  double get y => _normalizedY ?? originalY;
 
-  set normalizedY(double? value) => _ext._normalizedY = value;
-}
-
-// Additional class to ensure the flspot is immutable
-class _FlSpotExtension {
-  double? _normalizedY;
+  /// Returns a new spot with the given normalized Y value.
+  PlottingFlSpot withNormalizedY(double? value) =>
+      PlottingFlSpot._normalized(x, originalY, value);
 }
