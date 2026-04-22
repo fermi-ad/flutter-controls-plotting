@@ -584,6 +584,67 @@ class FlchartCache {
     _dLoggerEstimatedNumberOfPoints = null;
   }
 
+  /// Removes [pointsRemoved] raw points from the front of segment [segmentIndex]
+  /// for [channelName], trimming the corresponding cached FlSpots and adjusting
+  /// [lastProcessedIndex] so incremental cache builds remain correct.
+  ///
+  /// If the segment is fully consumed or not yet cached, it is dropped entirely.
+  /// Entire-segment removals ([segmentsRemoved] > 0) are handled by removing
+  /// those segments from both [spots] and [lastProcessedIndex].
+  void trimFront({
+    required String channelName,
+    required int segmentsRemoved,
+    required int pointsRemovedFromNextSegment,
+    required int remainingPointsInNextSegment,
+  }) {
+    if (!spots.containsKey(channelName)) return;
+
+    final channelSpots = spots[channelName]!;
+    final channelIdx = lastProcessedIndex[channelName]!;
+
+    // Drop fully-removed segments from the front.
+    if (segmentsRemoved > 0) {
+      final toDrop = segmentsRemoved.clamp(0, channelSpots.length);
+      channelSpots.removeRange(0, toDrop);
+      channelIdx.removeRange(0, toDrop);
+    }
+
+    // Trim points from the front of the next segment (now index 0).
+    if (pointsRemovedFromNextSegment > 0 && channelSpots.isNotEmpty) {
+      final segSpots = channelSpots[0];
+      // The ratio of spots-per-raw-point may not be 1:1 after reduction,
+      // so compute the proportion of spots to drop.
+      final totalRaw =
+          pointsRemovedFromNextSegment + remainingPointsInNextSegment;
+      if (totalRaw > 0 && segSpots.isNotEmpty) {
+        final spotsToDrop =
+            ((pointsRemovedFromNextSegment / totalRaw) * segSpots.length)
+                .floor();
+        if (spotsToDrop >= segSpots.length) {
+          segSpots.clear();
+          channelIdx[0] = -1;
+        } else if (spotsToDrop > 0) {
+          segSpots.removeRange(0, spotsToDrop);
+          // Shift lastProcessedIndex down by the number of raw points removed.
+          channelIdx[0] = (channelIdx[0] - pointsRemovedFromNextSegment).clamp(
+            -1,
+            1 << 30,
+          );
+        }
+      }
+    }
+
+    // Recount totalPoints from what actually remains in the cache.
+    totalPoints = 0;
+    for (final segs in spots.values) {
+      for (final seg in segs) {
+        totalPoints += seg.length;
+      }
+    }
+    reducedPoints = null;
+    _resetCache = false;
+  }
+
   void clearAll() {
     spots.clear();
     lastProcessedIndex.clear();

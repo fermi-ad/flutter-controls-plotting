@@ -394,7 +394,10 @@ class PlotData {
     // drift that previously could drive the counter negative.
     int totalPointsRemoved = 0;
 
-    for (var segments in points.values) {
+    for (var entry in points.entries) {
+      final channelName = entry.key;
+      final segments = entry.value;
+
       final int channelBytes = _calculateSizeOfAllSegments(segments);
       if (channelBytes == 0) continue;
 
@@ -404,9 +407,13 @@ class PlotData {
       int pointsToPurgePerCh = (pointsToPurge * percentage).round();
 
       int segmentsToRemove = 0;
+      int pointsRemovedFromNextSegment = 0;
+      int remainingPointsInNextSegment = 0;
       for (var segment in segments) {
         if (pointsToPurgePerCh <= 0) break;
         if (segment.length > pointsToPurgePerCh) {
+          pointsRemovedFromNextSegment = pointsToPurgePerCh;
+          remainingPointsInNextSegment = segment.length - pointsToPurgePerCh;
           segment.removeRange(0, pointsToPurgePerCh);
           totalPointsRemoved += pointsToPurgePerCh;
           pointsToPurgePerCh = 0;
@@ -420,6 +427,14 @@ class PlotData {
       if (segmentsToRemove > 0) {
         segments.removeRange(0, segmentsToRemove);
       }
+
+      // Trim the cache to match — no full clearAll needed.
+      flchartCache.trimFront(
+        channelName: channelName,
+        segmentsRemoved: segmentsToRemove,
+        pointsRemovedFromNextSegment: pointsRemovedFromNextSegment,
+        remainingPointsInNextSegment: remainingPointsInNextSegment,
+      );
     }
 
     // Apply one atomic deduction and clamp to zero as a safety net so
@@ -429,7 +444,6 @@ class PlotData {
       plotMetadata.plotDataBytes - totalPointsRemoved * _plotPointsByteSize,
     );
 
-    flchartCache.clearAll();
     _recalculateArrayStartTimeIfApplicable();
     // Force Y limits to be recomputed on the next packet since old data was removed.
     _lastConfMaxX = null;
