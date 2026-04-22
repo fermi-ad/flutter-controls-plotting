@@ -349,17 +349,29 @@ class FlchartCache {
     double? minY,
     double? maxY,
   }) {
-    // Check if any of the new bounds are outside the cached bounds
+    // A full cache reset is only needed when the visible window *contracts* or
+    // *jumps* so that previously-excluded points might now be in range:
+    //   - minX decreased: earlier points that were outside the left edge are
+    //     now visible and must be added — cache doesn't have them.
+    //   - maxX decreased: the right edge moved left (zoom/pan); cached points
+    //     beyond the new maxX must be removed — easiest to just rebuild.
+    //   - minY or maxY tightened inward: points outside the new Y range were
+    //     previously included and must now be excluded.
+    //
+    // What does NOT require a reset:
+    //   - maxX grew (rolling window advancing) — new points are appended
+    //     incrementally by toSpots via the startIndex mechanism.
+    //   - minX grew (old points scrolled off) — handled by trimFront.
     if (_spotsMinX != null && minX != null && minX < _spotsMinX!) {
       return true;
     }
-    if (_spotsMaxX != null && maxX != null && maxX > _spotsMaxX!) {
+    if (_spotsMaxX != null && maxX != null && maxX < _spotsMaxX!) {
       return true;
     }
     if (_spotsMinY != null && minY != null && minY < _spotsMinY!) {
       return true;
     }
-    if (_spotsMaxY != null && maxY != null && maxY > _spotsMaxY!) {
+    if (_spotsMaxY != null && maxY != null && maxY < _spotsMaxY!) {
       return true;
     }
     return false;
