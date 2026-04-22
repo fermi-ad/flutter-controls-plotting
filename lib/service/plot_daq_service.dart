@@ -79,19 +79,21 @@ class StandardPlotDAQ implements PlotDAQService {
       );
     } else {
       // API only
-      return ACSys.api(context).startPlot(
-        forChannels.toList(),
-        xMin: plotArgs.xMin,
-        xMax: plotArgs.xMax,
-        startTime: startTime,
-        endTime: endTime,
-        windowSize: plotArgs.windowSize,
-        updateRate: updateDelay,
-        triggerEvent: triggerEvent,
-        sampleOnEvent: sampleOnEvent,
-        nAcquisitions: nAcquisitions == 0 ? null : nAcquisitions,
-        chXAxis: chXAxis,
-        waveformDuration: waveformDuration,
+      return _wrapApiStream(
+        ACSys.api(context).startPlot(
+          forChannels.toList(),
+          xMin: plotArgs.xMin,
+          xMax: plotArgs.xMax,
+          startTime: startTime,
+          endTime: endTime,
+          windowSize: plotArgs.windowSize,
+          updateRate: updateDelay,
+          triggerEvent: triggerEvent,
+          sampleOnEvent: sampleOnEvent,
+          nAcquisitions: nAcquisitions == 0 ? null : nAcquisitions,
+          chXAxis: chXAxis,
+          waveformDuration: waveformDuration,
+        ),
       );
     }
   }
@@ -126,11 +128,13 @@ class StandardPlotDAQ implements PlotDAQService {
 
       if (channels.apiChannels.isNotEmpty) {
         // Internal and API request
-        var apiStream = ACSys.api(context).startPlot(
-          channels.apiChannels,
-          xMin: args.xMin,
-          xMax: args.xMax,
-          windowSize: args.windowSize,
+        var apiStream = _wrapApiStream(
+          ACSys.api(context).startPlot(
+            channels.apiChannels,
+            xMin: args.xMin,
+            xMax: args.xMax,
+            windowSize: args.windowSize,
+          ),
         );
 
         var generatePlot = await generatePlotFuture;
@@ -385,6 +389,18 @@ class StandardPlotDAQ implements PlotDAQService {
       pointsProcessed: pointsProcessed,
     );
   }
+
+  /// Wraps a raw [startPlot] stream to ensure all errors—including null-data
+  /// crashes and GraphQL errors silently swallowed inside the core library—are
+  /// surfaced as stream errors that reach the [PlotWidget] `onError` handler.
+  Stream<PlotReply> _wrapApiStream(Stream<PlotReply> raw) =>
+      raw.handleError((Object error, StackTrace stack) {
+        // Re-throw so the error propagates to the stream subscriber's onError.
+        // Without this, errors swallowed inside acsys_service.dart can cause
+        // the stream to complete silently (onDone) instead of erroring, which
+        // bypasses the reconnection logic in PlotWidget.
+        Error.throwWithStackTrace(error, stack);
+      });
 
   // Separates channels into mock channels and API channels
   _Channels _separateChannels(Set<String> forChannels) {
