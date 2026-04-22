@@ -202,8 +202,10 @@ class FlchartCache {
       final point = points[eligibleIndices[i]];
       var y = point.y;
       if (channelSetting.isLogScale && y > 0) y = log(y);
-      final flSpot = PlottingFlSpot(point.x, y);
-      flSpot.normalizedY = _normalizeY(y, channelSetting: channelSetting);
+      final flSpot = PlottingFlSpot(
+        point.x,
+        y,
+      ).withNormalizedY(_normalizeY(y, channelSetting: channelSetting));
       newSpots.add(flSpot);
     }
 
@@ -211,23 +213,27 @@ class FlchartCache {
     final List<MapEntry<int, PlottingFlSpot>> spotsToInsert = [];
 
     if (minXPairIndex != null) {
-      final s = PlottingFlSpot(minXPair!.x, minXPair.y);
-      s.normalizedY = _normalizeY(minXPair.y, channelSetting: channelSetting);
+      final s = PlottingFlSpot(minXPair!.x, minXPair.y).withNormalizedY(
+        _normalizeY(minXPair.y, channelSetting: channelSetting),
+      );
       spotsToInsert.add(MapEntry(minXPairIndex, s));
     }
     if (maxXPairIndex != null) {
-      final s = PlottingFlSpot(maxXPair!.x, maxXPair.y);
-      s.normalizedY = _normalizeY(maxXPair.y, channelSetting: channelSetting);
+      final s = PlottingFlSpot(maxXPair!.x, maxXPair.y).withNormalizedY(
+        _normalizeY(maxXPair.y, channelSetting: channelSetting),
+      );
       spotsToInsert.add(MapEntry(maxXPairIndex, s));
     }
     if (minYPairIndex != null) {
-      final s = PlottingFlSpot(minYPair!.x, minYPair.y);
-      s.normalizedY = _normalizeY(minYPair.y, channelSetting: channelSetting);
+      final s = PlottingFlSpot(minYPair!.x, minYPair.y).withNormalizedY(
+        _normalizeY(minYPair.y, channelSetting: channelSetting),
+      );
       spotsToInsert.add(MapEntry(minYPairIndex, s));
     }
     if (maxYPairIndex != null) {
-      final s = PlottingFlSpot(maxYPair!.x, maxYPair.y);
-      s.normalizedY = _normalizeY(maxYPair.y, channelSetting: channelSetting);
+      final s = PlottingFlSpot(maxYPair!.x, maxYPair.y).withNormalizedY(
+        _normalizeY(maxYPair.y, channelSetting: channelSetting),
+      );
       spotsToInsert.add(MapEntry(maxYPairIndex, s));
     }
 
@@ -268,8 +274,10 @@ class FlchartCache {
           flSpots.add(existingSpot);
         }
 
-        final newTempSpot = PlottingFlSpot(lastX, lastY);
-        newTempSpot.normalizedY = _normalizeY(lastY, channelSetting: channelSetting);
+        final newTempSpot = PlottingFlSpot(
+          lastX,
+          lastY,
+        ).withNormalizedY(_normalizeY(lastY, channelSetting: channelSetting));
         tempSpot[channelName] = newTempSpot;
       }
     }
@@ -297,21 +305,25 @@ class FlchartCache {
       }
 
       // Y limits changed — re-normalize all cached spots for this channel.
-      _lastNormalizedLimits[channelName] = (minY: currentMinY, maxY: currentMaxY);
+      _lastNormalizedLimits[channelName] = (
+        minY: currentMinY,
+        maxY: currentMaxY,
+      );
 
       for (var segmentSpots in channelSpots) {
-        for (var spot in segmentSpots) {
-          spot.normalizedY = _normalizeY(
-            spot.originalY,
-            channelSetting: channelSetting,
+        for (var i = 0; i < segmentSpots.length; i++) {
+          segmentSpots[i] = segmentSpots[i].withNormalizedY(
+            _normalizeY(
+              segmentSpots[i].originalY,
+              channelSetting: channelSetting,
+            ),
           );
         }
       }
       if (tempSpot.containsKey(channelName)) {
-        var spot = tempSpot[channelName]!;
-        spot.normalizedY = _normalizeY(
-          spot.originalY,
-          channelSetting: channelSetting,
+        final spot = tempSpot[channelName]!;
+        tempSpot[channelName] = spot.withNormalizedY(
+          _normalizeY(spot.originalY, channelSetting: channelSetting),
         );
       }
     }
