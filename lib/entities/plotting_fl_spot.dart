@@ -4,17 +4,16 @@ class PlottingFlSpot extends FlSpot {
   final double originalY;
   final double? _normalizedY;
 
-  PlottingFlSpot(double x, double y)
+  const PlottingFlSpot(double x, double y)
     : originalY = y,
       _normalizedY = null,
       super(x, y);
 
   const PlottingFlSpot._normalized(
     double x,
-    double originalY,
+    this.originalY,
     double? normalizedY,
-  ) : originalY = originalY,
-      _normalizedY = normalizedY,
+  ) : _normalizedY = normalizedY,
       super(x, normalizedY ?? originalY);
 
   @override
