@@ -458,12 +458,15 @@ class FlchartCache {
           maxSpots = max(minimumPointsPerSegment, maxSpots);
           __reduceSpots(spots: spots, maxPoints: maxSpots);
           reducedPoints = reducedPoints! + spots.length;
-          // __reduceSpots mutates the spot list length in place, which
-          // invalidates lastProcessedIndex for this segment. Reset it so
-          // toSpots rebuilds the segment from scratch on the next call
-          // rather than attempting to append to the truncated list.
+          // __reduceSpots mutates the spot list in place (reorders and
+          // truncates), which invalidates lastProcessedIndex for this segment.
+          // Clear the spot list and reset the index so toSpots does a clean
+          // rebuild from raw points on the next call.  Leaving stale reduced
+          // spots in place and appending to them produces out-of-order x
+          // values that fl_chart renders as backwards-time lines.
           if (lastProcessedIndex.containsKey(channelName) &&
               segmentIndex < lastProcessedIndex[channelName]!.length) {
+            channelSpots[segmentIndex].clear();
             lastProcessedIndex[channelName]![segmentIndex] = -1;
           }
         }
