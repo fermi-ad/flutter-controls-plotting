@@ -89,6 +89,28 @@ class FlchartCache {
       flSpots = spots[channelName]![segmentIndex];
       startIndex = lastProcessedIndex[channelName]![segmentIndex] + 1;
 
+      // As the rolling window's left edge (minX) advances, cached spots that
+      // have scrolled out of view pile up at the front of the list — causing
+      // artificially dense rendering on the left.  Trim them now using a
+      // binary search so the visible density stays uniform across the window.
+      if (minX != null && flSpots.isNotEmpty && flSpots.first.x < minX) {
+        int lo = 0, hi = flSpots.length;
+        while (lo < hi) {
+          final mid = (lo + hi) >> 1;
+          if (flSpots[mid].x < minX) {
+            lo = mid + 1;
+          } else {
+            hi = mid;
+          }
+        }
+        // Keep one point just outside the left edge as a boundary pair so the
+        // line is drawn all the way to the axis edge (same role as minXPair).
+        final trimTo = (lo - 1).clamp(0, flSpots.length);
+        if (trimTo > 0) {
+          flSpots.removeRange(0, trimTo);
+        }
+      }
+
       if (startIndex >= points.length) {
         if (appendExistingArrayPoints) {
           totalPoints += ((maxX ?? points.length - 1) - (minX ?? 0) + 1)
