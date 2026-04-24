@@ -458,6 +458,14 @@ class FlchartCache {
           maxSpots = max(minimumPointsPerSegment, maxSpots);
           __reduceSpots(spots: spots, maxPoints: maxSpots);
           reducedPoints = reducedPoints! + spots.length;
+          // __reduceSpots mutates the spot list length in place, which
+          // invalidates lastProcessedIndex for this segment. Reset it so
+          // toSpots rebuilds the segment from scratch on the next call
+          // rather than attempting to append to the truncated list.
+          if (lastProcessedIndex.containsKey(channelName) &&
+              segmentIndex < lastProcessedIndex[channelName]!.length) {
+            lastProcessedIndex[channelName]![segmentIndex] = -1;
+          }
         }
       }
     } else {
