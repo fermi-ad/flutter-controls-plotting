@@ -673,13 +673,14 @@ class FlchartCache {
           channelIdx[0] = -1;
         } else if (spotsToDrop > 0) {
           segSpots.removeRange(0, spotsToDrop);
-          // Shift lastProcessedIndex down by the number of raw points removed.
-          channelIdx[0] = (channelIdx[0] - pointsRemovedFromNextSegment).clamp(
-            -1,
-            1 << 30,
-          );
         }
       }
+      // After a purge the raw points array has been compacted: index 0 is now
+      // what was index [pointsRemovedFromNextSegment].  Set lastProcessedIndex
+      // to the last valid index in the compacted array so the next toSpots call
+      // only appends truly new points rather than re-scanning from a stale
+      // position that is now out of range.
+      channelIdx[0] = remainingPointsInNextSegment - 1;
     }
 
     // Recount totalPoints from what actually remains in the cache.
