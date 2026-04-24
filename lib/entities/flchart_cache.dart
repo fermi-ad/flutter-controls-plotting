@@ -486,19 +486,21 @@ class FlchartCache {
     return reducedPoints;
   }
 
-  /// Returns a strided (non-destructive) view of [fullSpots] for rendering.
-  /// The cache list itself is never modified.
+  /// Returns a copy of [fullSpots] subsampled by [stride] for rendering.
+  /// Always returns a new list so fl_chart never holds a reference to the
+  /// mutable cache list, which would corrupt its state when we trim the front.
   List<PlottingFlSpot> _applyRenderStride(
     List<PlottingFlSpot> fullSpots,
     int stride,
   ) {
-    if (stride <= 1) return fullSpots;
+    if (fullSpots.isEmpty) return [];
+    if (stride <= 1) return List.of(fullSpots);
     final result = <PlottingFlSpot>[];
     for (var i = 0; i < fullSpots.length; i += stride) {
       result.add(fullSpots[i]);
     }
     // Always include the last point so the line reaches the right edge.
-    if (fullSpots.isNotEmpty && (fullSpots.length - 1) % stride != 0) {
+    if ((fullSpots.length - 1) % stride != 0) {
       result.add(fullSpots.last);
     }
     return result;
