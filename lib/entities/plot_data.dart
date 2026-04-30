@@ -165,8 +165,11 @@ class PlotData {
           var n = array.length;
           points.add([]);
           for (var i = 0; i < n; i++) {
-            var pointTime = time - waveformDuration + (i / n) * waveformDuration;
-            points.last.add(PlottingPoint(x: pointTime, y: array[i], t: pointTime));
+            var pointTime =
+                time - waveformDuration + (i / n) * waveformDuration;
+            points.last.add(
+              PlottingPoint(x: pointTime, y: array[i], t: pointTime),
+            );
           }
         } else {
           if (minArrayTime == null) {
@@ -380,36 +383,67 @@ class PlotData {
       return;
     }
 
-    // Calculate number of points to purge.
-    var plotDataBytes = plotMetadata.plotDataBytes;
-    var bytesOverage = plotDataBytes - maxDataBytes!;
-    var bytesToPurge = bytesOverage + purgeDataSize;
+    // Snapshot total bytes before the loop so per-channel percentages are
+    // stable and consistent throughout the purge pass.
+    final int snapshotBytes = plotMetadata.plotDataBytes;
+    final int bytesToPurge = (snapshotBytes - maxDataBytes!) + purgeDataSize;
+    final int pointsToPurge = (bytesToPurge / _plotPointsByteSize).ceil();
 
-    int pointsToPurge = (bytesToPurge / _plotPointsByteSize).ceil();
+    // Accumulate the actual number of points removed so we can apply one
+    // atomic deduction to the byte counter at the end, avoiding mid-loop
+    // drift that previously could drive the counter negative.
+    int totalPointsRemoved = 0;
 
-    for (var segments in points.values) {
-      double percentage = _calculateSizeOfAllSegments(segments) / plotDataBytes;
-      int pointsToPurgePerCh = (pointsToPurge * percentage).ceil();
+    for (var entry in points.entries) {
+      final channelName = entry.key;
+      final segments = entry.value;
+
+      final int channelBytes = _calculateSizeOfAllSegments(segments);
+      if (channelBytes == 0) continue;
+
+      final double percentage = channelBytes / snapshotBytes;
+      // Use round() instead of ceil() so that rounding errors don't
+      // accumulate across channels and push the total above pointsToPurge.
+      int pointsToPurgePerCh = (pointsToPurge * percentage).round();
+
       int segmentsToRemove = 0;
+      int pointsRemovedFromNextSegment = 0;
+      int remainingPointsInNextSegment = 0;
       for (var segment in segments) {
+        if (pointsToPurgePerCh <= 0) break;
         if (segment.length > pointsToPurgePerCh) {
-          // Remove all necessary points from this segment and deduct their bytes directly.
-          plotMetadata.plotDataBytes -= pointsToPurgePerCh * _plotPointsByteSize;
+          pointsRemovedFromNextSegment = pointsToPurgePerCh;
+          remainingPointsInNextSegment = segment.length - pointsToPurgePerCh;
           segment.removeRange(0, pointsToPurgePerCh);
+          totalPointsRemoved += pointsToPurgePerCh;
+          pointsToPurgePerCh = 0;
           break;
         } else {
-          // Entire segment will be removed — deduct its bytes now.
-          plotMetadata.plotDataBytes -= segment.length * _plotPointsByteSize;
-          segmentsToRemove += 1;
+          totalPointsRemoved += segment.length;
           pointsToPurgePerCh -= segment.length;
+          segmentsToRemove += 1;
         }
       }
       if (segmentsToRemove > 0) {
         segments.removeRange(0, segmentsToRemove);
       }
+
+      // Trim the cache to match — no full clearAll needed.
+      flchartCache.trimFront(
+        channelName: channelName,
+        segmentsRemoved: segmentsToRemove,
+        pointsRemovedFromNextSegment: pointsRemovedFromNextSegment,
+        remainingPointsInNextSegment: remainingPointsInNextSegment,
+      );
     }
 
-    flchartCache.clearAll();
+    // Apply one atomic deduction and clamp to zero as a safety net so
+    // the counter can never go negative regardless of rounding.
+    plotMetadata.plotDataBytes = max(
+      0,
+      plotMetadata.plotDataBytes - totalPointsRemoved * _plotPointsByteSize,
+    );
+
     _recalculateArrayStartTimeIfApplicable();
     // Force Y limits to be recomputed on the next packet since old data was removed.
     _lastConfMaxX = null;

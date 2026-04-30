@@ -89,6 +89,28 @@ class FlchartCache {
       flSpots = spots[channelName]![segmentIndex];
       startIndex = lastProcessedIndex[channelName]![segmentIndex] + 1;
 
+      // As the rolling window's left edge (minX) advances, cached spots that
+      // have scrolled out of view pile up at the front of the list — causing
+      // artificially dense rendering on the left.  Trim them now using a
+      // binary search so the visible density stays uniform across the window.
+      if (minX != null && flSpots.isNotEmpty && flSpots.first.x < minX) {
+        int lo = 0, hi = flSpots.length;
+        while (lo < hi) {
+          final mid = (lo + hi) >> 1;
+          if (flSpots[mid].x < minX) {
+            lo = mid + 1;
+          } else {
+            hi = mid;
+          }
+        }
+        // Keep one point just outside the left edge as a boundary pair so the
+        // line is drawn all the way to the axis edge (same role as minXPair).
+        final trimTo = (lo - 1).clamp(0, flSpots.length);
+        if (trimTo > 0) {
+          flSpots.removeRange(0, trimTo);
+        }
+      }
+
       if (startIndex >= points.length) {
         if (appendExistingArrayPoints) {
           totalPoints += ((maxX ?? points.length - 1) - (minX ?? 0) + 1)
@@ -101,7 +123,10 @@ class FlchartCache {
             totalPoints += 1;
           }
         }
-        return flSpots;
+        return _applyRenderStride(
+          flSpots,
+          _strideFor(channelName, segmentIndex),
+        );
       }
     } else {
       flSpots = [];
@@ -284,7 +309,13 @@ class FlchartCache {
 
     spots[channelName]![segmentIndex] = flSpots;
     lastProcessedIndex[channelName]![segmentIndex] = points.length - 1;
-    return flSpots;
+    return _applyRenderStride(flSpots, _strideFor(channelName, segmentIndex));
+  }
+
+  int _strideFor(String channelName, int segmentIndex) {
+    final strides = _renderStride[channelName];
+    if (strides == null || segmentIndex >= strides.length) return 1;
+    return strides[segmentIndex];
   }
 
   void normalizeCacheSpots({required Map<String, ChannelMetadata> channels}) {
@@ -349,17 +380,29 @@ class FlchartCache {
     double? minY,
     double? maxY,
   }) {
-    // Check if any of the new bounds are outside the cached bounds
+    // A full cache reset is only needed when the visible window *contracts* or
+    // *jumps* so that previously-excluded points might now be in range:
+    //   - minX decreased: earlier points that were outside the left edge are
+    //     now visible and must be added — cache doesn't have them.
+    //   - maxX decreased: the right edge moved left (zoom/pan); cached points
+    //     beyond the new maxX must be removed — easiest to just rebuild.
+    //   - minY or maxY tightened inward: points outside the new Y range were
+    //     previously included and must now be excluded.
+    //
+    // What does NOT require a reset:
+    //   - maxX grew (rolling window advancing) — new points are appended
+    //     incrementally by toSpots via the startIndex mechanism.
+    //   - minX grew (old points scrolled off) — handled by trimFront.
     if (_spotsMinX != null && minX != null && minX < _spotsMinX!) {
       return true;
     }
-    if (_spotsMaxX != null && maxX != null && maxX > _spotsMaxX!) {
+    if (_spotsMaxX != null && maxX != null && maxX < _spotsMaxX!) {
       return true;
     }
     if (_spotsMinY != null && minY != null && minY < _spotsMinY!) {
       return true;
     }
-    if (_spotsMaxY != null && maxY != null && maxY > _spotsMaxY!) {
+    if (_spotsMaxY != null && maxY != null && maxY < _spotsMaxY!) {
       return true;
     }
     return false;
@@ -369,6 +412,11 @@ class FlchartCache {
     // Check if the given value is within the specified bounds (min and max).
     return (min == null || value >= min) && (max == null || value <= max);
   }
+
+  // Per-segment stride for non-destructive rendering reduction.
+  // Key: channelName, Value: list of strides indexed by segment.
+  // A stride of 1 means no reduction (render every point).
+  final Map<String, List<int>> _renderStride = {};
 
   int? reduceSpots({
     int minimumPointsNeeded = minimumNumberOfReducedPoints,
@@ -390,24 +438,22 @@ class FlchartCache {
             !segmentsToDisplay.contains(segmentIndex)) {
           continue;
         }
-        var segmentSpots = channelSpots[segmentIndex];
-        numberOfPoints += segmentSpots.length;
+        numberOfPoints += channelSpots[segmentIndex].length;
       }
     }
 
     if (numberOfPoints > maxiumumPointsDisplayed) {
-      if (reducedPoints != null) {
-        // Cache was already reduced and new data has grown it back above the
-        // threshold. Re-reduce in place without triggering a full cache reset.
-        // The old code set _resetCache=true here which caused a full rebuild
-        // of all raw points on every frame — that was the root cause of jank.
-        reducedPoints = null;
-      }
-      reducedPoints ??= 0;
+      reducedPoints = 0;
       for (var entry in spots.entries) {
         var channelName = entry.key;
         var channelSpots = entry.value;
         var segmentsToDisplay = displayedSegments[channelName] ?? [];
+
+        _renderStride[channelName] ??= [];
+        while (_renderStride[channelName]!.length < channelSpots.length) {
+          _renderStride[channelName]!.add(1);
+        }
+
         for (
           var segmentIndex = 0;
           segmentIndex < channelSpots.length;
@@ -415,45 +461,49 @@ class FlchartCache {
         ) {
           if (segmentsToDisplay.isNotEmpty &&
               !segmentsToDisplay.contains(segmentIndex)) {
+            _renderStride[channelName]![segmentIndex] = 1;
             continue;
           }
-          var spots = channelSpots[segmentIndex];
-          var spotsPercentage = spots.length / numberOfPoints;
+          var segSpots = channelSpots[segmentIndex];
+          var spotsPercentage = segSpots.length / numberOfPoints;
           var maxSpots = (minimumPointsNeeded * spotsPercentage).ceil();
-          // The reduction should never be less than specified points per segment.
           maxSpots = max(minimumPointsPerSegment, maxSpots);
-          __reduceSpots(spots: spots, maxPoints: maxSpots);
-          reducedPoints = reducedPoints! + spots.length;
+          // Compute stride so the rendered point count ≈ maxSpots.
+          // Cache is NOT mutated — stride is applied at render time in toSpots.
+          final stride = segSpots.length <= maxSpots
+              ? 1
+              : (segSpots.length / maxSpots).ceil();
+          _renderStride[channelName]![segmentIndex] = stride;
+          reducedPoints = reducedPoints! + (segSpots.length / stride).ceil();
         }
       }
     } else {
-      if (totalPoints > numberOfPoints) {
-        reducedPoints = numberOfPoints;
-      } else {
-        reducedPoints = null;
-      }
+      // No reduction needed — clear all strides.
+      _renderStride.clear();
+      reducedPoints = totalPoints > numberOfPoints ? numberOfPoints : null;
     }
 
     return reducedPoints;
   }
 
-  List<PlottingFlSpot> __reduceSpots({
-    required List<PlottingFlSpot> spots,
-    required int maxPoints,
-  }) {
-    if (spots.length <= maxPoints) {
-      return spots;
+  /// Returns a copy of [fullSpots] subsampled by [stride] for rendering.
+  /// Always returns a new list so fl_chart never holds a reference to the
+  /// mutable cache list, which would corrupt its state when we trim the front.
+  List<PlottingFlSpot> _applyRenderStride(
+    List<PlottingFlSpot> fullSpots,
+    int stride,
+  ) {
+    if (fullSpots.isEmpty) return [];
+    if (stride <= 1) return List.of(fullSpots);
+    final result = <PlottingFlSpot>[];
+    for (var i = 0; i < fullSpots.length; i += stride) {
+      result.add(fullSpots[i]);
     }
-
-    double step = (spots.length - 1) / (maxPoints - 1).toDouble();
-
-    for (int i = 0; i < maxPoints; i++) {
-      int index = (i * step).round();
-      spots[i] = spots[index];
+    // Always include the last point so the line reaches the right edge.
+    if ((fullSpots.length - 1) % stride != 0) {
+      result.add(fullSpots.last);
     }
-    spots.removeRange(maxPoints, spots.length);
-
-    return spots;
+    return result;
   }
 
   void prepareDataLoggerAcquisition({
@@ -584,10 +634,73 @@ class FlchartCache {
     _dLoggerEstimatedNumberOfPoints = null;
   }
 
+  /// Removes [pointsRemoved] raw points from the front of segment [segmentIndex]
+  /// for [channelName], trimming the corresponding cached FlSpots and adjusting
+  /// [lastProcessedIndex] so incremental cache builds remain correct.
+  ///
+  /// If the segment is fully consumed or not yet cached, it is dropped entirely.
+  /// Entire-segment removals ([segmentsRemoved] > 0) are handled by removing
+  /// those segments from both [spots] and [lastProcessedIndex].
+  void trimFront({
+    required String channelName,
+    required int segmentsRemoved,
+    required int pointsRemovedFromNextSegment,
+    required int remainingPointsInNextSegment,
+  }) {
+    if (!spots.containsKey(channelName)) return;
+
+    final channelSpots = spots[channelName]!;
+    final channelIdx = lastProcessedIndex[channelName]!;
+
+    // Drop fully-removed segments from the front.
+    if (segmentsRemoved > 0) {
+      final toDrop = segmentsRemoved.clamp(0, channelSpots.length);
+      channelSpots.removeRange(0, toDrop);
+      channelIdx.removeRange(0, toDrop);
+    }
+
+    // Trim points from the front of the next segment (now index 0).
+    if (pointsRemovedFromNextSegment > 0 && channelSpots.isNotEmpty) {
+      final segSpots = channelSpots[0];
+      // The ratio of spots-per-raw-point may not be 1:1 after reduction,
+      // so compute the proportion of spots to drop.
+      final totalRaw =
+          pointsRemovedFromNextSegment + remainingPointsInNextSegment;
+      if (totalRaw > 0 && segSpots.isNotEmpty) {
+        final spotsToDrop =
+            ((pointsRemovedFromNextSegment / totalRaw) * segSpots.length)
+                .floor();
+        if (spotsToDrop >= segSpots.length) {
+          segSpots.clear();
+          channelIdx[0] = -1;
+        } else if (spotsToDrop > 0) {
+          segSpots.removeRange(0, spotsToDrop);
+        }
+      }
+      // After a purge the raw points array has been compacted: index 0 is now
+      // what was index [pointsRemovedFromNextSegment].  Set lastProcessedIndex
+      // to the last valid index in the compacted array so the next toSpots call
+      // only appends truly new points rather than re-scanning from a stale
+      // position that is now out of range.
+      channelIdx[0] = remainingPointsInNextSegment - 1;
+    }
+
+    // Recount totalPoints from what actually remains in the cache.
+    totalPoints = 0;
+    for (final segs in spots.values) {
+      for (final seg in segs) {
+        totalPoints += seg.length;
+      }
+    }
+    reducedPoints = null;
+    _resetCache = false;
+  }
+
   void clearAll() {
     spots.clear();
     lastProcessedIndex.clear();
     _lastNormalizedLimits.clear();
+    _renderStride.clear();
 
     _spotsMinX = null;
     _spotsMaxX = null;
@@ -616,5 +729,6 @@ class FlchartCache {
     lastProcessedIndex.remove(channelName);
     tempSpot.remove(channelName);
     _lastNormalizedLimits.remove(channelName);
+    _renderStride.remove(channelName);
   }
 }
