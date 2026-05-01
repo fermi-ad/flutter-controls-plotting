@@ -731,4 +731,46 @@ class FlchartCache {
     _lastNormalizedLimits.remove(channelName);
     _renderStride.remove(channelName);
   }
+
+  /// For array mode: drops every cached segment that is NOT in [keepSegments]
+  /// for each channel. This prevents unbounded accumulation of waveform
+  /// segments in the cache when only one (or a few) are ever displayed.
+  ///
+  /// [keepSegments] maps channelName → set of segment indices to retain.
+  /// Any channel not present in [keepSegments] is left untouched.
+  void retainSegments(Map<String, List<int>> keepSegments) {
+    for (final entry in keepSegments.entries) {
+      final channelName = entry.key;
+      final keep = entry.value;
+      if (!spots.containsKey(channelName)) continue;
+
+      final channelSpots = spots[channelName]!;
+      final channelIdx = lastProcessedIndex[channelName]!;
+
+      // Build compacted lists containing only the kept segments.
+      final newSpots = <List<PlottingFlSpot>>[];
+      final newIdx = <int>[];
+      for (var i = 0; i < channelSpots.length; i++) {
+        if (keep.contains(i)) {
+          newSpots.add(channelSpots[i]);
+          newIdx.add(channelIdx[i]);
+        }
+      }
+
+      channelSpots
+        ..clear()
+        ..addAll(newSpots);
+      channelIdx
+        ..clear()
+        ..addAll(newIdx);
+    }
+
+    // Recount totalPoints after eviction.
+    totalPoints = 0;
+    for (final segs in spots.values) {
+      for (final seg in segs) {
+        totalPoints += seg.length;
+      }
+    }
+  }
 }

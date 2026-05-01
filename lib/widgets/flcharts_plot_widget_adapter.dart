@@ -511,6 +511,13 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
       }
     });
 
+    // For array mode, evict cached segments that are no longer displayed.
+    // Without this, every incoming waveform adds a new cached segment and
+    // the cache grows without bound — causing the memory leak and CPU cost.
+    if (possibleSkippedSegments && displayedSegments.isNotEmpty) {
+      cache.retainSegments(displayedSegments);
+    }
+
     // Verify if points reduction should be performed.
     int? reducedPoints = cache.reduceSpots(
       displayedSegments: displayedSegments,
