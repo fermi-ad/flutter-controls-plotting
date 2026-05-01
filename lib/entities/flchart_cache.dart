@@ -468,13 +468,11 @@ class FlchartCache {
           var spotsPercentage = segSpots.length / numberOfPoints;
           var maxSpots = (minimumPointsNeeded * spotsPercentage).ceil();
           maxSpots = max(minimumPointsPerSegment, maxSpots);
-          // Compute stride so the rendered point count >= maxSpots.
-          // Use floor so we never render *fewer* than maxSpots points.
-          // ceil would give a stride too large, dropping below the target.
+          // Compute stride so the rendered point count ≈ maxSpots.
           // Cache is NOT mutated — stride is applied at render time in toSpots.
           final stride = segSpots.length <= maxSpots
               ? 1
-              : max(1, (segSpots.length / maxSpots).floor());
+              : (segSpots.length / maxSpots).ceil();
           _renderStride[channelName]![segmentIndex] = stride;
           reducedPoints = reducedPoints! + (segSpots.length / stride).ceil();
         }
