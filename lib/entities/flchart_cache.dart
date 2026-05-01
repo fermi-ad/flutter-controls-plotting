@@ -274,6 +274,16 @@ class FlchartCache {
 
     totalPoints += newSpots.length;
 
+    // If the new batch of spots begins at or before the last cached spot's x,
+    // the source data has refreshed (e.g. array-as-timeseries delivering a full
+    // new waveform).  Discard the stale cache so we don't accumulate every
+    // historical waveform snapshot in the spot list.
+    if (flSpots.isNotEmpty &&
+        newSpots.isNotEmpty &&
+        newSpots.first.x <= flSpots.last.x) {
+      flSpots.clear();
+    }
+
     flSpots.addAll(newSpots);
 
     if (skipLastPoint && points.isNotEmpty) {
