@@ -1,5 +1,5 @@
 # Use NGINX as the base image
-FROM nginx:1.23
+FROM nginx:1.30
 
 # Copy built web files to container
 COPY ./build/web /usr/share/nginx/html
