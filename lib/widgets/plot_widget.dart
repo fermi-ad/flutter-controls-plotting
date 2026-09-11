@@ -599,11 +599,11 @@ class PlotState extends State<PlotWidget> {
         final chMetadata = widget.plotChannels[channelName];
         final chStatus = chMetadata?.channelStatus;
         if (channelHasError(chData)) {
-          chStatus?.setError(chData.status, chData.statusString);
+          chStatus?.setError(chData.status);
           errorChNames ??= {};
           errorChNames.add(channelName);
         } else if (channelHasWarning(chData)) {
-          chStatus?.setWarning(chData.status, chData.statusString);
+          chStatus?.setWarning(chData.status);
         } else {
           chStatus?.clearError();
         }

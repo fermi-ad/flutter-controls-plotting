@@ -202,8 +202,8 @@ class PlotData {
         if (deviceValue is DevTimeSeries) {
           points[0].add(
             PlottingPoint(
-              x: deviceValue.values[0].$1,
-              y: deviceValue.values[0].$2,
+              x: deviceValue.value[0].$1,
+              y: deviceValue.value[0].$2,
               t: t,
             ),
           );
