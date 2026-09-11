@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_gql_acsys/flutter_gql_acsys.dart';
 
 abstract class PlotDAQService {
   Stream<PlotReply> retrievePlot(

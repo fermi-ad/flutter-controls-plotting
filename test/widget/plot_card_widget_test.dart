@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_gql_acsys/flutter_gql_acsys.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
 import 'package:flutter_controls_plotting/service/fake_acsys_service.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';

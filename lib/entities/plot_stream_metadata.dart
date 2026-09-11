@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_gql_acsys/flutter_gql_acsys.dart';
 
 class PlotStreamMetadata extends ChangeNotifier {
   ConnectionState? _lastConnectionState;

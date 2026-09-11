@@ -1,4 +1,4 @@
-import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_gql_acsys/flutter_gql_acsys.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
 class FakeACSysService implements ACSysServiceAPI {
