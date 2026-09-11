@@ -159,7 +159,5 @@ class FakeACSysService implements ACSysServiceAPI {
   }
 
   @override
-  Future<void> dispose() {
-    throw UnimplementedError();
-  }
+  Future<void> dispose() async {}
 }
