@@ -1,43 +1,45 @@
 import 'package:flutter/material.dart';
 
-/// Styling for a named segment in a device bar.
-class BarSegmentStyle {
-  final Color color;
-  final Color? borderColor;
-  final double? borderWidth;
-
-  const BarSegmentStyle({
-    required this.color,
-    this.borderColor,
-    this.borderWidth,
-  });
-}
-
-/// Renderer-neutral presentation settings for device bars.
+/// Renderer-neutral presentation settings for device bar groups.
+///
+/// This library renders whatever segments the caller supplies for each
+/// device — it does not derive additional segments or interpret their
+/// meaning. [BarChartStyle] only controls layout and the color used when
+/// a segment or device does not specify its own color.
 class BarChartStyle {
-  final Map<String, BarSegmentStyle> segmentStyles;
-  final BarSegmentStyle defaultSegmentStyle;
+  /// Fixed lower Y bound, or `null` to auto-scale from the data.
   final double? minY;
+
+  /// Fixed upper Y bound, or `null` to auto-scale from the data.
   final double? maxY;
+
+  /// Whether axis titles (device names, Y labels) are shown.
   final bool showTitles;
-  final double rodWidth;
+
+  /// Width of each individual segment's bar.
+  final double segmentWidth;
+
+  /// Spacing between segments within the same device's group.
+  final double segmentSpace;
+
+  /// Spacing between different devices' groups.
+  final double groupSpace;
+
+  /// Corner rounding applied to each segment's bar.
   final BorderRadius borderRadius;
 
+  /// Fallback color used for a segment when neither the segment itself nor
+  /// a `colorForDevice`/`colorForSegment` callback supplies one.
+  final Color defaultColor;
+
   const BarChartStyle({
-    this.segmentStyles = const {
-      'current': BarSegmentStyle(color: Color(0xFF2196F3)),
-      'reference': BarSegmentStyle(color: Color(0xFF9E9E9E)),
-      'higher': BarSegmentStyle(color: Color(0xFFF44336)),
-      'lower': BarSegmentStyle(color: Color(0xFF4CAF50)),
-    },
-    this.defaultSegmentStyle = const BarSegmentStyle(color: Color(0xFF2196F3)),
     this.minY,
     this.maxY,
     this.showTitles = true,
-    this.rodWidth = 18,
+    this.segmentWidth = 18,
+    this.segmentSpace = 4,
+    this.groupSpace = 12,
     this.borderRadius = BorderRadius.zero,
+    this.defaultColor = const Color(0xFF2196F3),
   });
-
-  BarSegmentStyle styleFor(String key) =>
-      segmentStyles[key] ?? defaultSegmentStyle;
 }
