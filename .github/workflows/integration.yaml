@@ -46,7 +46,7 @@ jobs:
       #  run: flutter test test/unit
 
       - name: Running widget tests
-        run:  flutter test test/widget
+        run: flutter test test/widget
 
       - name: Building web application
         run: flutter build web
@@ -59,13 +59,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test: 
+        test:
           - demo_test
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - uses: subosito/flutter-action@v2
         with:
           channel: "stable"
@@ -76,11 +76,9 @@ jobs:
         uses: browser-actions/setup-chrome@v1
         with:
           chrome-version: beta
-      
+
       - name: Installing chromedriver (needed for acceptance tests)
-        uses: nanasess/setup-chromedriver@v2
-        with:
-          chromedriver-version: "148.0.7778.5"
+        uses: nanasess/setup-chromedriver@v3
 
       - name: Generate a token
         id: generate-token
