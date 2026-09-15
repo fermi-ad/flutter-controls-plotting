@@ -1,4 +1,4 @@
-part of plotadapter;
+part of 'plot_widget_adapter.dart';
 
 class GraphicPlotWidgetAdapter extends PlotWidgetAdapter {
   GraphicPlotWidgetAdapter({required super.plotWidget, super.plotReply});

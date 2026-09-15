@@ -1,4 +1,4 @@
-part of plotadapter;
+part of 'plot_widget_adapter.dart';
 
 class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
   final bool isShowLabels;

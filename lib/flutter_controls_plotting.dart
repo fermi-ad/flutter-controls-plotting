@@ -8,7 +8,7 @@
 ///
 /// Renderer-specific adapters remain private implementation details so the
 /// plotting library can change without requiring consumer changes.
-library flutter_controls_plotting;
+library;
 
 export 'entities/bar_acquisition_options.dart';
 export 'entities/bar_chart_controller.dart';

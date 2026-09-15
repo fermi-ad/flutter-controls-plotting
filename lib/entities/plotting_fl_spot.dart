@@ -4,10 +4,7 @@ class PlottingFlSpot extends FlSpot {
   final double originalY;
   final double? _normalizedY;
 
-  const PlottingFlSpot(double x, double y)
-    : originalY = y,
-      _normalizedY = null,
-      super(x, y);
+  const PlottingFlSpot(super.x, super.y) : originalY = y, _normalizedY = null;
 
   const PlottingFlSpot._normalized(
     double x,
