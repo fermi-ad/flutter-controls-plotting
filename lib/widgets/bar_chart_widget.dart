@@ -1,43 +1,54 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
-import 'package:flutter_controls_plotting/entities/channel_metadata.dart';
 import 'package:flutter_controls_plotting/entities/bar_acquisition_options.dart';
 import 'package:flutter_controls_plotting/entities/bar_chart_controller.dart';
 import 'package:flutter_controls_plotting/entities/bar_chart_model.dart';
 import 'package:flutter_controls_plotting/entities/bar_chart_style.dart';
-import 'package:flutter_controls_plotting/entities/bar_segment_policy.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 import 'package:flutter_controls_plotting/widgets/bar_chart_adapter.dart';
 import 'package:flutter_controls_plotting/widgets/fl_chart_bar_adapter.dart';
 
 /// Displays the latest streamed reading for each device as categorical bars.
 ///
-/// Each entry in [devices] defines one stable category on the X axis. The
-/// latest valid reading for that device is rendered as its current bar value.
-/// If a reference is supplied through [controller], the adapter renders one
-/// stacked bar: the reference portion is neutral, a higher-than-reference
-/// portion is red, and a lower-than-reference portion is green.
+/// Each entry in [devices] defines one stable category on the X axis. Each
+/// device is rendered as a group of one or more independent bars — one per
+/// named segment supplied through [controller]. This widget has no notion of
+/// "reference" or "comparison" values; callers that want that behavior can
+/// add named segments (e.g. `reading`, `setpoint`) via the controller and
+/// style/label them accordingly.
+///
+/// The concrete charting library used to render the bars (currently
+/// [`fl_chart`](https://pub.dev/packages/fl_chart)) is an internal
+/// implementation detail behind [BarChartAdapter] and is not part of this
+/// widget's public API.
 class BarChartWidget extends StatefulWidget {
-  /// Devices to request and display, in map iteration order.
-  final Map<String, ChannelMetadata> devices;
+  /// Devices to request and display, in list order.
+  final List<String> devices;
 
   /// Service that supplies the streamed device readings.
   final PlotDAQService daqService;
 
-  /// Optional controller for references and externally observed chart state.
+  /// Optional controller for adding/updating segments and observing
+  /// externally the latest chart state. When supplied, [style] and
+  /// [colorForDevice] are ignored — the controller owns its own style and
+  /// color resolution, set when it was constructed.
   final BarChartController? controller;
 
   /// DAQ settings for the stream-driven chart.
   final BarAcquisitionOptions acquisition;
 
-  /// Renderer-neutral presentation settings, including segment colors.
+  /// Renderer-neutral presentation settings. Ignored when [controller] is
+  /// supplied.
   final BarChartStyle style;
 
-  /// Converts named values into ordered visual segments.
-  final BarSegmentPolicy segmentPolicy;
+  /// Resolves the color for a device's streamed segment. Falls back to
+  /// [BarChartStyle.defaultColor] when not supplied. Ignored when
+  /// [controller] is supplied.
+  final Color Function(String device)? colorForDevice;
 
-  /// Called after the controller receives a new reply or reference update.
+  /// Called after the controller receives a new reply or segment update.
   final void Function(BarChartModel data)? onDataChanged;
 
   /// Called when acquisition or stream processing reports an error.
@@ -50,7 +61,7 @@ class BarChartWidget extends StatefulWidget {
     this.controller,
     this.acquisition = const BarAcquisitionOptions(),
     this.style = const BarChartStyle(),
-    this.segmentPolicy = const ReferenceDeltaSegmentPolicy(),
+    this.colorForDevice,
     this.onDataChanged,
     this.onError,
   });
@@ -61,6 +72,7 @@ class BarChartWidget extends StatefulWidget {
 
 class _BarChartWidgetState extends State<BarChartWidget> {
   late BarChartController _controller;
+  bool _ownsController = false;
   final BarChartAdapter _adapter = const FlChartBarAdapter();
   StreamSubscription? _subscription;
   Object? _error;
@@ -87,32 +99,58 @@ class _BarChartWidgetState extends State<BarChartWidget> {
   @override
   void didUpdateWidget(BarChartWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final devicesChanged =
-        oldWidget.devices.keys.toList().toString() !=
-        widget.devices.keys.toList().toString();
-    if (devicesChanged || oldWidget.daqService != widget.daqService) {
+
+    if (oldWidget.controller != widget.controller) {
       _subscription?.cancel();
+      _detachController(oldWidget.controller);
       _createController();
       _startStream();
+      return;
+    }
+
+    final devicesChanged = !listEquals(oldWidget.devices, widget.devices);
+    if (devicesChanged || oldWidget.daqService != widget.daqService) {
+      if (_ownsController) {
+        _subscription?.cancel();
+        _detachController(oldWidget.controller);
+        _createController();
+        _startStream();
+      }
+      // When an external controller is supplied, changing the device list
+      // is unsupported: the controller's device set is fixed at
+      // construction time. Recreate the controller externally if the
+      // device list needs to change.
     }
   }
 
   @override
   void dispose() {
     _subscription?.cancel();
+    _detachController(widget.controller);
     super.dispose();
   }
 
   void _createController() {
+    _ownsController = widget.controller == null;
     _controller =
         widget.controller ??
         BarChartController(
-          deviceNames: widget.devices.keys,
-          colorForDevice: (device) =>
-              widget.devices[device]!.channelSetting.lineColor ?? Colors.blue,
-          segmentPolicy: widget.segmentPolicy,
+          deviceNames: widget.devices,
+          colorForDevice: widget.colorForDevice,
           style: widget.style,
         );
+    _controller.addListener(_handleControllerChanged);
+  }
+
+  void _detachController(BarChartController? previous) {
+    (previous ?? _controller).removeListener(_handleControllerChanged);
+    if (_ownsController) {
+      _controller.dispose();
+    }
+  }
+
+  void _handleControllerChanged() {
+    widget.onDataChanged?.call(_controller.data);
   }
 
   void _startStream() {
@@ -120,7 +158,7 @@ class _BarChartWidgetState extends State<BarChartWidget> {
     try {
       final stream = widget.daqService.retrievePlot(
         context,
-        forChannels: widget.devices.keys.toSet(),
+        forChannels: widget.devices.toSet(),
         updateDelay: widget.acquisition.updateDelay,
         nAcquisitions: widget.acquisition.nAcquisitions,
         startTime: widget.acquisition.startTime,
@@ -133,7 +171,6 @@ class _BarChartWidgetState extends State<BarChartWidget> {
           _controller.applyReply(reply);
           if (!mounted) return;
           setState(() => _error = null);
-          widget.onDataChanged?.call(_controller.data);
         },
         onError: (Object error, StackTrace stackTrace) {
           if (!mounted) return;
@@ -147,26 +184,21 @@ class _BarChartWidgetState extends State<BarChartWidget> {
     }
   }
 
-  void setReference(String device, double value) {
-    _controller.setReference(device: device, value: value);
-    if (mounted) setState(() {});
-    widget.onDataChanged?.call(_controller.data);
-  }
-
-  void clearReference({String? device}) {
-    _controller.clearReference(device: device);
-    if (mounted) setState(() {});
-    widget.onDataChanged?.call(_controller.data);
-  }
-
   @override
   Widget build(BuildContext context) {
     if (widget.devices.isEmpty) {
       return const Center(child: Text('No devices selected'));
     }
-    if (_error != null && _controller.data.valuesByDevice.isEmpty) {
-      return Center(child: Text('Unable to acquire device readings: $_error'));
-    }
-    return _adapter.build(context, _controller.data);
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) {
+        if (_error != null && _controller.data.segmentsByDevice.isEmpty) {
+          return Center(
+            child: Text('Unable to acquire device readings: $_error'),
+          );
+        }
+        return _adapter.build(context, _controller.data);
+      },
+    );
   }
 }
