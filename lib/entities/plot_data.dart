@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_gql_acsys/flutter_gql_acsys.dart';
 import 'package:flutter_controls_plotting/entities/channel_metadata.dart';
 import 'package:flutter_controls_plotting/entities/plotting_point.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
@@ -202,8 +202,8 @@ class PlotData {
         if (deviceValue is DevTimeSeries) {
           points[0].add(
             PlottingPoint(
-              x: deviceValue.values[0].$1,
-              y: deviceValue.values[0].$2,
+              x: deviceValue.value[0].$1,
+              y: deviceValue.value[0].$2,
               t: t,
             ),
           );

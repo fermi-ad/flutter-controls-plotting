@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_gql_acsys/flutter_gql_acsys.dart';
 import 'package:flutter_controls_plotting/entities/channel_metadata.dart';
 import 'package:flutter_controls_plotting/entities/plotting_point.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
@@ -434,7 +434,7 @@ class PlotState extends State<PlotWidget> {
     _updateDelay = widget.updateDelay;
     _sampleOnEvent = widget.sampleOnEvent;
     _waveformDuration = widget.waveformDuration;
-    
+
     _triggerEvent = widget.triggerEvent;
     _nAcquisitions = widget.nAcquisitions;
     var apiAcquisitions = _nAcquisitions;
@@ -521,7 +521,9 @@ class PlotState extends State<PlotWidget> {
         widget.onPlotUpdate?.call(plotReplyList[i]);
 
         if ((i + 1) % chunkSize == 0) {
-          await Future.delayed(Duration.zero); // yield to event loop between chunks
+          await Future.delayed(
+            Duration.zero,
+          ); // yield to event loop between chunks
         }
       }
       plotReplyList.clear();
@@ -597,11 +599,11 @@ class PlotState extends State<PlotWidget> {
         final chMetadata = widget.plotChannels[channelName];
         final chStatus = chMetadata?.channelStatus;
         if (channelHasError(chData)) {
-          chStatus?.setError(chData.status, chData.statusString);
+          chStatus?.setError(chData.status);
           errorChNames ??= {};
           errorChNames.add(channelName);
         } else if (channelHasWarning(chData)) {
-          chStatus?.setWarning(chData.status, chData.statusString);
+          chStatus?.setWarning(chData.status);
         } else {
           chStatus?.clearError();
         }

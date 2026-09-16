@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'package:flutter_gql_acsys/flutter_gql_acsys.dart';
 
 abstract class PlotDAQService {
   Stream<PlotReply> retrievePlot(
@@ -92,7 +93,6 @@ class StandardPlotDAQ implements PlotDAQService {
           sampleOnEvent: sampleOnEvent,
           nAcquisitions: nAcquisitions == 0 ? null : nAcquisitions,
           chXAxis: chXAxis,
-          waveformDuration: waveformDuration,
         ),
       );
     }
@@ -537,7 +537,6 @@ class StandardPlotDAQ implements PlotDAQService {
             PlotChannelData newChannel;
 
             int status = 0;
-            String? statusString;
             String? units;
 
             if (data != null) {
@@ -547,17 +546,14 @@ class StandardPlotDAQ implements PlotDAQService {
               status = -1;
 
               if (forChannel == GenPlots.statusError.name) {
-                statusString = "Generated Error Message Channel";
                 status = -123;
               } else if (forChannel == GenPlots.statusIntError.name) {
-                statusString = "Intermittent error simulation channel";
                 status = -456;
               }
             }
 
             // Simulate warning channel with data.
             if (forChannel == GenPlots.statusWarn.name) {
-              statusString = "Signal value is delayed";
               status = 1; // Positive status for warning
             }
 
@@ -565,7 +561,6 @@ class StandardPlotDAQ implements PlotDAQService {
               name: forChannel,
               units: units ?? "",
               rate: chRate,
-              statusString: statusString,
               status: status,
               points: data ?? const [],
             );
@@ -624,7 +619,9 @@ class StandardPlotDAQ implements PlotDAQService {
     if (forChannel == GenPlots.constant.name) {
       data = [
         PlotPoint(
-          value: DevScalarArray(List.generate(500, (i) => 5)),
+          value: DevScalarArray(
+            Float64List.fromList(List.generate(500, (i) => 5)),
+          ),
           t: currentEpochTime,
         ),
       ];
@@ -633,14 +630,20 @@ class StandardPlotDAQ implements PlotDAQService {
       var constant = rand.nextInt(25);
       data = [
         PlotPoint(
-          value: DevScalarArray(List.generate(500, (i) => constant.toDouble())),
+          value: DevScalarArray(
+            Float64List.fromList(
+              List.generate(500, (i) => constant.toDouble()),
+            ),
+          ),
           t: currentEpochTime,
         ),
       ];
     } else if (forChannel == GenPlots.ramp.name) {
       data = [
         PlotPoint(
-          value: DevScalarArray(List.generate(500, (i) => i.toDouble())),
+          value: DevScalarArray(
+            Float64List.fromList(List.generate(500, (i) => i.toDouble())),
+          ),
           t: currentEpochTime,
         ),
       ];
@@ -662,7 +665,9 @@ class StandardPlotDAQ implements PlotDAQService {
         data = [
           PlotPoint(
             value: DevScalarArray(
-              List.generate(500, (i) => i + (rand.nextInt(50) - 25)),
+              Float64List.fromList(
+                List.generate(500, (i) => i + (rand.nextInt(50) - 25)),
+              ),
             ),
             t: currentEpochTime,
           ),
@@ -798,7 +803,9 @@ class StandardPlotDAQ implements PlotDAQService {
       data = [
         PlotPoint(
           value: DevScalarArray(
-            List.generate(501, (i) => pow(i - 250, 2).toDouble()),
+            Float64List.fromList(
+              List.generate(501, (i) => pow(i - 250, 2).toDouble()),
+            ),
           ),
           t: currentEpochTime,
         ),
@@ -807,7 +814,9 @@ class StandardPlotDAQ implements PlotDAQService {
       data = [
         PlotPoint(
           value: DevScalarArray(
-            List.generate(65535, (i) => pow(i - 32767, 2).toDouble()),
+            Float64List.fromList(
+              List.generate(65535, (i) => pow(i - 32767, 2).toDouble()),
+            ),
           ),
           t: currentEpochTime,
         ),
@@ -816,7 +825,9 @@ class StandardPlotDAQ implements PlotDAQService {
       data = [
         PlotPoint(
           value: DevScalarArray(
-            List.generate(32767, (i) => pow(i - 16383, 2).toDouble()),
+            Float64List.fromList(
+              List.generate(32767, (i) => pow(i - 16383, 2).toDouble()),
+            ),
           ),
           t: currentEpochTime,
         ),
@@ -825,7 +836,9 @@ class StandardPlotDAQ implements PlotDAQService {
       data = [
         PlotPoint(
           value: DevScalarArray(
-            List.generate(501, (i) => sin((i - 250) / 500 * 6.28).toDouble()),
+            Float64List.fromList(
+              List.generate(501, (i) => sin((i - 250) / 500 * 6.28).toDouble()),
+            ),
           ),
           t: currentEpochTime,
         ),
@@ -834,10 +847,12 @@ class StandardPlotDAQ implements PlotDAQService {
       data = [
         PlotPoint(
           value: DevScalarArray(
-            List.generate(
-              65535,
-              (i) => ((sin((i - 32767) / 65535 * 6.28) + 1) / 2 * 1073676289)
-                  .toDouble(),
+            Float64List.fromList(
+              List.generate(
+                65535,
+                (i) => ((sin((i - 32767) / 65535 * 6.28) + 1) / 2 * 1073676289)
+                    .toDouble(),
+              ),
             ),
           ),
           t: currentEpochTime,
@@ -847,10 +862,12 @@ class StandardPlotDAQ implements PlotDAQService {
       data = [
         PlotPoint(
           value: DevScalarArray(
-            List.generate(
-              32767,
-              (i) => ((sin((i - 16383) / 32767 * 6.28) + 1) / 2 * 268402689)
-                  .toDouble(),
+            Float64List.fromList(
+              List.generate(
+                32767,
+                (i) => ((sin((i - 16383) / 32767 * 6.28) + 1) / 2 * 268402689)
+                    .toDouble(),
+              ),
             ),
           ),
           t: currentEpochTime,
@@ -860,12 +877,14 @@ class StandardPlotDAQ implements PlotDAQService {
       data = [
         PlotPoint(
           value: DevScalarArray(
-            List.generate(
-              500,
-              (i) =>
-                  (pow(500, 2) / 4) *
-                  pow(e, -(pow(i - 250, 2) / (2 * pow(50, 2)))).toDouble() /
-                  (50 * sqrt(2 * pi)),
+            Float64List.fromList(
+              List.generate(
+                500,
+                (i) =>
+                    (pow(500, 2) / 4) *
+                    pow(e, -(pow(i - 250, 2) / (2 * pow(50, 2)))).toDouble() /
+                    (50 * sqrt(2 * pi)),
+              ),
             ),
           ),
           t: currentEpochTime,

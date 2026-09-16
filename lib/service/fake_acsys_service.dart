@@ -1,4 +1,6 @@
-import 'package:flutter_controls_core/flutter_controls_core.dart';
+import 'dart:typed_data';
+
+import 'package:flutter_gql_acsys/flutter_gql_acsys.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 
 class FakeACSysService implements ACSysServiceAPI {
@@ -7,30 +9,19 @@ class FakeACSysService implements ACSysServiceAPI {
   int? startPlotnAcquistions;
 
   @override
-  Future<List<DeviceInfo>> getDeviceInfo(List<String> devices) =>
-      throw UnimplementedError();
-
-  @override
   Stream<AnalogAlarmStatus> monitorAnalogAlarmProperty(List<String> drfs) =>
       throw UnimplementedError();
 
   @override
-  Stream<Reading> monitorDevices(List<String> drfs) =>
-      throw UnimplementedError();
-
-  @override
-  Stream<DigitalStatus> monitorDigitalStatusDevices(List<String> devices) =>
-      throw UnimplementedError();
-
-  @override
-  Stream<Reading> monitorSettingProperty(List<String> drfs) =>
-      throw UnimplementedError();
-
-  @override
-  Future<SettingStatus> sendCommand({
-    required String toDRF,
-    required String value,
+  Stream<Reading> monitorDevices(
+    List<String> drfs, {
+    DateTime? endTime,
+    DateTime? startTime,
   }) => throw UnimplementedError();
+
+  @override
+  Future<Status> sendCommand({required String toDRF, required String value}) =>
+      throw UnimplementedError();
 
   @override
   Stream<PlotReply> startPlot(
@@ -70,7 +61,9 @@ class FakeACSysService implements ACSysServiceAPI {
                 points: [
                   PlotPoint(
                     t: getCurrentAcsysEpochTime(),
-                    value: DevScalarArray(List.generate(500, (i) => 5)),
+                    value: DevScalarArray(
+                      Float64List.fromList(List.generate(500, (i) => 5)),
+                    ),
                   ),
                 ],
               ),
@@ -102,7 +95,7 @@ class FakeACSysService implements ACSysServiceAPI {
   }
 
   @override
-  Future<SettingStatus> submit({
+  Future<Status> submit({
     required String forDRF,
     required DeviceValue newSetting,
   }) => throw UnimplementedError();
@@ -156,12 +149,15 @@ class FakeACSysService implements ACSysServiceAPI {
   }
 
   @override
-  Stream<AlarmMessage> monitorAlarms() {
+  Stream<Alarm> monitorAlarms() {
     throw UnimplementedError();
   }
 
   @override
-  Future<List<AlarmMessage>> getAlarmsSnapshot() {
+  Future<List<Alarm>> getAlarmsSnapshot() {
     throw UnimplementedError();
   }
+
+  @override
+  Future<void> dispose() async {}
 }
