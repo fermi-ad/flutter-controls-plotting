@@ -35,7 +35,7 @@ dependencies:
     git:
       url: https://github.com/fermi-ad/flutter-controls-core.git
       tag_pattern: v{{version}}
-    version: ^1.3.0
+    version: ^1.4.0
 
   flutter_gql_acsys:
     git:
