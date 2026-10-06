@@ -38,33 +38,29 @@ class BarSegment {
   const BarSegment({
     required this.key,
     required this.label,
-    required double value,
+    required this.value,
     required this.color,
     this.timestamp,
-  }) : value = value,
-       start = null,
+  }) : start = null,
        end = null;
 
   const BarSegment.additive({
     required this.key,
     required this.label,
-    required double value,
+    required this.value,
     required this.color,
     this.timestamp,
-  }) : value = value,
-       start = null,
+  }) : start = null,
        end = null;
 
   const BarSegment.range({
     required this.key,
     required this.label,
-    required double start,
-    required double end,
+    required this.start,
+    required this.end,
     required this.color,
     this.timestamp,
-  }) : value = null,
-       start = start,
-       end = end;
+  }) : value = null;
 
   /// Whether this segment contributes a value to the preceding segment end.
   bool get isAdditive => value != null;
