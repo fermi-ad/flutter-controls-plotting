@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gql_acsys/flutter_gql_acsys.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_controls_plotting/entities/bar_chart_model.dart';
+import 'package:flutter_controls_plotting/entities/bar_chart_style.dart';
 
 void main() {
   group('BarChartReducer', () {
@@ -130,6 +131,97 @@ void main() {
         reducer.data.segmentFor('A', 'value')!.color,
         reducer.style.defaultColor,
       );
+    });
+
+    test('resolves additive segments into contiguous stack intervals', () {
+      final reducer = BarChartReducer(
+        deviceNames: ['A'],
+        style: const BarChartStyle(layout: BarChartLayout.stacked),
+      );
+      reducer.setSegment(device: 'A', key: 'first', label: 'First', value: 2);
+      reducer.setSegment(device: 'A', key: 'second', label: 'Second', value: 3);
+
+      final resolved = reducer.data.resolvedStackFor('A');
+      expect(resolved.map((segment) => segment.start), [0, 2]);
+      expect(resolved.map((segment) => segment.end), [2, 5]);
+    });
+
+    test('accepts an explicit range contiguous with an additive segment', () {
+      final reducer = BarChartReducer(
+        deviceNames: ['A'],
+        style: const BarChartStyle(layout: BarChartLayout.stacked),
+      );
+      reducer.setSegment(device: 'A', key: 'first', label: 'First', value: 2);
+      reducer.setRangeSegment(
+        device: 'A',
+        key: 'second',
+        label: 'Second',
+        start: 2,
+        end: 7,
+      );
+
+      final resolved = reducer.data.resolvedStackFor('A');
+      expect(resolved.map((segment) => segment.start), [0, 2]);
+      expect(resolved.map((segment) => segment.end), [2, 7]);
+    });
+
+    test('rejects a gapped or overlapping stacked range without mutation', () {
+      final reducer = BarChartReducer(
+        deviceNames: ['A'],
+        style: const BarChartStyle(layout: BarChartLayout.stacked),
+      );
+      reducer.setSegment(device: 'A', key: 'first', label: 'First', value: 2);
+
+      expect(
+        () => reducer.setRangeSegment(
+          device: 'A',
+          key: 'gap',
+          label: 'Gap',
+          start: 3,
+          end: 4,
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => reducer.setRangeSegment(
+          device: 'A',
+          key: 'overlap',
+          label: 'Overlap',
+          start: 1,
+          end: 4,
+        ),
+        throwsArgumentError,
+      );
+      expect(reducer.data.segmentsFor('A').map((segment) => segment.key), [
+        'first',
+      ]);
+    });
+
+    test('rejects reversed and non-finite stacked ranges without mutation', () {
+      final reducer = BarChartReducer(
+        deviceNames: ['A'],
+        style: const BarChartStyle(layout: BarChartLayout.stacked),
+      );
+      expect(
+        () => reducer.setRangeSegment(
+          device: 'A',
+          key: 'reversed',
+          label: 'Reversed',
+          start: 2,
+          end: 1,
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => reducer.setSegment(
+          device: 'A',
+          key: 'notFinite',
+          label: 'Not finite',
+          value: double.nan,
+        ),
+        throwsArgumentError,
+      );
+      expect(reducer.data.segmentsFor('A'), isEmpty);
     });
   });
 }

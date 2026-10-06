@@ -3,6 +3,19 @@ import 'package:flutter_controls_plotting/entities/bar_chart_style.dart';
 import 'package:flutter_controls_plotting/entities/bar_segment.dart';
 import 'package:flutter_gql_acsys/flutter_gql_acsys.dart';
 
+/// A verified interval for a segment in a stacked device bar.
+class ResolvedBarSegment {
+  final BarSegment segment;
+  final double start;
+  final double end;
+
+  const ResolvedBarSegment({
+    required this.segment,
+    required this.start,
+    required this.end,
+  });
+}
+
 /// Renderer-neutral state for categorical device bar groups.
 ///
 /// Device order is preserved from the device list supplied to the
@@ -54,6 +67,60 @@ class BarChartModel {
   List<BarSegment> segmentsFor(String device) =>
       segmentsByDevice[device] ?? const <BarSegment>[];
 
+  /// Resolves [device]'s segments into contiguous intervals for stacked
+  /// rendering.
+  ///
+  /// Additive segments begin at the preceding interval end. Explicit ranges
+  /// must begin at that same end. Invalid values, reversed ranges, overlaps,
+  /// and gaps throw [ArgumentError].
+  List<ResolvedBarSegment> resolvedStackFor(String device) =>
+      resolveStack(segmentsFor(device));
+
+  /// Resolves [segments] into verified contiguous intervals beginning at zero.
+  static List<ResolvedBarSegment> resolveStack(List<BarSegment> segments) {
+    const epsilon = 1e-9;
+    var previousEnd = 0.0;
+    final resolved = <ResolvedBarSegment>[];
+
+    for (final segment in segments) {
+      final double start;
+      final double end;
+      if (segment.isAdditive) {
+        final value = segment.value!;
+        if (!value.isFinite) {
+          throw ArgumentError.value(value, 'value', 'must be finite');
+        }
+        start = previousEnd;
+        end = start + value;
+      } else if (segment.isRange) {
+        start = segment.start!;
+        end = segment.end!;
+        if (!start.isFinite || !end.isFinite) {
+          throw ArgumentError('Range bounds must be finite.');
+        }
+        if (end < start) {
+          throw ArgumentError('Range end must not be less than its start.');
+        }
+        if ((start - previousEnd).abs() > epsilon) {
+          throw ArgumentError(
+            'Range start ($start) must equal the preceding segment end '
+            '($previousEnd).',
+          );
+        }
+      } else {
+        throw ArgumentError('A segment must be additive or an explicit range.');
+      }
+      if (!end.isFinite) {
+        throw ArgumentError.value(end, 'end', 'must be finite');
+      }
+      resolved.add(
+        ResolvedBarSegment(segment: segment, start: start, end: end),
+      );
+      previousEnd = end;
+    }
+    return List.unmodifiable(resolved);
+  }
+
   /// Returns one segment for [device] by its [key], if available.
   BarSegment? segmentFor(String device, String key) {
     final segments = segmentsByDevice[device];
@@ -101,9 +168,15 @@ class BarChartReducer {
     required Iterable<String> deviceNames,
     this.colorForDevice,
     this.style = const BarChartStyle(),
-  }) : deviceNames = List.unmodifiable(deviceNames);
+  }) : deviceNames = List.unmodifiable(deviceNames) {
+    _data = BarChartModel(
+      deviceNames: this.deviceNames,
+      segmentsByDevice: const {},
+      style: style,
+    );
+  }
 
-  BarChartModel _data = BarChartModel(deviceNames: [], segmentsByDevice: {});
+  late BarChartModel _data;
 
   /// Current renderer-neutral state.
   BarChartModel get data => _data;
@@ -158,6 +231,7 @@ class BarChartReducer {
       }
     }
 
+    _validateStackedSegments(nextSegments);
     _data = BarChartModel(
       deviceNames: deviceNames,
       segmentsByDevice: nextSegments,
@@ -203,7 +277,52 @@ class BarChartReducer {
     } else {
       segments.add(segment);
     }
+    _validateStackedSegments(next);
     _data = _data.copyWith(segmentsByDevice: next);
+  }
+
+  /// Sets (adds or replaces) a segment with an explicit interval.
+  ///
+  /// When the chart uses [BarChartLayout.stacked], [start] must be contiguous
+  /// with the preceding segment's resolved end.
+  void setRangeSegment({
+    required String device,
+    required String key,
+    required String label,
+    required double start,
+    required double end,
+    Color? color,
+  }) {
+    if (!deviceNames.contains(device)) return;
+    final next = <String, List<BarSegment>>{
+      for (final entry in _data.segmentsByDevice.entries)
+        entry.key: List<BarSegment>.from(entry.value),
+    };
+    final segments = next.putIfAbsent(device, () => []);
+    final index = segments.indexWhere((segment) => segment.key == key);
+    final segment = BarSegment.range(
+      key: key,
+      label: label,
+      start: start,
+      end: end,
+      color: color ?? _resolveColor(device),
+    );
+    if (index >= 0) {
+      segments[index] = segment;
+    } else {
+      segments.add(segment);
+    }
+    _validateStackedSegments(next);
+    _data = _data.copyWith(segmentsByDevice: next);
+  }
+
+  void _validateStackedSegments(
+    Map<String, List<BarSegment>> segmentsByDevice,
+  ) {
+    if (style.layout != BarChartLayout.stacked) return;
+    for (final segments in segmentsByDevice.values) {
+      BarChartModel.resolveStack(segments);
+    }
   }
 
   /// Removes the segment identified by [key] for [device]. When [key] is

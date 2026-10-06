@@ -1,5 +1,14 @@
 import 'package:flutter/material.dart';
 
+/// Determines how a device's segments are arranged.
+enum BarChartLayout {
+  /// Renders every segment as an independent rod next to the other segments.
+  grouped,
+
+  /// Renders all segments for a device as contiguous portions of one rod.
+  stacked,
+}
+
 /// Renderer-neutral presentation settings for device bar groups.
 ///
 /// This library renders whatever segments the caller supplies for each
@@ -15,6 +24,13 @@ class BarChartStyle {
 
   /// Whether axis titles (device names, Y labels) are shown.
   final bool showTitles;
+
+  /// Arrangement used to render the segments within each device group.
+  ///
+  /// [BarChartLayout.grouped] preserves the original behavior. In
+  /// [BarChartLayout.stacked] mode, every device's segments must resolve to
+  /// contiguous intervals with no overlaps or gaps.
+  final BarChartLayout layout;
 
   /// Width of each individual segment's bar.
   final double segmentWidth;
@@ -36,6 +52,7 @@ class BarChartStyle {
     this.minY,
     this.maxY,
     this.showTitles = true,
+    this.layout = BarChartLayout.grouped,
     this.segmentWidth = 18,
     this.segmentSpace = 4,
     this.groupSpace = 12,
