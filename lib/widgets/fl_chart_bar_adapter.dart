@@ -1,25 +1,37 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_plotting/entities/bar_chart_model.dart';
+import 'package:flutter_controls_plotting/entities/bar_chart_style.dart';
 import 'package:flutter_controls_plotting/entities/bar_segment.dart';
 import 'package:flutter_controls_plotting/widgets/bar_chart_adapter.dart';
 
 /// [`fl_chart`](https://pub.dev/packages/fl_chart) implementation for
-/// categorical, grouped device bars.
+/// categorical device bars.
 ///
-/// Each device is rendered as a group containing one independent bar per
-/// [BarSegment] the caller supplied — the adapter does not stack or derive
-/// segments, it simply renders what [BarChartModel] holds.
+/// [BarChartLayout.grouped] renders each [BarSegment] as an independent rod.
+/// [BarChartLayout.stacked] maps renderer-neutral resolved intervals to one
+/// fl_chart rod with contiguous stack items per device.
 class FlChartBarAdapter extends BarChartAdapter {
   const FlChartBarAdapter();
 
   @override
   Widget build(BuildContext context, BarChartModel data) {
-    final values = data.deviceNames
-        .expand(data.segmentsFor)
-        .map((segment) => segment.value)
-        .whereType<double>()
-        .toList();
+    final stackedSegments = data.style.layout == BarChartLayout.stacked
+        ? <String, List<ResolvedBarSegment>>{
+            for (final device in data.deviceNames)
+              device: data.resolvedStackFor(device),
+          }
+        : const <String, List<ResolvedBarSegment>>{};
+    final values = data.style.layout == BarChartLayout.stacked
+        ? stackedSegments.values
+              .expand((segments) => segments)
+              .expand((segment) => [segment.start, segment.end])
+              .toList()
+        : data.deviceNames
+              .expand(data.segmentsFor)
+              .map((segment) => segment.value)
+              .whereType<double>()
+              .toList();
     final calculatedMin = values.isEmpty
         ? 0.0
         : values.reduce((a, b) => a < b ? a : b);
@@ -44,7 +56,11 @@ class FlChartBarAdapter extends BarChartAdapter {
             BarChartGroupData(
               x: index,
               barsSpace: data.style.segmentSpace,
-              barRods: _barRodsFor(data, data.deviceNames[index]),
+              barRods: _barRodsFor(
+                data,
+                data.deviceNames[index],
+                stackedSegments[data.deviceNames[index]],
+              ),
             ),
         ],
         titlesData: FlTitlesData(
@@ -102,11 +118,27 @@ class FlChartBarAdapter extends BarChartAdapter {
           touchTooltipData: BarTouchTooltipData(
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               final device = data.deviceNames[group.x.toInt()];
+              final unit = data.unitsByDevice[device];
+              final suffix = unit == null || unit.isEmpty ? '' : ' $unit';
+              if (data.style.layout == BarChartLayout.stacked) {
+                final segments = stackedSegments[device] ?? const [];
+                if (segments.isEmpty) return null;
+                final lines = segments
+                    .map(
+                      (resolved) =>
+                          '${resolved.segment.label}: '
+                          '${resolved.start.toStringAsFixed(3)}–'
+                          '${resolved.end.toStringAsFixed(3)}$suffix',
+                    )
+                    .join('\n');
+                return BarTooltipItem(
+                  '$device\n$lines',
+                  const TextStyle(color: Colors.white),
+                );
+              }
               final segments = data.segmentsFor(device);
               if (rodIndex < 0 || rodIndex >= segments.length) return null;
               final segment = segments[rodIndex];
-              final unit = data.unitsByDevice[device];
-              final suffix = unit == null || unit.isEmpty ? '' : ' $unit';
               final valueText = segment.value == null
                   ? 'n/a'
                   : '${segment.value!.toStringAsFixed(3)}$suffix';
@@ -121,7 +153,32 @@ class FlChartBarAdapter extends BarChartAdapter {
     );
   }
 
-  List<BarChartRodData> _barRodsFor(BarChartModel data, String device) {
+  List<BarChartRodData> _barRodsFor(
+    BarChartModel data,
+    String device,
+    List<ResolvedBarSegment>? resolvedStack,
+  ) {
+    if (data.style.layout == BarChartLayout.stacked) {
+      final segments = resolvedStack ?? const [];
+      if (segments.isEmpty) return const [];
+      return [
+        BarChartRodData(
+          toY: segments.last.end,
+          width: data.style.segmentWidth,
+          borderRadius: data.style.borderRadius,
+          color: segments.last.segment.color,
+          rodStackItems: [
+            for (final resolved in segments)
+              BarChartRodStackItem(
+                resolved.start,
+                resolved.end,
+                resolved.segment.color,
+              ),
+          ],
+        ),
+      ];
+    }
+
     final segments = data.segmentsFor(device);
     return [
       for (final segment in segments)
