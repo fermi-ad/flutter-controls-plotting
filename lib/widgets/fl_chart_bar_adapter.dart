@@ -50,6 +50,12 @@ class FlChartBarAdapter extends BarChartAdapter {
     final yAxisInterval = data.style.yAxisDivisions == null
         ? null
         : (maxY - minY) / data.style.yAxisDivisions!;
+    final xAxisRotation = data.style.xAxisLabelRotation * math.pi / 180;
+    final bottomTitleReservedSize = _bottomTitleReservedSize(
+      context,
+      data.deviceNames,
+      xAxisRotation,
+    );
 
     return BarChart(
       BarChartData(
@@ -95,9 +101,7 @@ class FlChartBarAdapter extends BarChartAdapter {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: data.style.showTitles,
-              reservedSize: _bottomTitleReservedSize(
-                data.style.xAxisLabelRotation,
-              ),
+              reservedSize: bottomTitleReservedSize,
               getTitlesWidget: (value, meta) {
                 final index = value.toInt();
                 if (index < 0 || index >= data.deviceNames.length) {
@@ -107,27 +111,14 @@ class FlChartBarAdapter extends BarChartAdapter {
                 final hasError = data.errorsByDevice.containsKey(device);
                 return SideTitleWidget(
                   meta: meta,
-                  angle: data.style.xAxisLabelRotation * math.pi / 180,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (hasError) ...[
-                        const Icon(
-                          Icons.error_outline,
-                          size: 12,
-                          color: Colors.red,
-                        ),
-                        const SizedBox(width: 2),
-                      ],
-                      Flexible(
-                        child: Text(
-                          device,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 2,
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ],
+                  // Preserve the original fl_chart chart-to-title gap at every
+                  // angle. The zero-height rotated anchor prevents the title
+                  // reservation from becoming additional visible whitespace.
+                  space: 8,
+                  child: _xAxisLabel(
+                    device: device,
+                    hasError: hasError,
+                    rotationRadians: xAxisRotation,
                   ),
                 );
               },
@@ -197,9 +188,72 @@ class FlChartBarAdapter extends BarChartAdapter {
         : fixed;
   }
 
-  double _bottomTitleReservedSize(double rotationDegrees) {
-    final normalizedRotation = rotationDegrees % 180;
-    return normalizedRotation.abs() < 1e-9 ? 48 : 72;
+  Widget _xAxisLabel({
+    required String device,
+    required bool hasError,
+    required double rotationRadians,
+  }) {
+    final isUnrotated = _isUnrotated(rotationRadians);
+    final label = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (hasError) ...[
+          const Icon(Icons.error_outline, size: 12, color: Colors.red),
+          const SizedBox(width: 2),
+        ],
+        Text(
+          device,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 2,
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+    if (isUnrotated) return label;
+
+    // SideTitleWidget centers its child's layout bounds on the category. Give
+    // it a zero-width anchor and rotate around the leading edge's midpoint, so
+    // the bar meets the start of the label. The midpoint is essential at 90°:
+    // it keeps the vertical center of the text aligned with the bar.
+    return Align(
+      alignment: Alignment.centerLeft,
+      widthFactor: 0,
+      heightFactor: 0,
+      child: Transform.rotate(
+        angle: rotationRadians,
+        alignment: Alignment.centerLeft,
+        child: label,
+      ),
+    );
+  }
+
+  bool _isUnrotated(double rotationRadians) =>
+      (rotationRadians / math.pi).remainder(1).abs() < 1e-9;
+
+  double _bottomTitleReservedSize(
+    BuildContext context,
+    List<String> deviceNames,
+    double rotationRadians,
+  ) {
+    if (_isUnrotated(rotationRadians)) return 48;
+
+    final textDirection = Directionality.of(context);
+    final textScaler = MediaQuery.textScalerOf(context);
+    final longestLabel = deviceNames.fold<String>(
+      '',
+      (longest, device) => device.length > longest.length ? device : longest,
+    );
+    final painter = TextPainter(
+      text: TextSpan(text: longestLabel),
+      textDirection: textDirection,
+      textScaler: textScaler,
+      maxLines: 2,
+    )..layout();
+    final sine = math.sin(rotationRadians).abs();
+    final cosine = math.cos(rotationRadians).abs();
+    // Reserve the rotated label's painted vertical extent. This prevents
+    // clipping while SideTitleWidget.space remains zero at every angle.
+    return math.max(48, painter.width * sine + painter.height * cosine);
   }
 
   List<BarChartRodData> _barRodsFor(

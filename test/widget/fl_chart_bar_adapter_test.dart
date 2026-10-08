@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gql_acsys/flutter_gql_acsys.dart';
@@ -297,6 +299,51 @@ void main() {
     expect((yTitle.child as Text).data, '0.1');
   });
 
+  testWidgets(
+    'keeps rotated labels anchored and spaced like horizontal labels',
+    (tester) async {
+      for (final rotationDegrees in [30.0, 90.0]) {
+        final reducer = BarChartReducer(
+          deviceNames: ['Long device label'],
+          style: BarChartStyle(xAxisLabelRotation: rotationDegrees),
+        );
+        reducer.applyReply(_reply('Long device label', 1));
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) =>
+                  const FlChartBarAdapter().build(context, reducer.data),
+            ),
+          ),
+        );
+
+        final chart = tester.widget<BarChart>(find.byType(BarChart));
+        final title =
+            chart.data.titlesData.bottomTitles.sideTitles.getTitlesWidget(
+                  0,
+                  _titleMeta(),
+                )
+                as SideTitleWidget;
+        final anchor = title.child as Align;
+        final transform = anchor.child as Transform;
+
+        expect(title.space, 8, reason: 'rotation: $rotationDegrees');
+        expect(anchor.widthFactor, 0, reason: 'rotation: $rotationDegrees');
+        expect(anchor.heightFactor, 0, reason: 'rotation: $rotationDegrees');
+        expect(transform.alignment, Alignment.centerLeft);
+        expect(
+          transform.transform.storage[0],
+          closeTo(math.cos(rotationDegrees * math.pi / 180), 0.000001),
+        );
+        expect(
+          chart.data.titlesData.bottomTitles.sideTitles.reservedSize,
+          greaterThanOrEqualTo(48),
+        );
+      }
+    },
+  );
+
   testWidgets('uses configured Y divisions, label formatter, and X rotation', (
     tester,
   ) async {
@@ -330,8 +377,13 @@ void main() {
     expect(leftTitles.interval, 0.25);
     expect((yTitle as SideTitleWidget).child, isA<Text>());
     expect(((yTitle.child as Text).data), '0.25 V');
-    expect((xTitle as SideTitleWidget).angle, closeTo(0.785398, 0.000001));
-    expect(bottomTitles.reservedSize, 72);
+    expect((xTitle as SideTitleWidget).angle, 0);
+    final anchor = xTitle.child as Align;
+    final rotation = anchor.child as Transform;
+    expect(anchor.widthFactor, 0);
+    expect(rotation.alignment, Alignment.centerLeft);
+    expect(rotation.transform.storage[0], closeTo(0.707106, 0.000001));
+    expect(bottomTitles.reservedSize, greaterThanOrEqualTo(48));
   });
 }
 
