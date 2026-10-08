@@ -138,7 +138,84 @@ void main() {
     expect(secondRod.rodStackItems, hasLength(1));
     expect(chart.data.maxY, greaterThan(7));
   });
+
+  testWidgets('formats fractional Y labels without collapsing values', (
+    tester,
+  ) async {
+    final reducer = BarChartReducer(
+      deviceNames: ['Device A'],
+      style: const BarChartStyle(minY: 0, maxY: 0.4, yAxisDivisions: 4),
+    );
+    reducer.applyReply(_reply('Device A', 0.2));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) =>
+              const FlChartBarAdapter().build(context, reducer.data),
+        ),
+      ),
+    );
+
+    final chart = tester.widget<BarChart>(find.byType(BarChart));
+    final yTitle = chart.data.titlesData.leftTitles.sideTitles.getTitlesWidget(
+      0.1,
+      _titleMeta(),
+    );
+
+    expect((yTitle as SideTitleWidget).child, isA<Text>());
+    expect((yTitle.child as Text).data, '0.1');
+  });
+
+  testWidgets('uses configured Y divisions, label formatter, and X rotation', (
+    tester,
+  ) async {
+    final reducer = BarChartReducer(
+      deviceNames: ['Device A'],
+      style: BarChartStyle(
+        minY: 0,
+        maxY: 1,
+        yAxisDivisions: 4,
+        xAxisLabelRotation: 45,
+        yAxisLabelFormatter: (value) => '${value.toStringAsFixed(2)} V',
+      ),
+    );
+    reducer.applyReply(_reply('Device A', 0.5));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) =>
+              const FlChartBarAdapter().build(context, reducer.data),
+        ),
+      ),
+    );
+
+    final chart = tester.widget<BarChart>(find.byType(BarChart));
+    final leftTitles = chart.data.titlesData.leftTitles.sideTitles;
+    final bottomTitles = chart.data.titlesData.bottomTitles.sideTitles;
+    final yTitle = leftTitles.getTitlesWidget(0.25, _titleMeta());
+    final xTitle = bottomTitles.getTitlesWidget(0, _titleMeta());
+
+    expect(leftTitles.interval, 0.25);
+    expect((yTitle as SideTitleWidget).child, isA<Text>());
+    expect(((yTitle.child as Text).data), '0.25 V');
+    expect((xTitle as SideTitleWidget).angle, closeTo(0.785398, 0.000001));
+    expect(bottomTitles.reservedSize, 72);
+  });
 }
+
+TitleMeta _titleMeta() => TitleMeta(
+  min: 0,
+  max: 1,
+  parentAxisSize: 100,
+  axisPosition: 0,
+  appliedInterval: 1,
+  sideTitles: SideTitles(),
+  formattedValue: '',
+  axisSide: AxisSide.bottom,
+  rotationQuarterTurns: 0,
+);
 
 PlotReply _reply(String device, double value) => PlotReply(
   plotId: 'test',

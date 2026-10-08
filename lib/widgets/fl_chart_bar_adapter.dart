@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_plotting/entities/bar_chart_model.dart';
@@ -42,13 +44,17 @@ class FlChartBarAdapter extends BarChartAdapter {
     final padding = range == 0
         ? (calculatedMax.abs() * 0.1).clamp(1.0, double.infinity)
         : range * 0.1;
+    final minY =
+        data.style.minY ?? (calculatedMin < 0 ? calculatedMin - padding : 0);
+    final maxY = data.style.maxY ?? calculatedMax + padding;
+    final yAxisInterval = data.style.yAxisDivisions == null
+        ? null
+        : (maxY - minY) / data.style.yAxisDivisions!;
 
     return BarChart(
       BarChartData(
-        minY:
-            data.style.minY ??
-            (calculatedMin < 0 ? calculatedMin - padding : 0),
-        maxY: data.style.maxY ?? calculatedMax + padding,
+        minY: minY,
+        maxY: maxY,
         alignment: BarChartAlignment.spaceAround,
         groupsSpace: data.style.groupSpace,
         barGroups: [
@@ -71,13 +77,25 @@ class FlChartBarAdapter extends BarChartAdapter {
           rightTitles: const AxisTitles(
             sideTitles: SideTitles(showTitles: false),
           ),
-          leftTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: true, reservedSize: 46),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: data.style.showTitles,
+              reservedSize: 56,
+              interval: yAxisInterval,
+              getTitlesWidget: (value, meta) => SideTitleWidget(
+                meta: meta,
+                child: Text(
+                  _formatYAxisValue(data.style, value, yAxisInterval),
+                ),
+              ),
+            ),
           ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: data.style.showTitles,
-              reservedSize: 48,
+              reservedSize: _bottomTitleReservedSize(
+                data.style.xAxisLabelRotation,
+              ),
               getTitlesWidget: (value, meta) {
                 final index = value.toInt();
                 if (index < 0 || index >= data.deviceNames.length) {
@@ -87,6 +105,7 @@ class FlChartBarAdapter extends BarChartAdapter {
                 final hasError = data.errorsByDevice.containsKey(device);
                 return SideTitleWidget(
                   meta: meta,
+                  angle: data.style.xAxisLabelRotation * math.pi / 180,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -151,6 +170,34 @@ class FlChartBarAdapter extends BarChartAdapter {
         ),
       ),
     );
+  }
+
+  String _formatYAxisValue(
+    BarChartStyle style,
+    double value,
+    double? interval,
+  ) {
+    final formatter = style.yAxisLabelFormatter;
+    if (formatter != null) return formatter(value);
+    if (interval == null || interval == 0 || !interval.isFinite) {
+      return value.toString();
+    }
+
+    final absoluteInterval = interval.abs();
+    final decimals = absoluteInterval >= 1
+        ? 0
+        : (-math.log(absoluteInterval) / math.ln10).ceil().clamp(0, 12);
+    final fixed = value.toStringAsFixed(decimals);
+    return fixed.contains('.')
+        ? fixed
+              .replaceFirst(RegExp(r'0+$'), '')
+              .replaceFirst(RegExp(r'\.$'), '')
+        : fixed;
+  }
+
+  double _bottomTitleReservedSize(double rotationDegrees) {
+    final normalizedRotation = rotationDegrees % 180;
+    return normalizedRotation.abs() < 1e-9 ? 48 : 72;
   }
 
   List<BarChartRodData> _barRodsFor(
