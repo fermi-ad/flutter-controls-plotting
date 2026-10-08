@@ -63,7 +63,10 @@ class FlChartBarAdapter extends BarChartAdapter {
         maxY: maxY,
         alignment: BarChartAlignment.spaceAround,
         groupsSpace: data.style.groupSpace,
-        gridData: FlGridData(horizontalInterval: yAxisInterval),
+        gridData: FlGridData(
+          horizontalInterval: yAxisInterval,
+          drawVerticalLine: false,
+        ),
         barGroups: [
           for (var index = 0; index < data.deviceNames.length; index++)
             BarChartGroupData(
