@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 /// A single named contribution or explicit interval within one device's bar.
 ///
 /// A segment created with [BarSegment.additive] contributes [value] after the
-/// preceding segment. A segment created with [BarSegment.range] specifies its
-/// own interval from [start] to [end]. When segments are stacked, ranges must
-/// start exactly where the preceding segment ends; gaps and overlaps are
+/// preceding segment on its signed side of zero. A segment created with
+/// [BarSegment.range] specifies its own interval from [start] to [end]. When
+/// segments are stacked, ranges must start exactly where the preceding segment
+/// on the same signed side ends; gaps, overlaps, and ranges crossing zero are
 /// rejected by [BarChartModel.resolvedStackFor].
 class BarSegment {
   /// Stable key identifying this segment within a device (e.g. `'value'`,

@@ -146,6 +146,78 @@ void main() {
       expect(resolved.map((segment) => segment.end), [2, 5]);
     });
 
+    test('resolves positive and negative additive segments from zero', () {
+      final reducer = BarChartReducer(
+        deviceNames: ['A'],
+        style: const BarChartStyle(layout: BarChartLayout.stacked),
+      );
+      reducer.setSegment(device: 'A', key: 'up', label: 'Up', value: 2);
+      reducer.setSegment(device: 'A', key: 'down', label: 'Down', value: -3);
+      reducer.setSegment(
+        device: 'A',
+        key: 'upMore',
+        label: 'Up more',
+        value: 4,
+      );
+      reducer.setSegment(
+        device: 'A',
+        key: 'downMore',
+        label: 'Down more',
+        value: -5,
+      );
+
+      final resolved = reducer.data.resolvedStackFor('A');
+      expect(resolved.map((segment) => segment.start), [0, 0, 2, -3]);
+      expect(resolved.map((segment) => segment.end), [2, -3, 6, -8]);
+    });
+
+    test('accepts contiguous explicit negative ranges', () {
+      final reducer = BarChartReducer(
+        deviceNames: ['A'],
+        style: const BarChartStyle(layout: BarChartLayout.stacked),
+      );
+      reducer.setSegment(device: 'A', key: 'first', label: 'First', value: -2);
+      reducer.setRangeSegment(
+        device: 'A',
+        key: 'second',
+        label: 'Second',
+        start: -2,
+        end: -5,
+      );
+
+      final resolved = reducer.data.resolvedStackFor('A');
+      expect(resolved.map((segment) => segment.start), [0, -2]);
+      expect(resolved.map((segment) => segment.end), [-2, -5]);
+    });
+
+    test('rejects stacked ranges that cross zero or reverse toward zero', () {
+      final reducer = BarChartReducer(
+        deviceNames: ['A'],
+        style: const BarChartStyle(layout: BarChartLayout.stacked),
+      );
+      expect(
+        () => reducer.setRangeSegment(
+          device: 'A',
+          key: 'crosses',
+          label: 'Crosses',
+          start: -1,
+          end: 1,
+        ),
+        throwsArgumentError,
+      );
+      reducer.setSegment(device: 'A', key: 'first', label: 'First', value: -2);
+      expect(
+        () => reducer.setRangeSegment(
+          device: 'A',
+          key: 'towardZero',
+          label: 'Toward zero',
+          start: -2,
+          end: -1,
+        ),
+        throwsArgumentError,
+      );
+    });
+
     test('accepts an explicit range contiguous with an additive segment', () {
       final reducer = BarChartReducer(
         deviceNames: ['A'],

@@ -68,8 +68,10 @@ class BarChartController extends ChangeNotifier {
   /// Sets (adds or replaces) a segment with an explicit [start] and [end].
   ///
   /// In stacked layout, the range must be contiguous with the preceding
-  /// segment. Gaps, overlaps, reversed ranges, and non-finite bounds throw
-  /// [ArgumentError] without changing the current chart data.
+  /// segment on the same signed side of zero. Positive ranges extend upward;
+  /// negative ranges extend downward. Gaps, overlaps, ranges crossing zero,
+  /// ranges reversing toward zero, and non-finite bounds throw [ArgumentError]
+  /// without changing the current chart data.
   void setRangeSegment({
     required String device,
     required String key,

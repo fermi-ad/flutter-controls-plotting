@@ -139,6 +139,50 @@ void main() {
     expect(chart.data.maxY, greaterThan(7));
   });
 
+  testWidgets('renders positive and negative stacks from zero', (tester) async {
+    final reducer = BarChartReducer(
+      deviceNames: ['Device A'],
+      style: const BarChartStyle(layout: BarChartLayout.stacked),
+    );
+    reducer.setSegment(
+      device: 'Device A',
+      key: 'up',
+      label: 'Up',
+      value: 2,
+      color: Colors.red,
+    );
+    reducer.setSegment(
+      device: 'Device A',
+      key: 'down',
+      label: 'Down',
+      value: -3,
+      color: Colors.blue,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) =>
+              const FlChartBarAdapter().build(context, reducer.data),
+        ),
+      ),
+    );
+
+    final rod = tester
+        .widget<BarChart>(find.byType(BarChart))
+        .data
+        .barGroups
+        .single
+        .barRods
+        .single;
+    expect(rod.fromY, -3);
+    expect(rod.toY, 2);
+    expect(rod.rodStackItems[0].fromY, 0);
+    expect(rod.rodStackItems[0].toY, 2);
+    expect(rod.rodStackItems[1].fromY, 0);
+    expect(rod.rodStackItems[1].toY, -3);
+  });
+
   testWidgets('clips grouped rods to fixed Y limits', (tester) async {
     final reducer = BarChartReducer(
       deviceNames: ['Device A'],

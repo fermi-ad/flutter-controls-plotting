@@ -217,10 +217,11 @@ class FlChartBarAdapter extends BarChartAdapter {
           _clampStackSegment(resolved, minY, maxY),
       ].whereType<ResolvedBarSegment>().toList();
       if (visibleSegments.isEmpty) return const [];
+      final extent = _stackExtent(visibleSegments);
       return [
         BarChartRodData(
-          fromY: visibleSegments.first.start,
-          toY: visibleSegments.last.end,
+          fromY: extent.$1,
+          toY: extent.$2,
           width: data.style.segmentWidth,
           borderRadius: data.style.borderRadius,
           color: visibleSegments.last.segment.color,
@@ -259,6 +260,11 @@ class FlChartBarAdapter extends BarChartAdapter {
     final clampedFromY = fromY.clamp(minY, maxY).toDouble();
     final clampedToY = toY.clamp(minY, maxY).toDouble();
     return clampedFromY == clampedToY ? null : (clampedFromY, clampedToY);
+  }
+
+  (double, double) _stackExtent(List<ResolvedBarSegment> segments) {
+    final values = segments.expand((segment) => [segment.start, segment.end]);
+    return (values.reduce(math.min), values.reduce(math.max));
   }
 
   ResolvedBarSegment? _clampStackSegment(

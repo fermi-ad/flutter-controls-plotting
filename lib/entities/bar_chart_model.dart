@@ -67,7 +67,7 @@ class BarChartModel {
   List<BarSegment> segmentsFor(String device) =>
       segmentsByDevice[device] ?? const <BarSegment>[];
 
-  /// Resolves [device]'s segments into contiguous intervals for stacked
+  /// Resolves [device]'s segments into signed contiguous intervals for stacked
   /// rendering.
   ///
   /// Additive segments begin at the preceding interval end. Explicit ranges
@@ -76,10 +76,16 @@ class BarChartModel {
   List<ResolvedBarSegment> resolvedStackFor(String device) =>
       resolveStack(segmentsFor(device));
 
-  /// Resolves [segments] into verified contiguous intervals beginning at zero.
+  /// Resolves [segments] into verified signed intervals beginning at zero.
+  ///
+  /// Positive additive values advance independently upward from zero; negative
+  /// values advance independently downward from zero. Explicit ranges must be
+  /// contiguous with the cursor on their own side of zero, and therefore may
+  /// not cross zero.
   static List<ResolvedBarSegment> resolveStack(List<BarSegment> segments) {
     const epsilon = 1e-9;
-    var previousEnd = 0.0;
+    var positiveEnd = 0.0;
+    var negativeEnd = 0.0;
     final resolved = <ResolvedBarSegment>[];
 
     for (final segment in segments) {
@@ -90,7 +96,7 @@ class BarChartModel {
         if (!value.isFinite) {
           throw ArgumentError.value(value, 'value', 'must be finite');
         }
-        start = previousEnd;
+        start = value < 0 ? negativeEnd : positiveEnd;
         end = start + value;
       } else if (segment.isRange) {
         start = segment.start!;
@@ -98,13 +104,24 @@ class BarChartModel {
         if (!start.isFinite || !end.isFinite) {
           throw ArgumentError('Range bounds must be finite.');
         }
-        if (end < start) {
-          throw ArgumentError('Range end must not be less than its start.');
-        }
-        if ((start - previousEnd).abs() > epsilon) {
+        if (start >= 0 && end >= start) {
+          if ((start - positiveEnd).abs() > epsilon) {
+            throw ArgumentError(
+              'Positive range start ($start) must equal the preceding positive '
+              'segment end ($positiveEnd).',
+            );
+          }
+        } else if (start <= 0 && end <= start) {
+          if ((start - negativeEnd).abs() > epsilon) {
+            throw ArgumentError(
+              'Negative range start ($start) must equal the preceding negative '
+              'segment end ($negativeEnd).',
+            );
+          }
+        } else {
           throw ArgumentError(
-            'Range start ($start) must equal the preceding segment end '
-            '($previousEnd).',
+            'A stacked range must remain on one side of zero and extend away '
+            'from zero.',
           );
         }
       } else {
@@ -116,7 +133,11 @@ class BarChartModel {
       resolved.add(
         ResolvedBarSegment(segment: segment, start: start, end: end),
       );
-      previousEnd = end;
+      if (end < 0) {
+        negativeEnd = end;
+      } else {
+        positiveEnd = end;
+      }
     }
     return List.unmodifiable(resolved);
   }
