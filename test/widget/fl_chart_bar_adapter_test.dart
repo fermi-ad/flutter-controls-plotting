@@ -139,6 +139,92 @@ void main() {
     expect(chart.data.maxY, greaterThan(7));
   });
 
+  testWidgets('clips grouped rods to fixed Y limits', (tester) async {
+    final reducer = BarChartReducer(
+      deviceNames: ['Device A'],
+      style: const BarChartStyle(minY: -1, maxY: 1),
+    );
+    reducer.setSegment(
+      device: 'Device A',
+      key: 'high',
+      label: 'High',
+      value: 3,
+    );
+    reducer.setSegment(device: 'Device A', key: 'low', label: 'Low', value: -2);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) =>
+              const FlChartBarAdapter().build(context, reducer.data),
+        ),
+      ),
+    );
+
+    final rods = tester
+        .widget<BarChart>(find.byType(BarChart))
+        .data
+        .barGroups
+        .single
+        .barRods;
+    expect(rods, hasLength(2));
+    expect(rods[0].fromY, 0);
+    expect(rods[0].toY, 1);
+    expect(rods[1].fromY, 0);
+    expect(rods[1].toY, -1);
+  });
+
+  testWidgets('clips stacked geometry while preserving raw tooltip values', (
+    tester,
+  ) async {
+    final reducer = BarChartReducer(
+      deviceNames: ['Device A'],
+      style: const BarChartStyle(
+        layout: BarChartLayout.stacked,
+        minY: 0,
+        maxY: 3,
+      ),
+    );
+    reducer.setSegment(
+      device: 'Device A',
+      key: 'first',
+      label: 'First',
+      value: 2,
+      color: Colors.red,
+    );
+    reducer.setSegment(
+      device: 'Device A',
+      key: 'second',
+      label: 'Second',
+      value: 3,
+      color: Colors.blue,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) =>
+              const FlChartBarAdapter().build(context, reducer.data),
+        ),
+      ),
+    );
+
+    final chart = tester.widget<BarChart>(find.byType(BarChart));
+    final rod = chart.data.barGroups.single.barRods.single;
+    final tooltip = chart.data.barTouchData.touchTooltipData.getTooltipItem(
+      chart.data.barGroups.single,
+      0,
+      rod,
+      0,
+    );
+
+    expect(rod.rodStackItems[0].fromY, 0);
+    expect(rod.rodStackItems[0].toY, 2);
+    expect(rod.rodStackItems[1].fromY, 2);
+    expect(rod.rodStackItems[1].toY, 3);
+    expect(tooltip!.text, contains('2.000–5.000'));
+  });
+
   testWidgets('formats fractional Y labels without collapsing values', (
     tester,
   ) async {

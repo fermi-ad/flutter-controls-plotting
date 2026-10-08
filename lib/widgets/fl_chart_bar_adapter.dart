@@ -66,6 +66,8 @@ class FlChartBarAdapter extends BarChartAdapter {
                 data,
                 data.deviceNames[index],
                 stackedSegments[data.deviceNames[index]],
+                minY,
+                maxY,
               ),
             ),
         ],
@@ -204,18 +206,26 @@ class FlChartBarAdapter extends BarChartAdapter {
     BarChartModel data,
     String device,
     List<ResolvedBarSegment>? resolvedStack,
+    double minY,
+    double maxY,
   ) {
     if (data.style.layout == BarChartLayout.stacked) {
       final segments = resolvedStack ?? const [];
       if (segments.isEmpty) return const [];
+      final visibleSegments = [
+        for (final resolved in segments)
+          _clampStackSegment(resolved, minY, maxY),
+      ].whereType<ResolvedBarSegment>().toList();
+      if (visibleSegments.isEmpty) return const [];
       return [
         BarChartRodData(
-          toY: segments.last.end,
+          fromY: visibleSegments.first.start,
+          toY: visibleSegments.last.end,
           width: data.style.segmentWidth,
           borderRadius: data.style.borderRadius,
-          color: segments.last.segment.color,
+          color: visibleSegments.last.segment.color,
           rodStackItems: [
-            for (final resolved in segments)
+            for (final resolved in visibleSegments)
               BarChartRodStackItem(
                 resolved.start,
                 resolved.end,
@@ -229,12 +239,39 @@ class FlChartBarAdapter extends BarChartAdapter {
     final segments = data.segmentsFor(device);
     return [
       for (final segment in segments)
-        BarChartRodData(
-          toY: segment.value ?? 0,
-          width: data.style.segmentWidth,
-          borderRadius: data.style.borderRadius,
-          color: segment.color,
-        ),
+        if (_clampRod(0, segment.value ?? 0, minY, maxY) case final visible?)
+          BarChartRodData(
+            fromY: visible.$1,
+            toY: visible.$2,
+            width: data.style.segmentWidth,
+            borderRadius: data.style.borderRadius,
+            color: segment.color,
+          ),
     ];
+  }
+
+  (double, double)? _clampRod(
+    double fromY,
+    double toY,
+    double minY,
+    double maxY,
+  ) {
+    final clampedFromY = fromY.clamp(minY, maxY).toDouble();
+    final clampedToY = toY.clamp(minY, maxY).toDouble();
+    return clampedFromY == clampedToY ? null : (clampedFromY, clampedToY);
+  }
+
+  ResolvedBarSegment? _clampStackSegment(
+    ResolvedBarSegment segment,
+    double minY,
+    double maxY,
+  ) {
+    final visible = _clampRod(segment.start, segment.end, minY, maxY);
+    if (visible == null) return null;
+    return ResolvedBarSegment(
+      segment: segment.segment,
+      start: visible.$1,
+      end: visible.$2,
+    );
   }
 }
