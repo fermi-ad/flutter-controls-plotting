@@ -73,12 +73,37 @@ controller.setRangeSegment(
 );
 ```
 
-In stacked layout, the first segment starts at zero. Additive segments start at
-the preceding segment's resolved end. Explicit ranges must start at that same
-end. Gaps, overlaps, reversed ranges, and non-finite values throw
-`ArgumentError`; the controller retains its previous model state when that
-happens. A small floating-point tolerance is applied when checking contiguous
-explicit bounds.
+In stacked layout, positive and negative additive segments start independently
+at zero: positive contributions accumulate upward and negative contributions
+accumulate downward. Explicit ranges must remain on one side of zero and start
+at the preceding segment's resolved end on that same signed side. Gaps,
+overlaps, ranges crossing zero, ranges reversing toward zero, and non-finite
+values throw `ArgumentError`; the controller retains its previous model state
+when that happens. A small floating-point tolerance is applied when checking
+contiguous explicit bounds.
+
+### Axis presentation and limits
+
+Configure axis divisions, Y labels, and device-label rotation through
+`BarChartStyle` without exposing renderer types:
+
+```dart
+final style = BarChartStyle(
+  minY: -1,
+  maxY: 1,
+  yAxisDivisions: 4,
+  xAxisLabelRotation: 45,
+  yAxisLabelFormatter: (value) => '${value.toStringAsFixed(2)} A',
+);
+```
+
+`yAxisDivisions` is the number of equal intervals across the displayed Y range;
+`null` preserves automatic renderer ticks. When no formatter is supplied, the
+adapter derives enough decimal precision from the tick interval to distinguish
+fractional values. Fixed Y limits clip the rendered rod geometry to the visible
+range, while touch tooltips retain the original raw values and stacked ranges.
+`xAxisLabelRotation` is expressed in degrees and is mapped to fl_chart's native
+axis-title rotation.
 
 Grouped layout remains the default for source compatibility. Existing calls to
 `setSegment` remain additive values and therefore continue to render as
@@ -92,24 +117,27 @@ independent rods unless the style opts into stacked layout.
 - Grouped rods and contiguous stacked rods.
 - Additive contributions and explicit segment intervals.
 - Per-device units and error state.
-- Automatic or fixed Y-axis bounds.
+- Automatic or fixed Y-axis bounds with clipped render geometry and raw-value
+  tooltips.
+- Configurable Y-axis division count, precision-aware or custom Y labels, and
+  degree-based X-label rotation.
 - Segment width, segment/group spacing, corner radius, and colors.
 - Axis-title visibility, device labels, error indicators, and touch tooltips.
 
 ### Fixed renderer policy
 
 The fl_chart adapter uses space-around category alignment, fixed axis-title
-layout and typography, fixed tooltip styling, and a 10% auto-scale padding
-policy. These choices are intentionally not public configuration yet.
+layout and typography (except division count, Y label formatting, and rotation),
+fixed tooltip styling, and a 10% auto-scale padding policy. These choices are
+intentionally not public configuration yet.
 
 ### Not exposed
 
 The bar abstraction does not currently expose fl_chart gradients, rod borders,
 background rods, error indicators, grid/border styling, annotations or extra
-lines, clipping/rotation, custom axis-title formatting, touch callbacks or
-programmatic highlights, custom axis intervals, group alignment, or animation.
-No fl_chart configuration classes are part of the package's public bar-chart
-API.
+lines, touch callbacks or programmatic highlights, group alignment, or
+animation. No fl_chart configuration classes are part of the package's public
+bar-chart API.
 
 ## Architecture assessment
 
