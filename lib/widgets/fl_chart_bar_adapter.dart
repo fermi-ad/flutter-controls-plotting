@@ -132,6 +132,9 @@ class FlChartBarAdapter extends BarChartAdapter {
         barTouchData: BarTouchData(
           enabled: true,
           touchTooltipData: BarTouchTooltipData(
+            fitInsideHorizontally: true,
+            fitInsideVertically: true,
+            direction: TooltipDirection.auto,
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               final device = data.deviceNames[group.x.toInt()];
               final unit = data.unitsByDevice[device];

@@ -377,6 +377,18 @@ void main() {
     expect(leftTitles.interval, 0.25);
     expect(chart.data.gridData.horizontalInterval, 0.25);
     expect(chart.data.gridData.drawVerticalLine, isFalse);
+    expect(
+      chart.data.barTouchData.touchTooltipData.fitInsideHorizontally,
+      isTrue,
+    );
+    expect(
+      chart.data.barTouchData.touchTooltipData.fitInsideVertically,
+      isTrue,
+    );
+    expect(
+      chart.data.barTouchData.touchTooltipData.direction,
+      TooltipDirection.auto,
+    );
     expect((yTitle as SideTitleWidget).child, isA<Text>());
     expect(((yTitle.child as Text).data), '0.25 V');
     expect((xTitle as SideTitleWidget).angle, 0);
