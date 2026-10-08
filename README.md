@@ -1,6 +1,13 @@
-# Flutter Plotting Widgets
+# Flutter Controls Plotting
 
-Standard plotting widgets for Controls Flutter applications.
+Standard plotting widgets for Controls Flutter applications. Available plotting widgets:
+
+- [Line chart](#line-chart)
+- [Bar chart](#bar-chart)
+
+## Line chart
+
+TODO
 
 ## Bar chart
 
