@@ -11,7 +11,9 @@ enum BarChartLayout {
   /// Renders every segment as an independent rod next to the other segments.
   grouped,
 
-  /// Renders all segments for a device as contiguous portions of one rod.
+  /// Renders segments as contiguous signed portions of one rod per device.
+  ///
+  /// Positive and negative contributions accumulate independently from zero.
   stacked,
 }
 
@@ -19,8 +21,9 @@ enum BarChartLayout {
 ///
 /// This library renders whatever segments the caller supplies for each
 /// device — it does not derive additional segments or interpret their
-/// meaning. [BarChartStyle] only controls layout and the color used when
-/// a segment or device does not specify its own color.
+/// meaning. Settings control axis bounds and labels, grouped or stacked layout,
+/// bar geometry, spacing, and fallback color. Renderers translate these settings
+/// into their plotting package's geometry and interaction behavior.
 class BarChartStyle {
   /// Fixed lower Y bound, or `null` to auto-scale from the data.
   ///
@@ -54,27 +57,34 @@ class BarChartStyle {
 
   /// Arrangement used to render the segments within each device group.
   ///
-  /// [BarChartLayout.grouped] preserves the original behavior. In
-  /// [BarChartLayout.stacked] mode, every device's segments must resolve to
-  /// contiguous intervals with no overlaps or gaps.
+  /// [BarChartLayout.grouped] draws additive values independently from zero.
+  /// In [BarChartLayout.stacked], positive and negative segments accumulate
+  /// independently from zero with no gaps or overlaps on either signed side.
+  /// Explicit ranges are supported by the current renderer only when stacked.
   final BarChartLayout layout;
 
-  /// Width of each individual segment's bar.
+  /// Bar width in logical pixels, per segment when grouped or per device stack.
   final double segmentWidth;
 
-  /// Spacing between segments within the same device's group.
+  /// Spacing in logical pixels between grouped segments; unused for stacks.
   final double segmentSpace;
 
-  /// Spacing between different devices' groups.
+  /// Requested spacing in logical pixels between different devices' groups.
+  ///
+  /// The renderer's group alignment may also distribute available chart space.
   final double groupSpace;
 
-  /// Corner rounding applied to each segment's bar.
+  /// Corner rounding applied to each grouped bar or the outer stacked rod.
   final BorderRadius borderRadius;
 
-  /// Fallback color used for a segment when neither the segment itself nor
-  /// a `colorForDevice`/`colorForSegment` callback supplies one.
+  /// Fallback color used by the reducer when no explicit segment color or
+  /// device color resolver is supplied.
   final Color defaultColor;
 
+  /// Creates immutable presentation settings with grouped bars by default.
+  ///
+  /// Asserts that paired Y bounds are increasing and [yAxisDivisions], when
+  /// supplied, is positive. These assertions are disabled in release builds.
   const BarChartStyle({
     this.minY,
     this.maxY,

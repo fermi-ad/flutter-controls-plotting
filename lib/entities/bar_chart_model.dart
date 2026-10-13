@@ -3,12 +3,22 @@ import 'package:flutter_controls_plotting/entities/bar_chart_style.dart';
 import 'package:flutter_controls_plotting/entities/bar_segment.dart';
 import 'package:flutter_gql_acsys/flutter_gql_acsys.dart';
 
-/// A verified interval for a segment in a stacked device bar.
+/// A segment paired with its resolved interval for stacked rendering.
+///
+/// Stack resolution validates these intervals; the constructor itself does not.
+/// Renderers may also create clipped intervals while retaining the original
+/// [segment] for interaction details.
 class ResolvedBarSegment {
+  /// Original segment, including its label, color, and unmodified source value.
   final BarSegment segment;
+
+  /// Resolved interval start on the Y axis.
   final double start;
+
+  /// Resolved interval end; negative contributions extend below [start].
   final double end;
 
+  /// Creates an interval without validating its bounds or stack contiguity.
   const ResolvedBarSegment({
     required this.segment,
     required this.start,
@@ -18,13 +28,14 @@ class ResolvedBarSegment {
 
 /// Renderer-neutral state for categorical device bar groups.
 ///
-/// Device order is preserved from the device list supplied to the
-/// [BarChartReducer]/[BarChartController]. Each device holds an ordered list
-/// of named [BarSegment]s — for example a live reading, a setpoint, and a
-/// limit — each rendered as its own independent bar next to the others.
+/// Device order is preserved from the device list supplied to the reducer or
+/// controller. Each device holds an ordered list of named [BarSegment]s, such
+/// as a live reading, a setpoint, and a limit. The style determines whether
+/// segments are independent bars or signed contributions to one stacked bar.
 ///
-/// This model does not derive segments from one another; it only stores and
-/// replays whatever segments the caller supplied via [BarChartController].
+/// All collections, including per-device segment lists, are unmodifiable
+/// snapshots. The model stores raw segments; [resolvedStackFor] derives stacked
+/// intervals without changing those source values.
 class BarChartModel {
   /// Style passed to the renderer.
   final BarChartStyle style;
@@ -35,12 +46,22 @@ class BarChartModel {
   /// Ordered segments indexed by device name.
   final Map<String, List<BarSegment>> segmentsByDevice;
 
-  /// Units indexed by device name.
+  /// Last accepted channel units indexed by device name.
+  ///
+  /// Units apply to every segment's tooltip for that device and are retained
+  /// when later replies omit the device or its segments are cleared.
   final Map<String, String> unitsByDevice;
 
-  /// Latest channel errors indexed by device name.
+  /// Negative channel statuses from the most recently applied reply.
+  ///
+  /// Unlike segments and units, errors are replaced on every reply, so errors
+  /// for omitted devices are not retained. Manual segment edits preserve them.
   final Map<String, String> errorsByDevice;
 
+  /// Copies the supplied collections into an immutable snapshot.
+  ///
+  /// Device membership, segment-key uniqueness, and stacked intervals are not
+  /// validated here; the reducer validates stacks when applying value updates.
   BarChartModel({
     required List<String> deviceNames,
     required Map<String, List<BarSegment>> segmentsByDevice,
@@ -55,6 +76,7 @@ class BarChartModel {
        unitsByDevice = Map.unmodifiable(unitsByDevice),
        errorsByDevice = Map.unmodifiable(errorsByDevice);
 
+  /// Creates an empty snapshot with default style and the supplied device order.
   BarChartModel.empty({List<String> devices = const []})
     : deviceNames = List.unmodifiable(devices),
       segmentsByDevice = const {},
@@ -62,8 +84,9 @@ class BarChartModel {
       errorsByDevice = const {},
       style = const BarChartStyle();
 
-  /// Returns all segments currently available for [device], in insertion
-  /// order.
+  /// Returns an unmodifiable list of [device]'s segments in insertion order.
+  ///
+  /// Returns an empty list when the device has no segments or is unknown.
   List<BarSegment> segmentsFor(String device) =>
       segmentsByDevice[device] ?? const <BarSegment>[];
 
@@ -81,7 +104,11 @@ class BarChartModel {
   /// Positive additive values advance independently upward from zero; negative
   /// values advance independently downward from zero. Explicit ranges must be
   /// contiguous with the cursor on their own side of zero, and therefore may
-  /// not cross zero.
+  /// not cross zero. Contiguity comparisons allow an absolute tolerance of
+  /// 1e-9. Input order is preserved in the unmodifiable result.
+  ///
+  /// Throws [ArgumentError] for missing or non-finite values, overflowed ends,
+  /// non-contiguous ranges, or ranges that cross zero or extend toward it.
   static List<ResolvedBarSegment> resolveStack(List<BarSegment> segments) {
     const epsilon = 1e-9;
     var positiveEnd = 0.0;
@@ -152,6 +179,10 @@ class BarChartModel {
     return null;
   }
 
+  /// Creates a new immutable snapshot, replacing only non-null arguments.
+  ///
+  /// Pass empty collections to clear entries. As with the constructor, this
+  /// does not validate membership, key uniqueness, or stacked intervals.
   BarChartModel copyWith({
     List<String>? deviceNames,
     Map<String, List<BarSegment>>? segmentsByDevice,
@@ -169,11 +200,14 @@ class BarChartModel {
   }
 }
 
-/// Applies streamed values to the latest categorical state.
+/// Applies streamed replies and manual segment edits to categorical state.
 ///
 /// The reducer is independent of Flutter rendering and can be unit-tested or
 /// driven by an external controller. A reply containing only some devices
-/// leaves previously known segments for other devices unchanged.
+/// leaves previously known segments for other devices unchanged. Each update
+/// produces a new immutable [BarChartModel]; the reducer does not notify
+/// listeners. Device membership, order, style, and color resolution are fixed
+/// at construction.
 class BarChartReducer {
   /// Stable device order used for category matching.
   final List<String> deviceNames;
@@ -185,6 +219,9 @@ class BarChartReducer {
   /// Falls back to [BarChartStyle.defaultColor] when not supplied.
   final Color Function(String device)? colorForDevice;
 
+  /// Creates an empty reducer with a fixed, copied device order.
+  ///
+  /// Device names should be distinct and match channel names in replies.
   BarChartReducer({
     required Iterable<String> deviceNames,
     this.colorForDevice,
@@ -208,6 +245,15 @@ class BarChartReducer {
   /// Applies a streamed plot reply, updating one named segment (identified
   /// by [segmentKey]) per device found in the reply. Devices omitted from a
   /// partial reply retain their previously known segments.
+  ///
+  /// Only configured devices are accepted. Uses the channel's last point and,
+  /// for a time-series value, its last sample. Empty points and unsupported
+  /// values are ignored. Negative statuses preserve previous data and record
+  /// an error; the error map is replaced on each reply.
+  ///
+  /// Accepted points update units and timestamps. Existing keys retain their
+  /// color and insertion position; new keys are appended with a resolved color.
+  /// Invalid resulting stacks throw [ArgumentError] without changing [data].
   void applyReply(
     PlotReply reply, {
     String segmentKey = 'value',
@@ -273,6 +319,12 @@ class BarChartReducer {
   /// Sets (adds or replaces) a named segment for [device]. Use this for any
   /// segment that isn't driven by the streamed reply, such as a setpoint,
   /// limit, or manually supplied value.
+  ///
+  /// Unknown devices are ignored. Replacements preserve insertion position,
+  /// while new keys are appended. An omitted [color] resolves afresh through
+  /// [colorForDevice] or the style default; source timestamps are not retained.
+  /// In stacked layout, validates the entire resulting stack before publishing
+  /// it and throws [ArgumentError] without changing [data] if invalid.
   void setSegment({
     required String device,
     required String key,
@@ -304,8 +356,13 @@ class BarChartReducer {
 
   /// Sets (adds or replaces) a segment with an explicit interval.
   ///
-  /// When the chart uses [BarChartLayout.stacked], [start] must be contiguous
-  /// with the preceding segment's resolved end.
+  /// Unknown devices are ignored. Existing keys retain their insertion position
+  /// and new keys are appended. An omitted [color] uses [colorForDevice] or the
+  /// style default. The current grouped renderer does not draw explicit ranges.
+  ///
+  /// In [BarChartLayout.stacked], [start] must match the preceding resolved end
+  /// on its signed side of zero, and [end] must extend away from zero. Invalid
+  /// resulting stacks throw [ArgumentError] without changing [data].
   void setRangeSegment({
     required String device,
     required String key,
@@ -346,9 +403,14 @@ class BarChartReducer {
     }
   }
 
-  /// Removes the segment identified by [key] for [device]. When [key] is
-  /// omitted, removes all segments for [device]. When [device] is also
-  /// omitted, clears segments for every device.
+  /// Removes matching segments while retaining units and channel errors.
+  ///
+  /// A supplied [device] restricts removal to that device; otherwise all devices
+  /// are considered. A supplied [key] removes only that named segment; otherwise
+  /// all segments on the selected devices are removed.
+  ///
+  /// Does not revalidate or rebase remaining explicit ranges. Removing an earlier
+  /// contribution can leave a stack invalid until the ranges are repaired.
   void clearSegment({String? device, String? key}) {
     final next = <String, List<BarSegment>>{
       for (final entry in _data.segmentsByDevice.entries)

@@ -10,12 +10,23 @@ import 'package:flutter_controls_plotting/widgets/bar_chart_adapter.dart';
 /// [`fl_chart`](https://pub.dev/packages/fl_chart) implementation for
 /// categorical device bars.
 ///
-/// [BarChartLayout.grouped] renders each [BarSegment] as an independent rod.
-/// [BarChartLayout.stacked] maps renderer-neutral resolved intervals to one
-/// fl_chart rod with contiguous stack items per device.
+/// [BarChartLayout.grouped] renders additive [BarSegment] values from zero as
+/// independent rods; explicit ranges have no grouped geometry.
+/// [BarChartLayout.stacked] maps resolved signed intervals to one rod per device.
+///
+/// Geometry is clipped to the visible Y bounds, and zero-length or fully clipped
+/// rods are omitted. Tooltips retain the original values or resolved intervals
+/// and append the device's units. Channel errors add an icon to device labels
+/// without removing previously acquired values.
 class FlChartBarAdapter extends BarChartAdapter {
+  /// Creates a stateless renderer; acquisition and controller ownership remain
+  /// with the caller.
   const FlChartBarAdapter();
 
+  /// Builds grouped or stacked geometry from an immutable [data] snapshot.
+  ///
+  /// Unspecified Y bounds are derived from values with padding. Stacked data is
+  /// resolved before rendering and invalid stacks throw [ArgumentError].
   @override
   Widget build(BuildContext context, BarChartModel data) {
     final stackedSegments = data.style.layout == BarChartLayout.stacked
@@ -172,6 +183,8 @@ class FlChartBarAdapter extends BarChartAdapter {
     );
   }
 
+  // Custom formatting takes precedence. For explicit tick intervals, derive
+  // decimal precision from the interval and trim insignificant trailing zeros.
   String _formatYAxisValue(
     BarChartStyle style,
     double value,
@@ -258,8 +271,8 @@ class FlChartBarAdapter extends BarChartAdapter {
     )..layout();
     final sine = math.sin(rotationRadians).abs();
     final cosine = math.cos(rotationRadians).abs();
-    // Reserve the rotated label's painted vertical extent. This prevents
-    // clipping while SideTitleWidget.space remains zero at every angle.
+    // Reserve the rotated label's painted vertical extent to prevent clipping.
+    // The chart-to-title gap remains the separate eight-pixel title spacing.
     return math.max(48, painter.width * sine + painter.height * cosine);
   }
 
@@ -312,6 +325,8 @@ class FlChartBarAdapter extends BarChartAdapter {
     ];
   }
 
+  // Clamp endpoints without reversing their direction. A collapsed interval
+  // has no visible geometry, even though its raw value remains in the model.
   (double, double)? _clampRod(
     double fromY,
     double toY,
