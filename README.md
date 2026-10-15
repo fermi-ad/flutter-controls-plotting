@@ -82,6 +82,21 @@ values throw `ArgumentError`; the controller retains its previous model state
 when that happens. A small floating-point tolerance is applied when checking
 contiguous explicit bounds.
 
+Explicit ranges store fixed coordinates and are not automatically rebased when
+an earlier contribution changes or is removed. In the example above, changing
+the beam contribution from 2.5 to 2.0 would leave a gap before the loss range,
+so the update is rejected. Streamed replies are rejected atomically: if any
+device's proposed stack is invalid, no segments, units, timestamps, or channel
+errors from that reply are published. Invalid removals likewise preserve the
+entire previous snapshot, and rejected controller operations do not notify
+listeners.
+
+To remove an earlier contribution, remove its dependent ranges first (starting
+with the outermost range if several depend on one another), or clear all
+segments on that device in one call. To represent a fixed-size contribution
+that should move with a live reading, use an additive segment instead of an
+explicit range.
+
 ### Axis presentation and limits
 
 Configure axis divisions, Y labels, and device-label rotation through

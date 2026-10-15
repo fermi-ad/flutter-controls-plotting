@@ -59,8 +59,10 @@ class BarChartController extends ChangeNotifier {
   /// and point respectively. Channel errors are replaced by those in this
   /// reply, rather than retained across partial replies.
   ///
-  /// In stacked layout, invalid resulting intervals throw [ArgumentError]
-  /// before publishing the new snapshot.
+  /// In stacked layout, explicit ranges keep their fixed bounds and are not
+  /// rebased when a streamed contribution changes. Invalid resulting intervals
+  /// throw [ArgumentError] and reject the entire reply, including other devices'
+  /// updates and metadata, without changing [data] or notifying listeners.
   void applyReply(
     PlotReply reply, {
     String segmentKey = 'value',
@@ -113,7 +115,9 @@ class BarChartController extends ChangeNotifier {
   /// segment on the same signed side of zero. Positive ranges extend upward;
   /// negative ranges extend downward. Gaps, overlaps, ranges crossing zero,
   /// ranges reversing toward zero, and non-finite bounds throw [ArgumentError]
-  /// without changing the current chart data.
+  /// without changing the current chart data. Bounds are fixed coordinates and
+  /// are never automatically rebased; upstream edits that break contiguity are
+  /// rejected. Use [setSegment] for contributions that should move with the stack.
   void setRangeSegment({
     required String device,
     required String key,
@@ -139,9 +143,11 @@ class BarChartController extends ChangeNotifier {
   /// only [device], removes all its segments. With only [key], removes that
   /// key from every device. With neither, removes all segments.
   ///
-  /// Remaining explicit ranges are not revalidated or rebased. Removing an
-  /// earlier stacked contribution can leave a gap that must be repaired before
-  /// resolving or rendering that stack.
+  /// In stacked layout, validates all remaining stacks before publishing.
+  /// Explicit ranges keep their fixed bounds and are not rebased. Removals that
+  /// break contiguity throw [ArgumentError] without changing [data] on any device
+  /// or notifying listeners. Remove dependent ranges first, or clear all
+  /// segments on the device in one call.
   void clearSegment({String? device, String? key}) {
     _reducer.clearSegment(device: device, key: key);
     notifyListeners();

@@ -25,6 +25,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Clip grouped and stacked bar geometry to the visible Y-axis limits while retaining original model values for tooltip details.
 - Keep rotated device labels anchored to their categories and reserve space to reduce label clipping.
 - Keep bar-chart tooltips within plot bounds using automatic placement.
+- Validate remaining stacked segments before publishing removals; reject invalid removals without changing chart state or notifying listeners.
+- Document fixed explicit-range bounds and atomic rejection of streamed updates that break stack contiguity, with regression coverage for both signed sides and multi-device operations.
 
 ## 1.1.0 2026-09-15
 

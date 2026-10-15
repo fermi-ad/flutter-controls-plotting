@@ -253,7 +253,12 @@ class BarChartReducer {
   ///
   /// Accepted points update units and timestamps. Existing keys retain their
   /// color and insertion position; new keys are appended with a resolved color.
-  /// Invalid resulting stacks throw [ArgumentError] without changing [data].
+  /// In stacked layout, explicit ranges retain their fixed bounds; they are not
+  /// rebased when a streamed contribution changes. If an update makes a range
+  /// non-contiguous, or otherwise invalidates a stack, throws [ArgumentError]
+  /// and rejects the entire reply without changing [data], including other
+  /// devices' segments, units, timestamps, and channel errors. Use additive
+  /// segments for contributions that should move with the preceding stack.
   void applyReply(
     PlotReply reply, {
     String segmentKey = 'value',
@@ -362,7 +367,11 @@ class BarChartReducer {
   ///
   /// In [BarChartLayout.stacked], [start] must match the preceding resolved end
   /// on its signed side of zero, and [end] must extend away from zero. Invalid
-  /// resulting stacks throw [ArgumentError] without changing [data].
+  /// resulting stacks throw [ArgumentError] without changing [data]. Bounds are
+  /// fixed coordinates, not a contribution size, and are never automatically
+  /// rebased. Updates or removals of earlier contributions are rejected if they
+  /// make a remaining range non-contiguous. Use [setSegment] for a contribution
+  /// whose position should follow the preceding stack.
   void setRangeSegment({
     required String device,
     required String key,
@@ -409,8 +418,11 @@ class BarChartReducer {
   /// are considered. A supplied [key] removes only that named segment; otherwise
   /// all segments on the selected devices are removed.
   ///
-  /// Does not revalidate or rebase remaining explicit ranges. Removing an earlier
-  /// contribution can leave a stack invalid until the ranges are repaired.
+  /// In stacked layout, validates all remaining stacks before publishing.
+  /// Explicit ranges retain their fixed bounds and are not rebased. If removing
+  /// an earlier contribution makes a range non-contiguous, throws [ArgumentError]
+  /// without changing [data] on any device. Remove dependent ranges first, or
+  /// clear all segments on the device in one call.
   void clearSegment({String? device, String? key}) {
     final next = <String, List<BarSegment>>{
       for (final entry in _data.segmentsByDevice.entries)
@@ -427,6 +439,7 @@ class BarChartReducer {
         if (segments.isEmpty) next.remove(name);
       }
     }
+    _validateStackedSegments(next);
     _data = _data.copyWith(segmentsByDevice: next);
   }
 }
