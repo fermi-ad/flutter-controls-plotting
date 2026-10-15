@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gql_acsys/flutter_gql_acsys.dart';
@@ -85,7 +87,331 @@ void main() {
     final chart = tester.widget<BarChart>(find.byType(BarChart));
     expect(chart.data.barGroups.single.barRods.single.width, 30);
   });
+
+  testWidgets('renders contiguous segments as one stacked rod', (tester) async {
+    final reducer = BarChartReducer(
+      deviceNames: ['A', 'B'],
+      style: const BarChartStyle(layout: BarChartLayout.stacked),
+    );
+    reducer.setSegment(
+      device: 'A',
+      key: 'first',
+      label: 'First',
+      value: 2,
+      color: Colors.red,
+    );
+    reducer.setRangeSegment(
+      device: 'A',
+      key: 'second',
+      label: 'Second',
+      start: 2,
+      end: 5,
+      color: Colors.blue,
+    );
+    reducer.setSegment(
+      device: 'B',
+      key: 'only',
+      label: 'Only',
+      value: 7,
+      color: Colors.green,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) =>
+              const FlChartBarAdapter().build(context, reducer.data),
+        ),
+      ),
+    );
+
+    final chart = tester.widget<BarChart>(find.byType(BarChart));
+    final firstRod = chart.data.barGroups[0].barRods.single;
+    final secondRod = chart.data.barGroups[1].barRods.single;
+    expect(firstRod.toY, 5);
+    expect(firstRod.rodStackItems, hasLength(2));
+    expect(firstRod.rodStackItems[0].fromY, 0);
+    expect(firstRod.rodStackItems[0].toY, 2);
+    expect(firstRod.rodStackItems[0].color, Colors.red);
+    expect(firstRod.rodStackItems[1].fromY, 2);
+    expect(firstRod.rodStackItems[1].toY, 5);
+    expect(firstRod.rodStackItems[1].color, Colors.blue);
+    expect(secondRod.toY, 7);
+    expect(secondRod.rodStackItems, hasLength(1));
+    expect(chart.data.maxY, greaterThan(7));
+  });
+
+  testWidgets('renders positive and negative stacks from zero', (tester) async {
+    final reducer = BarChartReducer(
+      deviceNames: ['Device A'],
+      style: const BarChartStyle(layout: BarChartLayout.stacked),
+    );
+    reducer.setSegment(
+      device: 'Device A',
+      key: 'up',
+      label: 'Up',
+      value: 2,
+      color: Colors.red,
+    );
+    reducer.setSegment(
+      device: 'Device A',
+      key: 'down',
+      label: 'Down',
+      value: -3,
+      color: Colors.blue,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) =>
+              const FlChartBarAdapter().build(context, reducer.data),
+        ),
+      ),
+    );
+
+    final rod = tester
+        .widget<BarChart>(find.byType(BarChart))
+        .data
+        .barGroups
+        .single
+        .barRods
+        .single;
+    expect(rod.fromY, -3);
+    expect(rod.toY, 2);
+    expect(rod.rodStackItems[0].fromY, 0);
+    expect(rod.rodStackItems[0].toY, 2);
+    expect(rod.rodStackItems[1].fromY, 0);
+    expect(rod.rodStackItems[1].toY, -3);
+  });
+
+  testWidgets('clips grouped rods to fixed Y limits', (tester) async {
+    final reducer = BarChartReducer(
+      deviceNames: ['Device A'],
+      style: const BarChartStyle(minY: -1, maxY: 1),
+    );
+    reducer.setSegment(
+      device: 'Device A',
+      key: 'high',
+      label: 'High',
+      value: 3,
+    );
+    reducer.setSegment(device: 'Device A', key: 'low', label: 'Low', value: -2);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) =>
+              const FlChartBarAdapter().build(context, reducer.data),
+        ),
+      ),
+    );
+
+    final rods = tester
+        .widget<BarChart>(find.byType(BarChart))
+        .data
+        .barGroups
+        .single
+        .barRods;
+    expect(rods, hasLength(2));
+    expect(rods[0].fromY, 0);
+    expect(rods[0].toY, 1);
+    expect(rods[1].fromY, 0);
+    expect(rods[1].toY, -1);
+  });
+
+  testWidgets('clips stacked geometry while preserving raw tooltip values', (
+    tester,
+  ) async {
+    final reducer = BarChartReducer(
+      deviceNames: ['Device A'],
+      style: const BarChartStyle(
+        layout: BarChartLayout.stacked,
+        minY: 0,
+        maxY: 3,
+      ),
+    );
+    reducer.setSegment(
+      device: 'Device A',
+      key: 'first',
+      label: 'First',
+      value: 2,
+      color: Colors.red,
+    );
+    reducer.setSegment(
+      device: 'Device A',
+      key: 'second',
+      label: 'Second',
+      value: 3,
+      color: Colors.blue,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) =>
+              const FlChartBarAdapter().build(context, reducer.data),
+        ),
+      ),
+    );
+
+    final chart = tester.widget<BarChart>(find.byType(BarChart));
+    final rod = chart.data.barGroups.single.barRods.single;
+    final tooltip = chart.data.barTouchData.touchTooltipData.getTooltipItem(
+      chart.data.barGroups.single,
+      0,
+      rod,
+      0,
+    );
+
+    expect(rod.rodStackItems[0].fromY, 0);
+    expect(rod.rodStackItems[0].toY, 2);
+    expect(rod.rodStackItems[1].fromY, 2);
+    expect(rod.rodStackItems[1].toY, 3);
+    expect(tooltip!.text, contains('2.000–5.000'));
+  });
+
+  testWidgets('formats fractional Y labels without collapsing values', (
+    tester,
+  ) async {
+    final reducer = BarChartReducer(
+      deviceNames: ['Device A'],
+      style: const BarChartStyle(minY: 0, maxY: 0.4, yAxisDivisions: 4),
+    );
+    reducer.applyReply(_reply('Device A', 0.2));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) =>
+              const FlChartBarAdapter().build(context, reducer.data),
+        ),
+      ),
+    );
+
+    final chart = tester.widget<BarChart>(find.byType(BarChart));
+    final yTitle = chart.data.titlesData.leftTitles.sideTitles.getTitlesWidget(
+      0.1,
+      _titleMeta(),
+    );
+
+    expect((yTitle as SideTitleWidget).child, isA<Text>());
+    expect((yTitle.child as Text).data, '0.1');
+  });
+
+  testWidgets(
+    'keeps rotated labels anchored and spaced like horizontal labels',
+    (tester) async {
+      for (final rotationDegrees in [30.0, 90.0]) {
+        final reducer = BarChartReducer(
+          deviceNames: ['Long device label'],
+          style: BarChartStyle(xAxisLabelRotation: rotationDegrees),
+        );
+        reducer.applyReply(_reply('Long device label', 1));
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) =>
+                  const FlChartBarAdapter().build(context, reducer.data),
+            ),
+          ),
+        );
+
+        final chart = tester.widget<BarChart>(find.byType(BarChart));
+        final title =
+            chart.data.titlesData.bottomTitles.sideTitles.getTitlesWidget(
+                  0,
+                  _titleMeta(),
+                )
+                as SideTitleWidget;
+        final anchor = title.child as Align;
+        final transform = anchor.child as Transform;
+
+        expect(title.space, 8, reason: 'rotation: $rotationDegrees');
+        expect(anchor.widthFactor, 0, reason: 'rotation: $rotationDegrees');
+        expect(anchor.heightFactor, 0, reason: 'rotation: $rotationDegrees');
+        expect(transform.alignment, Alignment.centerLeft);
+        expect(
+          transform.transform.storage[0],
+          closeTo(math.cos(rotationDegrees * math.pi / 180), 0.000001),
+        );
+        expect(
+          chart.data.titlesData.bottomTitles.sideTitles.reservedSize,
+          greaterThanOrEqualTo(48),
+        );
+      }
+    },
+  );
+
+  testWidgets('uses configured Y divisions, label formatter, and X rotation', (
+    tester,
+  ) async {
+    final reducer = BarChartReducer(
+      deviceNames: ['Device A'],
+      style: BarChartStyle(
+        minY: 0,
+        maxY: 1,
+        yAxisDivisions: 4,
+        xAxisLabelRotation: 45,
+        yAxisLabelFormatter: (value) => '${value.toStringAsFixed(2)} V',
+      ),
+    );
+    reducer.applyReply(_reply('Device A', 0.5));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) =>
+              const FlChartBarAdapter().build(context, reducer.data),
+        ),
+      ),
+    );
+
+    final chart = tester.widget<BarChart>(find.byType(BarChart));
+    final leftTitles = chart.data.titlesData.leftTitles.sideTitles;
+    final bottomTitles = chart.data.titlesData.bottomTitles.sideTitles;
+    final yTitle = leftTitles.getTitlesWidget(0.25, _titleMeta());
+    final xTitle = bottomTitles.getTitlesWidget(0, _titleMeta());
+
+    expect(leftTitles.interval, 0.25);
+    expect(chart.data.gridData.horizontalInterval, 0.25);
+    expect(chart.data.gridData.drawVerticalLine, isFalse);
+    expect(
+      chart.data.barTouchData.touchTooltipData.fitInsideHorizontally,
+      isTrue,
+    );
+    expect(
+      chart.data.barTouchData.touchTooltipData.fitInsideVertically,
+      isTrue,
+    );
+    expect(
+      chart.data.barTouchData.touchTooltipData.direction,
+      TooltipDirection.auto,
+    );
+    expect((yTitle as SideTitleWidget).child, isA<Text>());
+    expect(((yTitle.child as Text).data), '0.25 V');
+    expect((xTitle as SideTitleWidget).angle, 0);
+    final anchor = xTitle.child as Align;
+    final rotation = anchor.child as Transform;
+    expect(anchor.widthFactor, 0);
+    expect(rotation.alignment, Alignment.centerLeft);
+    expect(rotation.transform.storage[0], closeTo(0.707106, 0.000001));
+    expect(bottomTitles.reservedSize, greaterThanOrEqualTo(48));
+  });
 }
+
+TitleMeta _titleMeta() => TitleMeta(
+  min: 0,
+  max: 1,
+  parentAxisSize: 100,
+  axisPosition: 0,
+  appliedInterval: 1,
+  sideTitles: SideTitles(),
+  formattedValue: '',
+  axisSide: AxisSide.bottom,
+  rotationQuarterTurns: 0,
+);
 
 PlotReply _reply(String device, double value) => PlotReply(
   plotId: 'test',

@@ -1,25 +1,50 @@
+import 'dart:math' as math;
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_controls_plotting/entities/bar_chart_model.dart';
+import 'package:flutter_controls_plotting/entities/bar_chart_style.dart';
 import 'package:flutter_controls_plotting/entities/bar_segment.dart';
 import 'package:flutter_controls_plotting/widgets/bar_chart_adapter.dart';
 
 /// [`fl_chart`](https://pub.dev/packages/fl_chart) implementation for
-/// categorical, grouped device bars.
+/// categorical device bars.
 ///
-/// Each device is rendered as a group containing one independent bar per
-/// [BarSegment] the caller supplied — the adapter does not stack or derive
-/// segments, it simply renders what [BarChartModel] holds.
+/// [BarChartLayout.grouped] renders additive [BarSegment] values from zero as
+/// independent rods; explicit ranges have no grouped geometry.
+/// [BarChartLayout.stacked] maps resolved signed intervals to one rod per device.
+///
+/// Geometry is clipped to the visible Y bounds, and zero-length or fully clipped
+/// rods are omitted. Tooltips retain the original values or resolved intervals
+/// and append the device's units. Channel errors add an icon to device labels
+/// without removing previously acquired values.
 class FlChartBarAdapter extends BarChartAdapter {
+  /// Creates a stateless renderer; acquisition and controller ownership remain
+  /// with the caller.
   const FlChartBarAdapter();
 
+  /// Builds grouped or stacked geometry from an immutable [data] snapshot.
+  ///
+  /// Unspecified Y bounds are derived from values with padding. Stacked data is
+  /// resolved before rendering and invalid stacks throw [ArgumentError].
   @override
   Widget build(BuildContext context, BarChartModel data) {
-    final values = data.deviceNames
-        .expand(data.segmentsFor)
-        .map((segment) => segment.value)
-        .whereType<double>()
-        .toList();
+    final stackedSegments = data.style.layout == BarChartLayout.stacked
+        ? <String, List<ResolvedBarSegment>>{
+            for (final device in data.deviceNames)
+              device: data.resolvedStackFor(device),
+          }
+        : const <String, List<ResolvedBarSegment>>{};
+    final values = data.style.layout == BarChartLayout.stacked
+        ? stackedSegments.values
+              .expand((segments) => segments)
+              .expand((segment) => [segment.start, segment.end])
+              .toList()
+        : data.deviceNames
+              .expand(data.segmentsFor)
+              .map((segment) => segment.value)
+              .whereType<double>()
+              .toList();
     final calculatedMin = values.isEmpty
         ? 0.0
         : values.reduce((a, b) => a < b ? a : b);
@@ -30,21 +55,41 @@ class FlChartBarAdapter extends BarChartAdapter {
     final padding = range == 0
         ? (calculatedMax.abs() * 0.1).clamp(1.0, double.infinity)
         : range * 0.1;
+    final minY =
+        data.style.minY ?? (calculatedMin < 0 ? calculatedMin - padding : 0);
+    final maxY = data.style.maxY ?? calculatedMax + padding;
+    final yAxisInterval = data.style.yAxisDivisions == null
+        ? null
+        : (maxY - minY) / data.style.yAxisDivisions!;
+    final xAxisRotation = data.style.xAxisLabelRotation * math.pi / 180;
+    final bottomTitleReservedSize = _bottomTitleReservedSize(
+      context,
+      data.deviceNames,
+      xAxisRotation,
+    );
 
     return BarChart(
       BarChartData(
-        minY:
-            data.style.minY ??
-            (calculatedMin < 0 ? calculatedMin - padding : 0),
-        maxY: data.style.maxY ?? calculatedMax + padding,
+        minY: minY,
+        maxY: maxY,
         alignment: BarChartAlignment.spaceAround,
         groupsSpace: data.style.groupSpace,
+        gridData: FlGridData(
+          horizontalInterval: yAxisInterval,
+          drawVerticalLine: false,
+        ),
         barGroups: [
           for (var index = 0; index < data.deviceNames.length; index++)
             BarChartGroupData(
               x: index,
               barsSpace: data.style.segmentSpace,
-              barRods: _barRodsFor(data, data.deviceNames[index]),
+              barRods: _barRodsFor(
+                data,
+                data.deviceNames[index],
+                stackedSegments[data.deviceNames[index]],
+                minY,
+                maxY,
+              ),
             ),
         ],
         titlesData: FlTitlesData(
@@ -55,13 +100,23 @@ class FlChartBarAdapter extends BarChartAdapter {
           rightTitles: const AxisTitles(
             sideTitles: SideTitles(showTitles: false),
           ),
-          leftTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: true, reservedSize: 46),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: data.style.showTitles,
+              reservedSize: 56,
+              interval: yAxisInterval,
+              getTitlesWidget: (value, meta) => SideTitleWidget(
+                meta: meta,
+                child: Text(
+                  _formatYAxisValue(data.style, value, yAxisInterval),
+                ),
+              ),
+            ),
           ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: data.style.showTitles,
-              reservedSize: 48,
+              reservedSize: bottomTitleReservedSize,
               getTitlesWidget: (value, meta) {
                 final index = value.toInt();
                 if (index < 0 || index >= data.deviceNames.length) {
@@ -71,26 +126,14 @@ class FlChartBarAdapter extends BarChartAdapter {
                 final hasError = data.errorsByDevice.containsKey(device);
                 return SideTitleWidget(
                   meta: meta,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (hasError) ...[
-                        const Icon(
-                          Icons.error_outline,
-                          size: 12,
-                          color: Colors.red,
-                        ),
-                        const SizedBox(width: 2),
-                      ],
-                      Flexible(
-                        child: Text(
-                          device,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 2,
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ],
+                  // Preserve the original fl_chart chart-to-title gap at every
+                  // angle. The zero-height rotated anchor prevents the title
+                  // reservation from becoming additional visible whitespace.
+                  space: 8,
+                  child: _xAxisLabel(
+                    device: device,
+                    hasError: hasError,
+                    rotationRadians: xAxisRotation,
                   ),
                 );
               },
@@ -100,13 +143,32 @@ class FlChartBarAdapter extends BarChartAdapter {
         barTouchData: BarTouchData(
           enabled: true,
           touchTooltipData: BarTouchTooltipData(
+            fitInsideHorizontally: true,
+            fitInsideVertically: true,
+            direction: TooltipDirection.auto,
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               final device = data.deviceNames[group.x.toInt()];
+              final unit = data.unitsByDevice[device];
+              final suffix = unit == null || unit.isEmpty ? '' : ' $unit';
+              if (data.style.layout == BarChartLayout.stacked) {
+                final segments = stackedSegments[device] ?? const [];
+                if (segments.isEmpty) return null;
+                final lines = segments
+                    .map(
+                      (resolved) =>
+                          '${resolved.segment.label}: '
+                          '${resolved.start.toStringAsFixed(3)}–'
+                          '${resolved.end.toStringAsFixed(3)}$suffix',
+                    )
+                    .join('\n');
+                return BarTooltipItem(
+                  '$device\n$lines',
+                  const TextStyle(color: Colors.white),
+                );
+              }
               final segments = data.segmentsFor(device);
               if (rodIndex < 0 || rodIndex >= segments.length) return null;
               final segment = segments[rodIndex];
-              final unit = data.unitsByDevice[device];
-              final suffix = unit == null || unit.isEmpty ? '' : ' $unit';
               final valueText = segment.value == null
                   ? 'n/a'
                   : '${segment.value!.toStringAsFixed(3)}$suffix';
@@ -121,16 +183,177 @@ class FlChartBarAdapter extends BarChartAdapter {
     );
   }
 
-  List<BarChartRodData> _barRodsFor(BarChartModel data, String device) {
+  // Custom formatting takes precedence. For explicit tick intervals, derive
+  // decimal precision from the interval and trim insignificant trailing zeros.
+  String _formatYAxisValue(
+    BarChartStyle style,
+    double value,
+    double? interval,
+  ) {
+    final formatter = style.yAxisLabelFormatter;
+    if (formatter != null) return formatter(value);
+    if (interval == null || interval == 0 || !interval.isFinite) {
+      return value.toString();
+    }
+
+    final absoluteInterval = interval.abs();
+    final decimals = absoluteInterval >= 1
+        ? 0
+        : (-math.log(absoluteInterval) / math.ln10).ceil().clamp(0, 12);
+    final fixed = value.toStringAsFixed(decimals);
+    return fixed.contains('.')
+        ? fixed
+              .replaceFirst(RegExp(r'0+$'), '')
+              .replaceFirst(RegExp(r'\.$'), '')
+        : fixed;
+  }
+
+  Widget _xAxisLabel({
+    required String device,
+    required bool hasError,
+    required double rotationRadians,
+  }) {
+    final isUnrotated = _isUnrotated(rotationRadians);
+    final label = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (hasError) ...[
+          const Icon(Icons.error_outline, size: 12, color: Colors.red),
+          const SizedBox(width: 2),
+        ],
+        Text(
+          device,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 2,
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+    if (isUnrotated) return label;
+
+    // SideTitleWidget centers its child's layout bounds on the category. Give
+    // it a zero-width anchor and rotate around the leading edge's midpoint, so
+    // the bar meets the start of the label. The midpoint is essential at 90°:
+    // it keeps the vertical center of the text aligned with the bar.
+    return Align(
+      alignment: Alignment.centerLeft,
+      widthFactor: 0,
+      heightFactor: 0,
+      child: Transform.rotate(
+        angle: rotationRadians,
+        alignment: Alignment.centerLeft,
+        child: label,
+      ),
+    );
+  }
+
+  bool _isUnrotated(double rotationRadians) =>
+      (rotationRadians / math.pi).remainder(1).abs() < 1e-9;
+
+  double _bottomTitleReservedSize(
+    BuildContext context,
+    List<String> deviceNames,
+    double rotationRadians,
+  ) {
+    if (_isUnrotated(rotationRadians)) return 48;
+
+    final textDirection = Directionality.of(context);
+    final textScaler = MediaQuery.textScalerOf(context);
+    final longestLabel = deviceNames.fold<String>(
+      '',
+      (longest, device) => device.length > longest.length ? device : longest,
+    );
+    final painter = TextPainter(
+      text: TextSpan(text: longestLabel),
+      textDirection: textDirection,
+      textScaler: textScaler,
+      maxLines: 2,
+    )..layout();
+    final sine = math.sin(rotationRadians).abs();
+    final cosine = math.cos(rotationRadians).abs();
+    // Reserve the rotated label's painted vertical extent to prevent clipping.
+    // The chart-to-title gap remains the separate eight-pixel title spacing.
+    return math.max(48, painter.width * sine + painter.height * cosine);
+  }
+
+  List<BarChartRodData> _barRodsFor(
+    BarChartModel data,
+    String device,
+    List<ResolvedBarSegment>? resolvedStack,
+    double minY,
+    double maxY,
+  ) {
+    if (data.style.layout == BarChartLayout.stacked) {
+      final segments = resolvedStack ?? const [];
+      if (segments.isEmpty) return const [];
+      final visibleSegments = [
+        for (final resolved in segments)
+          _clampStackSegment(resolved, minY, maxY),
+      ].whereType<ResolvedBarSegment>().toList();
+      if (visibleSegments.isEmpty) return const [];
+      final extent = _stackExtent(visibleSegments);
+      return [
+        BarChartRodData(
+          fromY: extent.$1,
+          toY: extent.$2,
+          width: data.style.segmentWidth,
+          borderRadius: data.style.borderRadius,
+          color: visibleSegments.last.segment.color,
+          rodStackItems: [
+            for (final resolved in visibleSegments)
+              BarChartRodStackItem(
+                resolved.start,
+                resolved.end,
+                resolved.segment.color,
+              ),
+          ],
+        ),
+      ];
+    }
+
     final segments = data.segmentsFor(device);
     return [
       for (final segment in segments)
-        BarChartRodData(
-          toY: segment.value ?? 0,
-          width: data.style.segmentWidth,
-          borderRadius: data.style.borderRadius,
-          color: segment.color,
-        ),
+        if (_clampRod(0, segment.value ?? 0, minY, maxY) case final visible?)
+          BarChartRodData(
+            fromY: visible.$1,
+            toY: visible.$2,
+            width: data.style.segmentWidth,
+            borderRadius: data.style.borderRadius,
+            color: segment.color,
+          ),
     ];
+  }
+
+  // Clamp endpoints without reversing their direction. A collapsed interval
+  // has no visible geometry, even though its raw value remains in the model.
+  (double, double)? _clampRod(
+    double fromY,
+    double toY,
+    double minY,
+    double maxY,
+  ) {
+    final clampedFromY = fromY.clamp(minY, maxY).toDouble();
+    final clampedToY = toY.clamp(minY, maxY).toDouble();
+    return clampedFromY == clampedToY ? null : (clampedFromY, clampedToY);
+  }
+
+  (double, double) _stackExtent(List<ResolvedBarSegment> segments) {
+    final values = segments.expand((segment) => [segment.start, segment.end]);
+    return (values.reduce(math.min), values.reduce(math.max));
+  }
+
+  ResolvedBarSegment? _clampStackSegment(
+    ResolvedBarSegment segment,
+    double minY,
+    double maxY,
+  ) {
+    final visible = _clampRod(segment.start, segment.end, minY, maxY);
+    if (visible == null) return null;
+    return ResolvedBarSegment(
+      segment: segment.segment,
+      start: visible.$1,
+      end: visible.$2,
+    );
   }
 }

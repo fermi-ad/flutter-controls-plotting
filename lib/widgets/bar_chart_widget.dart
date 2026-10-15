@@ -12,9 +12,11 @@ import 'package:flutter_controls_plotting/widgets/fl_chart_bar_adapter.dart';
 
 /// Displays the latest streamed reading for each device as categorical bars.
 ///
-/// Each entry in [devices] defines one stable category on the X axis. Each
-/// device is rendered as a group of one or more independent bars — one per
-/// named segment supplied through [controller]. This widget has no notion of
+/// Each entry in [devices] defines one stable category on the X axis. Named
+/// segments are rendered as independent bars by default, or as signed stacks
+/// when the controller's style uses [BarChartLayout.stacked]. Streamed replies
+/// update the segment keyed `value` with the label `Value`; other segments can
+/// be supplied through [controller]. This widget has no notion of
 /// "reference" or "comparison" values; callers that want that behavior can
 /// add named segments (e.g. `reading`, `setpoint`) via the controller and
 /// style/label them accordingly.
@@ -25,35 +27,68 @@ import 'package:flutter_controls_plotting/widgets/fl_chart_bar_adapter.dart';
 /// widget's public API.
 class BarChartWidget extends StatefulWidget {
   /// Devices to request and display, in list order.
+  ///
+  /// Use distinct names matching the channel names returned by [daqService].
+  /// An empty list shows a placeholder and does not start acquisition. With an
+  /// external [controller], this list should match its fixed device order.
   final List<String> devices;
 
   /// Service that supplies the streamed device readings.
+  ///
+  /// Acquisition starts after inherited dependencies are available. The widget
+  /// cancels its subscription when disposed, but does not dispose this service.
+  /// Replacing the service restarts acquisition only for an owned controller.
   final PlotDAQService daqService;
 
-  /// Optional controller for adding/updating segments and observing
-  /// externally the latest chart state. When supplied, [style] and
-  /// [colorForDevice] are ignored — the controller owns its own style and
-  /// color resolution, set when it was constructed.
+  /// Optional controller for updating segments and observing the latest state.
+  ///
+  /// When supplied, [style] and [colorForDevice] are ignored: the controller
+  /// owns the style and color resolution set at its construction. The caller
+  /// remains responsible for disposing an external controller.
+  ///
+  /// When omitted, the widget creates and disposes its own controller.
+  /// Changing [devices] or [daqService] then recreates that controller and
+  /// restarts acquisition, discarding the previous chart state. With an
+  /// external controller, replace [controller] to restart acquisition or
+  /// change its fixed device set; changing [devices] alone is unsupported.
   final BarChartController? controller;
 
-  /// DAQ settings for the stream-driven chart.
+  /// DAQ settings forwarded to [PlotDAQService.retrievePlot].
+  ///
+  /// Changing these settings alone does not restart an active subscription.
+  /// They take effect the next time acquisition starts.
   final BarAcquisitionOptions acquisition;
 
-  /// Renderer-neutral presentation settings. Ignored when [controller] is
-  /// supplied.
+  /// Renderer-neutral presentation settings for an owned controller.
+  ///
+  /// Ignored when [controller] is supplied. Changing these settings alone does
+  /// not update an existing controller; they apply when it is next created.
   final BarChartStyle style;
 
-  /// Resolves the color for a device's streamed segment. Falls back to
-  /// [BarChartStyle.defaultColor] when not supplied. Ignored when
-  /// [controller] is supplied.
+  /// Resolves the color for a device's streamed segment.
+  ///
+  /// Falls back to [BarChartStyle.defaultColor] when omitted and is ignored
+  /// when [controller] is supplied. The resolver is captured when an owned
+  /// controller is created; changing it alone does not update that controller.
   final Color Function(String device)? colorForDevice;
 
-  /// Called after the controller receives a new reply or segment update.
+  /// Called synchronously whenever the attached controller notifies listeners.
+  ///
+  /// Receives its latest immutable snapshot after a reply, segment update, or
+  /// clear operation, including operations that leave values unchanged. It is
+  /// not called just for attaching a controller or rebuilding the widget.
   final void Function(BarChartModel data)? onDataChanged;
 
-  /// Called when acquisition or stream processing reports an error.
+  /// Called when starting acquisition throws or the stream emits an error.
+  ///
+  /// Existing chart data remains visible; an error placeholder is shown only
+  /// when there are no segments. A subsequent reply clears the stream error.
+  /// Per-channel negative statuses are recorded in [BarChartModel.errorsByDevice]
+  /// instead and do not invoke this callback. Exceptions thrown by controller
+  /// updates or [onDataChanged] are not routed through this callback.
   final void Function(Object error, StackTrace stackTrace)? onError;
 
+  /// Creates a stream-driven chart with an optional externally owned controller.
   const BarChartWidget({
     super.key,
     required this.devices,
