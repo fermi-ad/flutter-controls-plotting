@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -426,7 +427,9 @@ PlotReply _reply(String device, double value) => PlotReply(
       units: '',
       rate: '',
       status: 0,
-      points: [PlotPoint(t: 1, value: DevScalar(value))],
+      series: ScalarSeries.fromPoints([
+        PlotPoint(t: 1, value: DevScalar(value)),
+      ]),
     ),
   ],
 );

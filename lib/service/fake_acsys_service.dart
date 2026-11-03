@@ -58,14 +58,10 @@ class FakeACSysService implements ACSysServiceAPI {
                 units: "A",
                 rate: getRate(updateRate),
                 status: 0,
-                points: [
-                  PlotPoint(
-                    t: getCurrentAcsysEpochTime(),
-                    value: DevScalarArray(
-                      Float64List.fromList(List.generate(500, (i) => 5)),
-                    ),
-                  ),
-                ],
+                series: ArraySeries.build(
+                  Float64List.fromList([getCurrentAcsysEpochTime()]),
+                  [Float64List.fromList(List.generate(500, (i) => 5.0))],
+                ),
               ),
             ],
           ),
@@ -86,13 +82,19 @@ class FakeACSysService implements ACSysServiceAPI {
                 units: "",
                 rate: getRate(updateRate),
                 status: -1,
-                points: [],
+                series: ArraySeries.empty(),
               ),
             ],
           ),
         );
     }
   }
+
+  @override
+  Future<Status> setDevice({
+    required String forDRF,
+    required DeviceValue newSetting,
+  }) => throw UnimplementedError();
 
   @override
   Future<Status> submit({
