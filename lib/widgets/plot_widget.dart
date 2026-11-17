@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -126,13 +127,16 @@ class PlotState extends State<PlotWidget> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _focusNode.requestFocus();
+      if (mounted) _focusNode.requestFocus();
     });
   }
 
   @override
   void dispose() {
+    _reconnectTimer?.cancel();
+    _clearPendingReplies();
     _plotStreamSubscription?.cancel();
+    _plotStreamMetadata.dispose();
     _focusNode.dispose();
     super.dispose();
   }
@@ -182,10 +186,9 @@ class PlotState extends State<PlotWidget> {
 
     if (_streamShouldReset) {
       _initializeNewStream();
-    } else if (_plotStreamMetadata.plotReply != null) {
-      // Simulate last plot reply to reload plot data with potntially new configuration.
-      // This mimics the behavior of stream builder.
-      _receiveData(_plotStreamMetadata.plotReply!);
+    } else {
+      _findLimits();
+      if (!widget.isPaused) _scheduleReplyDrain();
     }
     super.didUpdateWidget(oldWidget);
   }
@@ -286,6 +289,8 @@ class PlotState extends State<PlotWidget> {
   }
 
   void _attemptReconnection() {
+    if (_reconnectTimer != null) return;
+
     Duration? delay;
 
     if (_plotStreamMetadata.failedReconnectCount == 0 &&
@@ -297,28 +302,24 @@ class PlotState extends State<PlotWidget> {
       delay = const Duration(seconds: 1);
     }
 
-    if (delay != null) {
-      // Delayed reconnection attempt
-      Future.delayed(delay, () {
-        if (mounted) {
-          _initializeStream();
-        }
-      });
-    } else {
-      // Immediate reconnection for nonconfigured (reconnectionDelayMs) first attempt
-      _initializeStream();
-    }
-
     _plotStreamMetadata.incrementFailedReconnectCount();
+    _reconnectTimer = Timer(delay ?? Duration.zero, () {
+      _reconnectTimer = null;
+      if (mounted) _initializeStream();
+    });
   }
 
   void _initializeNewStream() {
+    _clearPendingReplies();
     _plotStreamMetadata.resetVarsForNewAcquisition();
     _initializeStream();
   }
 
   void _initializeStream() {
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
     _plotStreamSubscription?.cancel();
+    _plotStreamSubscription = null;
     _plotReply = null;
 
     _resetStream();
@@ -328,6 +329,8 @@ class PlotState extends State<PlotWidget> {
 
       _plotStreamSubscription = _plotStream!.listen(
         (plotReply) {
+          _reconnectTimer?.cancel();
+          _reconnectTimer = null;
           _plotStreamMetadata.resetFailedReconnectCount();
           _updateStreamConnectionChanged(ConnectionState.active);
           _receiveData(plotReply);
@@ -492,45 +495,77 @@ class PlotState extends State<PlotWidget> {
     }
   }
 
-  Future<void> _receiveData(PlotReply plotReply) async {
-    if (widget.isPaused) {
-      if (lastReply != null) {
-        _plotReply = lastReply;
-
-        _filterPoints();
-
-        _findLimits();
-
-        widget.onPlotUpdate?.call(lastReply!);
-      }
-
-      plotReplyList.add(plotReply);
-      if (plotReplyList.length > 100) {
-        plotReplyList.removeAt(0);
-      }
+  void _receiveData(PlotReply plotReply) {
+    if (!widget.isPaused && _pendingReplies.isEmpty) {
+      _applyReply(plotReply);
       return;
-    } else {
-      const chunkSize = 10;
-      for (int i = 0; i < plotReplyList.length; i++) {
-        _plotReply = plotReplyList[i];
-
-        _filterPoints();
-
-        _findLimits();
-
-        widget.onPlotUpdate?.call(plotReplyList[i]);
-
-        if ((i + 1) % chunkSize == 0) {
-          await Future.delayed(
-            Duration.zero,
-          ); // yield to event loop between chunks
-        }
-      }
-      plotReplyList.clear();
     }
 
-    lastReply = plotReply;
+    final bytes = _estimateReplyBytes(plotReply);
+    if (bytes > _maxPendingReplyBytes) return;
+    while (_pendingReplies.length >= 100 ||
+        _pendingReplyBytes + bytes > _maxPendingReplyBytes) {
+      _takePendingReply();
+    }
+    _pendingReplies.addLast((plotReply, bytes));
+    _pendingReplyBytes += bytes;
+    if (!widget.isPaused) _scheduleReplyDrain();
+  }
 
+  static int _estimateReplyBytes(PlotReply reply) {
+    var bytes = 128;
+    for (final channel in reply.data) {
+      bytes +=
+          128 +
+          2 *
+              (channel.name.length +
+                  channel.units.length +
+                  channel.rate.length);
+      for (final point in channel.points) {
+        bytes += 64;
+        bytes += switch (point.value) {
+          DevScalar() => 8,
+          DevStatusCode() => 8,
+          DevScalarArray(:final value) => 8 * value.length,
+          DevRaw(:final value) => value.length,
+          DevTimeSeries(:final value) => 32 * value.length,
+          DevText(:final value) => 2 * value.length,
+          DevTextArray(:final value) => value.fold(
+            0,
+            (bytes, text) => bytes + 16 + 2 * text.length,
+          ),
+        };
+      }
+    }
+    return bytes;
+  }
+
+  PlotReply _takePendingReply() {
+    final (reply, bytes) = _pendingReplies.removeFirst();
+    _pendingReplyBytes -= bytes;
+    return reply;
+  }
+
+  void _clearPendingReplies() {
+    _replyDrainTimer?.cancel();
+    _replyDrainTimer = null;
+    _pendingReplies.clear();
+    _pendingReplyBytes = 0;
+  }
+
+  void _scheduleReplyDrain() {
+    if (_pendingReplies.isEmpty || _replyDrainTimer != null) return;
+    _replyDrainTimer = Timer(Duration.zero, () {
+      _replyDrainTimer = null;
+      if (!mounted || widget.isPaused) return;
+      for (var i = 0; i < 10 && _pendingReplies.isNotEmpty; i++) {
+        _applyReply(_takePendingReply());
+      }
+      _scheduleReplyDrain();
+    });
+  }
+
+  void _applyReply(PlotReply plotReply) {
     if (widget.plotData.points.isEmpty) {
       // Switching from empty plot to plot with channels.
       // Ensure that min and max xy get adjusted appropriately.
@@ -670,7 +705,9 @@ class PlotState extends State<PlotWidget> {
 
   bool _errorsDismissed = false;
 
-  PlotReply? lastReply;
-
-  List<PlotReply> plotReplyList = [];
+  static const _maxPendingReplyBytes = 8 * 1024 * 1024;
+  final _pendingReplies = ListQueue<(PlotReply, int)>();
+  int _pendingReplyBytes = 0;
+  Timer? _replyDrainTimer;
+  Timer? _reconnectTimer;
 }

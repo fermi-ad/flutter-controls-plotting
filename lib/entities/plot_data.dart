@@ -155,6 +155,8 @@ class PlotData {
       var deviceValue = plotPoint.value;
       var time = plotPoint.t;
 
+      if (deviceValue is DevStatusCode) continue;
+
       if (deviceValue is DevScalarArray) {
         if (waveformDuration != null) {
           // Array-as-time-series mode: expand the array into individual scalar
@@ -193,6 +195,7 @@ class PlotData {
           }
         }
       } else if (deviceValue is DevScalar || deviceValue is DevTimeSeries) {
+        if (points.isEmpty) points.add([]);
         var t = time;
 
         if (triggerTimestamp != null) {
@@ -200,6 +203,7 @@ class PlotData {
         }
 
         if (deviceValue is DevTimeSeries) {
+          if (deviceValue.value.isEmpty) continue;
           points[0].add(
             PlottingPoint(
               x: deviceValue.value[0].$1,
@@ -245,6 +249,7 @@ class PlotData {
         ChannelSetting? channelSetting =
             channelMetadatas?[channelName]?.channelSetting;
         var segments = points[channelName]!;
+        if (segments.isEmpty) segments.add([]);
         var pointsList = segments.last;
         bool oneShotCleared = false;
 
@@ -555,7 +560,8 @@ class PlotData {
         if (confMaxX != null) {
           maxX = confMaxX;
         }
-        minX = maxX! - timeDelta;
+        if (maxX == null) return;
+        minX = maxX - timeDelta;
 
         // Only re-scan all stored points for Y limits when the visible window
         // has actually changed. The window changes when:

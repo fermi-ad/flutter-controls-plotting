@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gql_acsys/flutter_gql_acsys.dart';
 import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
-import 'package:flutter_controls_plotting/entities/plotting_fl_spot.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 import 'package:flutter_controls_plotting/widgets/plot_channel_title.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';

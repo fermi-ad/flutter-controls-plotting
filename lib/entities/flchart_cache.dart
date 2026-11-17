@@ -12,6 +12,8 @@ class FlchartCache {
   final Map<String, List<List<PlottingFlSpot>>> spots = {};
   final Map<String, PlottingFlSpot> tempSpot = {};
   final Map<String, List<int>> lastProcessedIndex = {};
+  final Map<String, Map<int, int>> _arrayPointCounts = {};
+  int? _frameSpotBudget;
 
   int? reducedPoints;
   int totalPoints = 0;
@@ -34,6 +36,19 @@ class FlchartCache {
   double? __dLoggerEstimatedNumberOfPoints;
   int? __dLoggerPointSkipCount;
 
+  void beginFrame({
+    required int spotBudget,
+    required bool fixedXWindow,
+    double? minX,
+    double? maxX,
+  }) {
+    if ((_frameSpotBudget != null && spotBudget > _frameSpotBudget!) ||
+        (fixedXWindow && (_spotsMinX != minX || _spotsMaxX != maxX))) {
+      clearAll(clearDataLoggerState: false);
+    }
+    _frameSpotBudget = spotBudget;
+  }
+
   List<PlottingFlSpot> toSpots({
     required List<PlottingPoint> points,
     required channelName,
@@ -47,6 +62,7 @@ class FlchartCache {
     bool appendExistingArrayPoints = false,
     // Last point will have its own segment for blinking puprposes created outside of cache.
     bool skipLastPoint = false,
+    int spotBudget = 10000,
   }) {
     if (!_resetCache) {
       _resetCache = shouldResetCache(
@@ -58,7 +74,7 @@ class FlchartCache {
     }
 
     if (_resetCache) {
-      clearAll();
+      clearAll(clearDataLoggerState: false);
     }
 
     estimateDataLoggerPoints(channelName: channelName, firstSample: points);
@@ -113,20 +129,10 @@ class FlchartCache {
 
       if (startIndex >= points.length) {
         if (appendExistingArrayPoints) {
-          totalPoints += ((maxX ?? points.length - 1) - (minX ?? 0) + 1)
-              .toInt();
-
-          if (minX != null && minX > 0) {
-            totalPoints += 1;
-          }
-          if (maxX != null && maxX < points.length - 1) {
-            totalPoints += 1;
-          }
+          totalPoints += _arrayPointCounts[channelName]?[segmentIndex] ?? 0;
         }
-        return _applyRenderStride(
-          flSpots,
-          _strideFor(channelName, segmentIndex),
-        );
+        _sampleInPlace(flSpots, spotBudget);
+        return List.of(flSpots);
       }
     } else {
       flSpots = [];
@@ -154,6 +160,9 @@ class FlchartCache {
     // We do a single reverse scan to respect the existing early-exit logic
     // (exitForScalar, xRangeMin break), then build newSpots oldest-to-newest.
     final List<int> eligibleIndices = [];
+    var eligibleCount = 0;
+    var sampleStride = 1;
+    int? lastEligibleIndex;
     for (int i = endIndex - 1; i >= startIndex; i--) {
       PlottingPoint point = points[i];
       var x = point.x;
@@ -190,11 +199,11 @@ class FlchartCache {
         if ((maxX != null && x > maxX) &&
             (maxXPair == null || maxXPair.x > x)) {
           maxXPair = PlottingPoint(x: x, y: y);
-          maxXPairIndex = eligibleIndices.length;
+          maxXPairIndex = i;
         } else if ((minX != null && x < minX) &&
             (minXPair == null || minXPair.x < x)) {
           minXPair = PlottingPoint(x: x, y: y);
-          minXPairIndex = eligibleIndices.length;
+          minXPairIndex = i;
           if (exitForScalar) {
             // The last relevant time was reached. No need to check rest of points.
             break;
@@ -207,21 +216,45 @@ class FlchartCache {
         if ((maxY != null && y > maxY) &&
             (maxYPair == null || maxYPair.y > y)) {
           maxYPair = PlottingPoint(x: x, y: y);
-          maxYPairIndex = eligibleIndices.length;
+          maxYPairIndex = i;
         } else if ((minY != null && y < minY) &&
             (minYPair == null || minYPair.y < y)) {
           minYPair = PlottingPoint(x: x, y: y);
-          minYPairIndex = eligibleIndices.length;
+          minYPairIndex = i;
         }
         addPoint = false;
       }
 
       if (addPoint) {
-        eligibleIndices.add(i);
+        if (eligibleCount % sampleStride == 0) eligibleIndices.add(i);
+        eligibleCount++;
+        lastEligibleIndex = i;
+        if (eligibleIndices.length > max(2, spotBudget) * 2) {
+          final kept = (eligibleIndices.length + 1) ~/ 2;
+          for (var index = 1; index < kept; index++) {
+            eligibleIndices[index] = eligibleIndices[index * 2];
+          }
+          eligibleIndices.removeRange(kept, eligibleIndices.length);
+          sampleStride *= 2;
+        }
       }
     }
 
-    // Second pass: build newSpots oldest-to-newest using add() (O(1) amortized)
+    if (lastEligibleIndex != null &&
+        eligibleIndices.last != lastEligibleIndex) {
+      eligibleIndices.add(lastEligibleIndex);
+    }
+    final boundaryCount = [
+      minXPairIndex,
+      maxXPairIndex,
+      minYPairIndex,
+      maxYPairIndex,
+    ].whereType<int>().length;
+    final rawSpotCount = eligibleCount + boundaryCount;
+    final dataBudget = max(0, spotBudget - boundaryCount);
+    _sampleInPlace(eligibleIndices, dataBudget);
+
+    // Build only the points the chart can render, in oldest-to-newest order.
     // instead of insert(0,...) which was O(k²) across the loop.
     for (int i = eligibleIndices.length - 1; i >= 0; i--) {
       final point = points[eligibleIndices[i]];
@@ -266,13 +299,19 @@ class FlchartCache {
     spotsToInsert.sort((a, b) => b.key.compareTo(a.key));
 
     // Insert the FlSpot objects into flSpots in order from largest index to smallest
-    var offset = newSpots.length;
-    for (var entry in spotsToInsert.reversed) {
-      var index = offset - entry.key;
+    final offset = newSpots.length;
+    for (var entry in spotsToInsert) {
+      final preceding = eligibleIndices.indexWhere(
+        (index) => index <= entry.key,
+      );
+      final index = preceding == -1 ? 0 : offset - preceding;
       newSpots.insert(index, entry.value);
     }
 
-    totalPoints += newSpots.length;
+    totalPoints += rawSpotCount;
+    if (appendExistingArrayPoints) {
+      (_arrayPointCounts[channelName] ??= {})[segmentIndex] = rawSpotCount;
+    }
 
     // If the new batch of spots begins at or before the last cached spot's x,
     // the source data has refreshed (e.g. array-as-timeseries delivering a full
@@ -319,13 +358,25 @@ class FlchartCache {
 
     spots[channelName]![segmentIndex] = flSpots;
     lastProcessedIndex[channelName]![segmentIndex] = points.length - 1;
-    return _applyRenderStride(flSpots, _strideFor(channelName, segmentIndex));
+    _sampleInPlace(flSpots, spotBudget);
+    return List.of(flSpots);
   }
 
-  int _strideFor(String channelName, int segmentIndex) {
-    final strides = _renderStride[channelName];
-    if (strides == null || segmentIndex >= strides.length) return 1;
-    return strides[segmentIndex];
+  static void _sampleInPlace<T>(List<T> values, int budget) {
+    if (values.length <= budget) return;
+    if (budget == 0) {
+      values.clear();
+      return;
+    }
+    if (budget == 1) {
+      values[0] = values.last;
+    } else {
+      final last = values.length - 1;
+      for (var i = 1; i < budget; i++) {
+        values[i] = values[(i * last) ~/ (budget - 1)];
+      }
+    }
+    values.removeRange(budget, values.length);
   }
 
   void normalizeCacheSpots({required Map<String, ChannelMetadata> channels}) {
@@ -423,97 +474,40 @@ class FlchartCache {
     return (min == null || value >= min) && (max == null || value <= max);
   }
 
-  // Per-segment stride for non-destructive rendering reduction.
-  // Key: channelName, Value: list of strides indexed by segment.
-  // A stride of 1 means no reduction (render every point).
-  final Map<String, List<int>> _renderStride = {};
-
+  /// Apply a global budget to existing cached spots. The chart normally
+  /// allocates per-segment budgets before populating this cache.
   int? reduceSpots({
     int minimumPointsNeeded = minimumNumberOfReducedPoints,
     int maxiumumPointsDisplayed = 10000,
     int minimumPointsPerSegment = 50,
     Map<String, List<int>> displayedSegments = const {},
   }) {
-    int numberOfPoints = 0;
-    for (var entry in spots.entries) {
-      var channelName = entry.key;
-      var channelSpots = entry.value;
-      var segmentsToDisplay = displayedSegments[channelName] ?? [];
-      for (
-        var segmentIndex = 0;
-        segmentIndex < channelSpots.length;
-        segmentIndex++
-      ) {
-        if (segmentsToDisplay.isNotEmpty &&
-            !segmentsToDisplay.contains(segmentIndex)) {
-          continue;
-        }
-        numberOfPoints += channelSpots[segmentIndex].length;
-      }
+    final selected = [
+      for (final entry in spots.entries)
+        for (final (index, segment) in entry.value.indexed)
+          if (displayedSegments[entry.key]?.contains(index) ?? true) segment,
+    ];
+    final count = selected.fold(0, (count, segment) => count + segment.length);
+    if (count <= maxiumumPointsDisplayed) {
+      return reducedPoints = totalPoints > count ? count : null;
     }
 
-    if (numberOfPoints > maxiumumPointsDisplayed) {
-      reducedPoints = 0;
-      for (var entry in spots.entries) {
-        var channelName = entry.key;
-        var channelSpots = entry.value;
-        var segmentsToDisplay = displayedSegments[channelName] ?? [];
-
-        _renderStride[channelName] ??= [];
-        while (_renderStride[channelName]!.length < channelSpots.length) {
-          _renderStride[channelName]!.add(1);
-        }
-
-        for (
-          var segmentIndex = 0;
-          segmentIndex < channelSpots.length;
-          segmentIndex++
-        ) {
-          if (segmentsToDisplay.isNotEmpty &&
-              !segmentsToDisplay.contains(segmentIndex)) {
-            _renderStride[channelName]![segmentIndex] = 1;
-            continue;
-          }
-          var segSpots = channelSpots[segmentIndex];
-          var spotsPercentage = segSpots.length / numberOfPoints;
-          var maxSpots = (minimumPointsNeeded * spotsPercentage).ceil();
-          maxSpots = max(minimumPointsPerSegment, maxSpots);
-          // Compute stride so the rendered point count ≈ maxSpots.
-          // Cache is NOT mutated — stride is applied at render time in toSpots.
-          final stride = segSpots.length <= maxSpots
-              ? 1
-              : (segSpots.length / maxSpots).ceil();
-          _renderStride[channelName]![segmentIndex] = stride;
-          reducedPoints = reducedPoints! + (segSpots.length / stride).ceil();
-        }
-      }
-    } else {
-      // No reduction needed — clear all strides.
-      _renderStride.clear();
-      reducedPoints = totalPoints > numberOfPoints ? numberOfPoints : null;
+    var remaining = min(
+      maxiumumPointsDisplayed,
+      max(minimumPointsNeeded, minimumPointsPerSegment * selected.length),
+    );
+    var remainingPoints = count;
+    var retained = 0;
+    for (final segment in selected) {
+      if (segment.isEmpty) continue;
+      final length = segment.length;
+      final quota = (remaining * length) ~/ remainingPoints;
+      _sampleInPlace(segment, quota);
+      retained += segment.length;
+      remaining -= quota;
+      remainingPoints -= length;
     }
-
-    return reducedPoints;
-  }
-
-  /// Returns a copy of [fullSpots] subsampled by [stride] for rendering.
-  /// Always returns a new list so fl_chart never holds a reference to the
-  /// mutable cache list, which would corrupt its state when we trim the front.
-  List<PlottingFlSpot> _applyRenderStride(
-    List<PlottingFlSpot> fullSpots,
-    int stride,
-  ) {
-    if (fullSpots.isEmpty) return [];
-    if (stride <= 1) return List.of(fullSpots);
-    final result = <PlottingFlSpot>[];
-    for (var i = 0; i < fullSpots.length; i += stride) {
-      result.add(fullSpots[i]);
-    }
-    // Always include the last point so the line reaches the right edge.
-    if ((fullSpots.length - 1) % stride != 0) {
-      result.add(fullSpots.last);
-    }
-    return result;
+    return reducedPoints = retained;
   }
 
   void prepareDataLoggerAcquisition({
@@ -658,6 +652,10 @@ class FlchartCache {
     required int remainingPointsInNextSegment,
   }) {
     if (!spots.containsKey(channelName)) return;
+    if (_arrayPointCounts.containsKey(channelName)) {
+      clearChannel(channelName);
+      return;
+    }
 
     final channelSpots = spots[channelName]!;
     final channelIdx = lastProcessedIndex[channelName]!;
@@ -706,11 +704,12 @@ class FlchartCache {
     _resetCache = false;
   }
 
-  void clearAll() {
+  void clearAll({bool clearDataLoggerState = true}) {
     spots.clear();
+    tempSpot.clear();
+    _arrayPointCounts.clear();
     lastProcessedIndex.clear();
     _lastNormalizedLimits.clear();
-    _renderStride.clear();
 
     _spotsMinX = null;
     _spotsMaxX = null;
@@ -721,7 +720,7 @@ class FlchartCache {
     reducedPoints = null;
     _resetCache = false;
 
-    clearDataLogger();
+    if (clearDataLoggerState) clearDataLogger();
   }
 
   void clearDataLogger() {
@@ -738,8 +737,8 @@ class FlchartCache {
     spots.remove(channelName);
     lastProcessedIndex.remove(channelName);
     tempSpot.remove(channelName);
+    _arrayPointCounts.remove(channelName);
     _lastNormalizedLimits.remove(channelName);
-    _renderStride.remove(channelName);
   }
 
   /// For array mode: clears every cached segment that is NOT in [keepSegments]
@@ -750,11 +749,17 @@ class FlchartCache {
   /// to receive the same segmentIndex values it uses to index into [points].
   ///
   /// [keepSegments] maps channelName → list of segment indices to retain.
-  /// Any channel not present in [keepSegments] is left untouched.
-  void retainSegments(Map<String, List<int>> keepSegments) {
+  /// Cached channels absent from [keepSegments] are evicted.
+  void retainSegments(
+    Map<String, List<int>> keepSegments, {
+    bool recount = true,
+  }) {
+    for (final channel in spots.keys.toList()) {
+      if (!keepSegments.containsKey(channel)) clearChannel(channel);
+    }
     for (final entry in keepSegments.entries) {
       final channelName = entry.key;
-      final keep = entry.value;
+      final keep = entry.value.toSet();
       if (!spots.containsKey(channelName)) continue;
 
       final channelSpots = spots[channelName]!;
@@ -764,12 +769,14 @@ class FlchartCache {
         if (!keep.contains(i)) {
           // Clear the spot list but keep the slot so segment indices stay valid.
           channelSpots[i].clear();
+          _arrayPointCounts[channelName]?.remove(i);
           if (i < channelIdx.length) channelIdx[i] = -1;
         }
       }
     }
 
     // Recount totalPoints after eviction.
+    if (!recount) return;
     totalPoints = 0;
     for (final segs in spots.values) {
       for (final seg in segs) {
