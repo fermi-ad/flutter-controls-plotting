@@ -27,6 +27,12 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
         maxX: plotWidget.plotData.maxX,
         minY: 0,
         maxY: 1,
+        // Splitting every grid line into dashed paths creates excessive
+        // CanvasKit allocations on each live-data repaint.
+        gridData: const FlGridData(
+          getDrawingHorizontalLine: _solidGridLine,
+          getDrawingVerticalLine: _solidGridLine,
+        ),
         lineBarsData: plotReply == null
             ? []
             : _toLineChartBarDataList(plotReply!.data, plotWidget.plotData),
@@ -328,205 +334,137 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     List<PlotChannelData> plotChannels,
     PlotData plotData,
   ) {
-    List<LineChartBarData> lineChartList = [];
-
-    // Clear the mapping at the start of each rebuild
+    const maximumRenderedSegments = 512;
     _barIndexToChannelName.clear();
 
-    var points = plotData.points;
+    final activeChannels = plotChannels
+        .where(
+          (channel) =>
+              !_channelHasError(channel) &&
+              (plotData.points[channel.name]?.isNotEmpty ?? false),
+        )
+        .take(maximumRenderedSegments)
+        .toList();
+    final isArray = !plotWidget.isTimedScalarData;
+    final minX = isArray ? plotWidget.confMinX : plotData.minX;
+    final maxX = isArray ? plotWidget.confMaxX : plotData.maxX;
+    final displayedSegments = <String, List<int>>{};
+    final maxSegmentsPerChannel =
+        maximumRenderedSegments ~/ max(1, activeChannels.length);
 
-    // Timed X axis and no xMax defined will exit upon last out of range value.
-    bool exitForScalar = plotWidget.confMaxX == null && plotWidget.isTimedXAxis;
-    var cache = plotWidget.plotData.flchartCache;
-    var arrayNonPersistentData =
-        (!plotWidget.isTimedScalarData && !plotWidget.isPersistent);
-    var arrayPersistentData =
-        (!plotWidget.isTimedScalarData && plotWidget.isPersistent);
-
-    Map<String, List<int>> displayedSegments = {};
-
-    bool possibleSkippedSegments =
-        (arrayNonPersistentData || arrayPersistentData);
-
-    if (possibleSkippedSegments) {
-      cache.totalPoints = 0;
-      cache.reducedPoints = null;
-    }
-
-    var isBlinkSegment = plotWidget.isBlinkLatestSegment;
-
-    var isSkipLastPointForBlink =
-        isBlinkSegment && plotWidget.triggerEvent == null;
-
-    bool blinkState = false;
-    if (isBlinkSegment) {
-      blinkState = plotData.blinkState = !plotData.blinkState;
-    }
-
-    plotChannels.asMap().forEach((index, plotChannel) {
-      var channelName = plotChannel.name;
-      if (_channelHasError(plotChannel) || !points.containsKey(channelName)) {
-        return;
-      }
-
-      int nearestSegmentIndex = points[channelName]!.length - 1;
-      if (arrayNonPersistentData || arrayPersistentData) {
-        // Array data
-        var selectedTime = plotData.selectedArrayTime;
-        if (selectedTime != null) {
-          // Find the segment index nearest to selectedArrayTime
-          double minTimeDiff = double.infinity;
-
-          for (var (idx, segment) in points[channelName]!.indexed) {
-            var t = segment.first.t;
-            if (t != null) {
-              var timeDiff = (t - selectedTime).abs();
-              if (timeDiff < minTimeDiff) {
-                minTimeDiff = timeDiff;
-                nearestSegmentIndex = idx;
-              }
+    // Reserve a frame budget before creating any chart objects. Keep the most
+    // recent visible segments when persistence produces more series than fit.
+    for (final channel in activeChannels) {
+      final segments = plotData.points[channel.name]!;
+      var nearest = segments.length - 1;
+      final selectedTime = isArray ? plotData.selectedArrayTime : null;
+      if (selectedTime != null) {
+        var closest = double.infinity;
+        for (final (index, segment) in segments.indexed) {
+          if (segment.isEmpty) continue;
+          final time = segment.first.t;
+          if (time != null) {
+            final difference = (time - selectedTime).abs();
+            if (difference < closest) {
+              nearest = index;
+              closest = difference;
             }
           }
         }
       }
-      var segmentsForChannel = points[channelName]!;
+      final first = isArray && !plotWidget.isPersistent
+          ? nearest
+          : max(0, nearest + 1 - maxSegmentsPerChannel);
+      final indices = [
+        for (var index = first; index <= nearest; index++)
+          if (segments[index].isNotEmpty) index,
+      ];
+      if (indices.isNotEmpty) displayedSegments[channel.name] = indices;
+    }
 
-      for (var (segmentIndex, pointSegment) in segmentsForChannel.indexed) {
-        if (possibleSkippedSegments) {
-          if (arrayNonPersistentData) {
-            // Array data
-            if (nearestSegmentIndex != segmentIndex) {
-              continue;
-            }
+    final segmentCount = displayedSegments.values.fold(
+      0,
+      (count, indices) => count + indices.length,
+    );
+    final spotBudget = maxiumumPointsDisplayed ~/ max(1, segmentCount);
+    final cache = plotData.flchartCache;
+    cache.beginFrame(
+      spotBudget: spotBudget,
+      fixedXWindow:
+          isArray || plotWidget.confMinX != null || plotWidget.confMaxX != null,
+      minX: minX,
+      maxX: maxX,
+    );
+    cache.retainSegments(displayedSegments, recount: false);
+    if (isArray) cache.totalPoints = 0;
 
-            plotWidget.plotMetadata.displayedArrayTime = pointSegment.first.t;
-          }
-
-          if (arrayPersistentData) {
-            if (nearestSegmentIndex < segmentIndex) {
-              // All done, index is larger
-              break;
-            }
-
-            plotWidget.plotMetadata.displayedArrayTime = pointSegment.first.t;
-          }
-
-          displayedSegments[channelName] ??= [];
-          displayedSegments[channelName]!.add(segmentIndex);
+    final lineChartList = <LineChartBarData>[];
+    final blink = plotWidget.isBlinkLatestSegment;
+    final blinkState = blink && (plotData.blinkState = !plotData.blinkState);
+    for (final entry in displayedSegments.entries) {
+      final channelName = entry.key;
+      final segments = plotData.points[channelName]!;
+      final marker = markerIndexForChannel(channelName);
+      for (final segmentIndex in entry.value) {
+        final segment = segments[segmentIndex];
+        if (isArray) {
+          plotWidget.plotMetadata.displayedArrayTime = segment.first.t;
         }
 
-        // the segment would dim in this itteration as well as the segment is the last one.
-        var blinkingSegment =
-            blinkState && segmentIndex == segmentsForChannel.length - 1;
-
-        // For any timed scalar plot (rolling window), use the computed display
-        // window bounds (plotData.minX/maxX) so that toSpots can trim out-of-
-        // window spots from the cache front and stop scanning via exitForScalar.
-        // Using confMinX/confMaxX (user pan limits) fails when they are null
-        // (auto-range), causing flSpots to grow without bound and the render
-        // stride to increase continuously, degrading point density over time.
-        // For non-timed (array) plots, confMinX/confMaxX remain correct.
-        final effectiveMinX = plotWidget.isTimedScalarData
-            ? plotData.minX
-            : plotWidget.confMinX;
-        final effectiveMaxX = plotWidget.isTimedScalarData
-            ? plotData.maxX
-            : plotWidget.confMaxX;
-        var spots = cache.toSpots(
-          points: pointSegment,
+        final latest = segmentIndex == segments.length - 1;
+        final splitBlinkSpot =
+            blink && latest && plotWidget.triggerEvent == null;
+        final spots = cache.toSpots(
+          points: segment,
           channelName: channelName,
-          channelSetting: plotWidget.plotChannels[channelName]!.channelSetting,
           segmentIndex: segmentIndex,
-          minX: effectiveMinX,
-          maxX: effectiveMaxX,
-          exitForScalar: exitForScalar,
-          appendExistingArrayPoints:
-              arrayNonPersistentData || arrayPersistentData,
-          skipLastPoint: isSkipLastPointForBlink,
+          channelSetting: plotWidget.plotChannels[channelName]!.channelSetting,
+          minX: minX,
+          maxX: maxX,
+          exitForScalar: plotWidget.confMaxX == null && plotWidget.isTimedXAxis,
+          appendExistingArrayPoints: isArray,
+          skipLastPoint: splitBlinkSpot,
+          spotBudget: spotBudget - (splitBlinkSpot ? 1 : 0),
         );
-
-        var segmentColor = lineColorForChannel(
+        final color = lineColorForChannel(
           channelName,
-          dim: blinkingSegment && !isSkipLastPointForBlink,
+          dim: blinkState && latest && !splitBlinkSpot,
         );
-
-        double barWidth =
-            markerIndexForChannel(channelName) == 0 ||
-                markerIndexForChannel(channelName) == 1
-            ? 3
-            : 0;
-        var dotData = _selectFlDotData(
-          markerIndexForChannel(channelName),
-          segmentColor,
-        );
-
-        // Keep index of channel name for new bar data.
         _barIndexToChannelName[lineChartList.length] = channelName;
         lineChartList.add(
           LineChartBarData(
-            color: segmentColor,
+            color: color,
             spots: spots,
-            isCurved: false,
-            belowBarData: BarAreaData(show: false),
-            barWidth: barWidth,
-            dotData: dotData,
+            barWidth: marker == 0 || marker == 1 ? 3 : 0,
+            dotData: _selectFlDotData(marker, color),
           ),
         );
 
-        // Blinked last spot when its split into its own list
-        if (isSkipLastPointForBlink) {
-          if (!cache.tempSpot.containsKey(channelName)) {
-            continue;
-          }
-          List<PlottingFlSpot> tempSpot = [cache.tempSpot[channelName]!];
-
-          var segmentColor = lineColorForChannel(
-            channelName,
-            dim: blinkingSegment,
-          );
-
-          var dotData = _selectFlDotData(
-            markerIndexForChannel(channelName),
-            segmentColor,
-          );
-
+        final lastSpot = cache.tempSpot[channelName];
+        if (splitBlinkSpot && lastSpot != null) {
+          final color = lineColorForChannel(channelName, dim: blinkState);
           _barIndexToChannelName[lineChartList.length] = channelName;
-
           lineChartList.add(
             LineChartBarData(
-              color: segmentColor,
-              spots: tempSpot,
-              isCurved: false,
-              belowBarData: BarAreaData(show: false),
-              barWidth: barWidth,
-              dotData: dotData,
+              color: color,
+              spots: [lastSpot],
+              barWidth: marker == 0 || marker == 1 ? 3 : 0,
+              dotData: _selectFlDotData(marker, color),
             ),
           );
         }
-
-        if (arrayNonPersistentData) {
-          // Array data
-          break;
-        }
       }
-    });
-
-    // For array mode, evict cached segments that are no longer displayed.
-    // Without this, every incoming waveform adds a new cached segment and
-    // the cache grows without bound — causing the memory leak and CPU cost.
-    if (possibleSkippedSegments && displayedSegments.isNotEmpty) {
-      cache.retainSegments(displayedSegments);
     }
 
-    // Verify if points reduction should be performed.
-    int? reducedPoints = cache.reduceSpots(
-      displayedSegments: displayedSegments,
-    );
     cache.normalizeCacheSpots(channels: plotWidget.plotChannels);
-
-    plotWidget.plotMetadata.reducedPoints = reducedPoints;
+    final renderedPoints = lineChartList.fold(
+      0,
+      (count, series) => count + series.spots.length,
+    );
     plotWidget.plotMetadata.numberOfPoints = cache.totalPoints;
-
+    plotWidget.plotMetadata.reducedPoints = cache.totalPoints > renderedPoints
+        ? renderedPoints
+        : null;
     return lineChartList;
   }
 
@@ -543,6 +481,9 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
     }
   }
 }
+
+FlLine _solidGridLine(double value) =>
+    const FlLine(color: Colors.blueGrey, strokeWidth: 0.4);
 
 FlDotData _selectFlDotData(int plotMarker, Color channelColor) {
   switch (plotMarker) {
