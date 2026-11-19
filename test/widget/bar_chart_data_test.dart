@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_gql_acsys/flutter_gql_acsys.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -28,7 +30,9 @@ void main() {
       units: units,
       rate: '',
       status: status,
-      points: [PlotPoint(t: timestamp, value: DevScalar(value))],
+      series: ScalarSeries.fromPoints([
+        PlotPoint(t: timestamp, value: DevScalar(value)),
+      ]),
     );
 
     test('preserves device order and replaces the latest value segment', () {
