@@ -27,7 +27,7 @@ jobs:
 
       - name: Generate a token
         id: generate-token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v2
         with:
           app-id: ${{ vars.ACTION_SETTINGS_APP_ID }}
           private-key: ${{ secrets.ACTION_SETTINGS_PRIVATE_KEY }}
@@ -84,7 +84,7 @@ jobs:
 
       - name: Generate a token
         id: generate-token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v2
         with:
           app-id: ${{ vars.ACTION_SETTINGS_APP_ID }}
           private-key: ${{ secrets.ACTION_SETTINGS_PRIVATE_KEY }}
