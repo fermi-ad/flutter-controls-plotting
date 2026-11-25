@@ -422,6 +422,7 @@ class FlchartsPlotWidgetAdapter extends PlotWidgetAdapter {
           minX: minX,
           maxX: maxX,
           exitForScalar: plotWidget.confMaxX == null && plotWidget.isTimedXAxis,
+          isDeviceXAxis: !isArray && plotWidget.chXAxis != null,
           appendExistingArrayPoints: isArray,
           skipLastPoint: splitBlinkSpot,
           spotBudget: spotBudget - (splitBlinkSpot ? 1 : 0),
