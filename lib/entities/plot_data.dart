@@ -139,7 +139,7 @@ class PlotData {
   }
 
   List<List<PlottingPoint>> __processDeviceValue(
-    List<PlotPoint> plotPoints,
+    Iterable<PlotPoint> plotPoints,
     double? triggerTimestamp, {
     double? waveformDuration,
   }) {

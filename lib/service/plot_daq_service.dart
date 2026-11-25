@@ -562,7 +562,7 @@ class StandardPlotDAQ implements PlotDAQService {
               units: units ?? "",
               rate: chRate,
               status: status,
-              points: data ?? const [],
+              series: ScalarSeries.fromPoints(data ?? const []),
             );
 
             internalDaqData.add(newChannel);
@@ -573,7 +573,7 @@ class StandardPlotDAQ implements PlotDAQService {
 
         if (data != null) {
           if (!newChannelAdded) {
-            existingChannelData.points.addAll(data);
+            existingChannelData.series.addAll(data);
           }
           args.xMax = max(args.xMax, data.length - 1);
           args.windowSize = max(args.windowSize, data.length);
