@@ -59,6 +59,7 @@ class FlchartCache {
     double? minY,
     double? maxY,
     bool exitForScalar = false,
+    bool isDeviceXAxis = false,
     bool appendExistingArrayPoints = false,
     // Last point will have its own segment for blinking puprposes created outside of cache.
     bool skipLastPoint = false,
@@ -70,6 +71,7 @@ class FlchartCache {
         maxX: maxX,
         minY: minY,
         maxY: maxY,
+        isDeviceXAxis: isDeviceXAxis,
       );
     }
 
@@ -109,7 +111,7 @@ class FlchartCache {
       // have scrolled out of view pile up at the front of the list — causing
       // artificially dense rendering on the left.  Trim them now using a
       // binary search so the visible density stays uniform across the window.
-      if (minX != null && flSpots.isNotEmpty && flSpots.first.x < minX) {
+      if (!isDeviceXAxis && minX != null && flSpots.first.x < minX) {
         int lo = 0, hi = flSpots.length;
         while (lo < hi) {
           final mid = (lo + hi) >> 1;
@@ -315,9 +317,10 @@ class FlchartCache {
 
     // If the new batch of spots begins at or before the last cached spot's x,
     // the source data has refreshed (e.g. array-as-timeseries delivering a full
-    // new waveform).  Discard the stale cache so we don't accumulate every
-    // historical waveform snapshot in the spot list.
-    if (flSpots.isNotEmpty &&
+    // new waveform). Discard the stale cache for that case. A device's X
+    // readings can repeat or decrease during normal acquisition.
+    if (!isDeviceXAxis &&
+        flSpots.isNotEmpty &&
         newSpots.isNotEmpty &&
         newSpots.first.x <= flSpots.last.x) {
       flSpots.clear();
@@ -440,6 +443,7 @@ class FlchartCache {
     double? maxX,
     double? minY,
     double? maxY,
+    bool isDeviceXAxis = false,
   }) {
     // A full cache reset is only needed when the visible window *contracts* or
     // *jumps* so that previously-excluded points might now be in range:
@@ -453,8 +457,11 @@ class FlchartCache {
     // What does NOT require a reset:
     //   - maxX grew (rolling window advancing) — new points are appended
     //     incrementally by toSpots via the startIndex mechanism.
-    //   - minX grew (old points scrolled off) — handled by trimFront.
-    if (_spotsMinX != null && minX != null && minX < _spotsMinX!) {
+    //   - minX grew (old points scrolled off) — the prefix trim handles
+    //     ordered X values. Rebuild for device X values, which can be unordered.
+    if (_spotsMinX != null &&
+        minX != null &&
+        (minX < _spotsMinX! || (isDeviceXAxis && minX > _spotsMinX!))) {
       return true;
     }
     if (_spotsMaxX != null && maxX != null && maxX < _spotsMaxX!) {

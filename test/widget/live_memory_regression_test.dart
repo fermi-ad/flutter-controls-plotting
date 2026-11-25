@@ -7,6 +7,7 @@ import 'package:flutter_controls_plotting/entities/channel_setting.dart';
 import 'package:flutter_controls_plotting/entities/flchart_cache.dart';
 import 'package:flutter_controls_plotting/entities/plot_data.dart';
 import 'package:flutter_controls_plotting/entities/plotting_fl_spot.dart';
+import 'package:flutter_controls_plotting/entities/scalar_data_options.dart';
 import 'package:flutter_controls_plotting/service/plot_daq_service.dart';
 import 'package:flutter_controls_plotting/widgets/plot_widget.dart';
 import 'package:flutter_gql_acsys/flutter_gql_acsys.dart';
@@ -87,6 +88,80 @@ void main() {
       expect(data.plotMetadata.xMax, 100);
     },
   );
+
+  testWidgets('device X plots keep rendered points when X wraps', (
+    tester,
+  ) async {
+    final service = BurstService();
+    final data = PlotData();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PlotWidget(
+            daqService: service,
+            plotData: data,
+            plotChannels: {
+              channelName: ChannelMetadata(
+                channelSetting: ChannelSetting(confMinY: 0, confMaxY: 100),
+              ),
+            },
+            scalarDataOptions: ScalarDataOptions(
+              isOneShot: false,
+              timeDelta: null,
+            ),
+            chXAxis: 'G:SCTIME',
+            confMinX: 0,
+            confMaxX: 65,
+          ),
+        ),
+      ),
+    );
+
+    final stream = service.streams.single;
+    Future<void> send(List<double> xValues) async {
+      stream.add(
+        PlotReply(
+          plotId: 'device-x',
+          requestTime: 1000,
+          xAxisUnits: 'G:SCTIME',
+          data: [
+            PlotChannelData(
+              name: channelName,
+              units: '',
+              rate: '',
+              status: 0,
+              points: [
+                for (final x in xValues)
+                  PlotPoint(t: x, value: DevScalar(x + 1)),
+              ],
+            ),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    Iterable<double> renderedX() {
+      final chart = tester.widget<LineChart>(find.byType(LineChart));
+      return chart.data.lineBarsData.single.spots.map((point) => point.x);
+    }
+
+    await send([62, 64, 65]);
+    expect(renderedX(), orderedEquals([62, 64, 65]));
+
+    await send([0, 1]);
+    expect(
+      data.points[channelName]!.single.map((point) => point.x),
+      orderedEquals([62, 64, 65, 0, 1]),
+    );
+    expect(renderedX(), orderedEquals([62, 64, 65, 0, 1]));
+
+    await send([1, 2]);
+    expect(renderedX(), orderedEquals([62, 64, 65, 0, 1, 1, 2]));
+
+    await tester.pumpWidget(const SizedBox());
+    unawaited(stream.close());
+  });
 
   test('periodic array mode retains history under the raw point limit', () {
     const limit = 8 * 1024 * 1024;
